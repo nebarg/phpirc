@@ -90,9 +90,7 @@ final readonly class MessageParser
             } else {
                 $name = substr($rawTag, 0, $valueDelimiter);
                 $escapedValue = substr($rawTag, $valueDelimiter + 1);
-                $value = $escapedValue === ''
-                    ? null
-                    : $this->unescapeTagValue($escapedValue);
+                $value = $this->unescapeTagValue($escapedValue);
             }
 
             // Prefixing avoids PHP converting numeric string keys to integers.

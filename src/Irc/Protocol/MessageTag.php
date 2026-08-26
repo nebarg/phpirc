@@ -6,8 +6,12 @@ namespace PhpIrc\Irc\Protocol;
 
 final readonly class MessageTag
 {
+    public ?string $value;
+
     public function __construct(
         public string $name,
-        public ?string $value,
-    ) {}
+        ?string $value,
+    ) {
+        $this->value = $value === '' ? null : $value;
+    }
 }
