@@ -6,6 +6,9 @@ namespace PhpIrc\Irc\Protocol;
 
 final readonly class MessageEncoder
 {
+    /**
+     * @throws InvalidMessage
+     */
     public function encode(Message $message): string
     {
         return $this->encodeTags($message->tags)
