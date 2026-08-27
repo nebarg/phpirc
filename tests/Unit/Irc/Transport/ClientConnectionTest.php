@@ -6,8 +6,8 @@ namespace Tests\Unit\Irc\Transport;
 
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InputTooLong;
-use PhpIrc\Irc\Protocol\InvalidMessage;
+use PhpIrc\Irc\Protocol\InputTooLongException;
+use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -96,7 +96,7 @@ final class ClientConnectionTest extends IntegrationTestCase
         try {
             $this->connection($socket, $handler)->run();
             $this->fail('Expected an invalid message exception.');
-        } catch (InvalidMessage) {
+        } catch (InvalidMessageException) {
             $this->assertSame(1, $socket->closeCalls);
             $this->assertSame([], $handler->messages);
         }
@@ -113,7 +113,7 @@ final class ClientConnectionTest extends IntegrationTestCase
         try {
             $this->connection($socket, $handler)->run();
             $this->fail('Expected an input-too-long exception.');
-        } catch (InputTooLong) {
+        } catch (InputTooLongException) {
             $this->assertSame(1, $socket->closeCalls);
             $this->assertSame([], $handler->messages);
         }

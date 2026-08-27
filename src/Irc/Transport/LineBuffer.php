@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InputTooLong;
+use PhpIrc\Irc\Protocol\InputTooLongException;
 
 final class LineBuffer
 {
@@ -20,7 +20,7 @@ final class LineBuffer
     /**
      * @return list<string>
      *
-     * @throws InputTooLong
+     * @throws InputTooLongException
      */
     public function push(string $bytes): array
     {
@@ -28,7 +28,7 @@ final class LineBuffer
         $messages = $this->extractMessages();
 
         if (strlen($this->buffer) > self::MAX_INCOMPLETE_BYTES) {
-            throw new InputTooLong('Input exceeded the maximum bytes.');
+            throw new InputTooLongException('Input exceeded the maximum bytes.');
         }
 
         foreach ($messages as $message) {

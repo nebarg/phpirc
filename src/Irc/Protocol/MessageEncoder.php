@@ -7,7 +7,7 @@ namespace PhpIrc\Irc\Protocol;
 final readonly class MessageEncoder
 {
     /**
-     * @throws InvalidMessage
+     * @throws InvalidMessageException
      */
     public function encode(Message $message): string
     {
@@ -53,11 +53,11 @@ final readonly class MessageEncoder
         }
 
         if ($source === '') {
-            throw new InvalidMessage('Message source cannot be empty.');
+            throw new InvalidMessageException('Message source cannot be empty.');
         }
 
         if (preg_match('/[\x00\r\n ]/', $source) !== 0) {
-            throw new InvalidMessage('Message contains an invalid character.');
+            throw new InvalidMessageException('Message contains an invalid character.');
         }
 
         return ":$source ";
@@ -66,7 +66,7 @@ final readonly class MessageEncoder
     private function encodeCommand(string $command): string
     {
         if (preg_match('/\A(?:[A-Za-z]+|[0-9]{3})\z/', $command) !== 1) {
-            throw new InvalidMessage('Message contains an invalid command.');
+            throw new InvalidMessageException('Message contains an invalid command.');
         }
 
         return strtoupper($command);
@@ -84,7 +84,7 @@ final readonly class MessageEncoder
 
         foreach ($parameters as $index => $parameter) {
             if (preg_match('/[\x00\r\n]/', $parameter) !== 0) {
-                throw new InvalidMessage('Parameter contains an invalid character.');
+                throw new InvalidMessageException('Parameter contains an invalid character.');
             }
 
             if ($index === $last) {
@@ -97,7 +97,7 @@ final readonly class MessageEncoder
             }
 
             if ($parameter === '' || $parameter[0] === ':' || str_contains($parameter, ' ')) {
-                throw new InvalidMessage('Invalid parameter.');
+                throw new InvalidMessageException('Invalid parameter.');
             }
 
             $result[] = $parameter;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Protocol;
 
-use PhpIrc\Irc\Protocol\InvalidMessage;
+use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Protocol\MessageTag;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -143,7 +143,7 @@ final class MessageParserTest extends IntegrationTestCase
     /**
      * @return iterable<string, array{string}>
      */
-    public static function invalidMessages(): iterable
+    public static function InvalidMessageExceptions(): iterable
     {
         yield 'empty message' => [''];
         yield 'leading space' => [' NICK Grant'];
@@ -158,10 +158,10 @@ final class MessageParserTest extends IntegrationTestCase
     }
 
     #[Test]
-    #[DataProvider('invalidMessages')]
+    #[DataProvider('InvalidMessageExceptions')]
     public function it_rejects_malformed_messages(string $line): void
     {
-        $this->expectException(InvalidMessage::class);
+        $this->expectException(InvalidMessageException::class);
 
         new MessageParser()->parse($line);
     }

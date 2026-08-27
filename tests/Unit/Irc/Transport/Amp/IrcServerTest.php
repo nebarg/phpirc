@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport\Amp;
 
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InvalidMessage;
+use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -64,7 +64,7 @@ final class IrcServerTest extends IntegrationTestCase
             ->with(
                 'IRC client connection failed.',
                 $this->callback(
-                    static fn (array $context): bool => ($context['exception'] ?? null) instanceof InvalidMessage,
+                    static fn (array $context): bool => ($context['exception'] ?? null) instanceof InvalidMessageException,
                 ),
             );
 

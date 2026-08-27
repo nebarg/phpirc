@@ -6,7 +6,7 @@ namespace Tests\Unit\Irc\Transport;
 
 use Override;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InputTooLong;
+use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
@@ -114,7 +114,7 @@ final class LineBufferTest extends IntegrationTestCase
     #[Test]
     public function it_validates_each_completed_line(): void
     {
-        $this->expectException(InputTooLong::class);
+        $this->expectException(InputTooLongException::class);
 
         $this->buffer->push(
             str_repeat('a', ClientMessageSizeValidator::MAX_MAIN_BYTES + 1) . "\r\n",
@@ -129,7 +129,7 @@ final class LineBufferTest extends IntegrationTestCase
             $this->buffer->push(str_repeat('a', self::MAX_INCOMPLETE_BYTES)),
         );
 
-        $this->expectException(InputTooLong::class);
+        $this->expectException(InputTooLongException::class);
 
         $this->buffer->push('a');
     }

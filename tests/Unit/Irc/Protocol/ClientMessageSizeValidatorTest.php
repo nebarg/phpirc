@@ -6,7 +6,7 @@ namespace Tests\Unit\Irc\Protocol;
 
 use Override;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InputTooLong;
+use PhpIrc\Irc\Protocol\InputTooLongException;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
 
@@ -40,7 +40,7 @@ final class ClientMessageSizeValidatorTest extends IntegrationTestCase
         $tagData = str_repeat('a', ClientMessageSizeValidator::MAX_TAG_BYTES + 1);
 
         $this->assertSame(ClientMessageSizeValidator::MAX_TAG_BYTES + 1, strlen($tagData));
-        $this->expectException(InputTooLong::class);
+        $this->expectException(InputTooLongException::class);
 
         $this->validator->validate("@{$tagData} PING :token");
     }
@@ -61,7 +61,7 @@ final class ClientMessageSizeValidatorTest extends IntegrationTestCase
         $line = $this->mainSectionWithLength(ClientMessageSizeValidator::MAX_MAIN_BYTES + 1);
 
         $this->assertSame(ClientMessageSizeValidator::MAX_MAIN_BYTES + 1, strlen($line));
-        $this->expectException(InputTooLong::class);
+        $this->expectException(InputTooLongException::class);
 
         $this->validator->validate($line);
     }
@@ -82,7 +82,7 @@ final class ClientMessageSizeValidatorTest extends IntegrationTestCase
         $main = $this->mainSectionWithLength(ClientMessageSizeValidator::MAX_MAIN_BYTES + 1);
 
         $this->assertSame(ClientMessageSizeValidator::MAX_MAIN_BYTES + 1, strlen($main));
-        $this->expectException(InputTooLong::class);
+        $this->expectException(InputTooLongException::class);
 
         $this->validator->validate("@ourtag=value {$main}");
     }

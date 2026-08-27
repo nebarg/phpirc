@@ -11,7 +11,7 @@ final class ClientMessageSizeValidator
     public const int MAX_MAIN_BYTES = 510;
 
     /**
-     * @throws InputTooLong
+     * @throws InputTooLongException
      */
     public function validate(string $line): void
     {
@@ -27,7 +27,7 @@ final class ClientMessageSizeValidator
             : substr($line, 1, $tagSeparator - 1);
 
         if (strlen($tagData) > self::MAX_TAG_BYTES) {
-            throw new InputTooLong(sprintf(
+            throw new InputTooLongException(sprintf(
                 'Tags cannot be greater than %d bytes',
                 self::MAX_TAG_BYTES
             ));
@@ -39,12 +39,12 @@ final class ClientMessageSizeValidator
     }
 
     /**
-     * @throws InputTooLong
+     * @throws InputTooLongException
      */
     private function validateMainSection(string $main): void
     {
         if (strlen($main) > self::MAX_MAIN_BYTES) {
-            throw new InputTooLong(sprintf(
+            throw new InputTooLongException(sprintf(
                 'Message cannot be greater than %d bytes',
                 self::MAX_MAIN_BYTES
             ));

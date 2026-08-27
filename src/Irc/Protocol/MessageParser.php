@@ -9,7 +9,7 @@ final readonly class MessageParser
     /**
      * Walk the message string as extra spaces are valid
      *
-     * @throws InvalidMessage
+     * @throws InvalidMessageException
      */
     public function parse(string $line): Message
     {
@@ -25,7 +25,7 @@ final readonly class MessageParser
         }
 
         if ($position >= $length) {
-            throw new InvalidMessage('Message does not contain a command.');
+            throw new InvalidMessageException('Message does not contain a command.');
         }
 
         $source = null;
@@ -36,7 +36,7 @@ final readonly class MessageParser
         }
 
         if ($position >= $length) {
-            throw new InvalidMessage('Message does not contain a command.');
+            throw new InvalidMessageException('Message does not contain a command.');
         }
 
         [$command, $position] = $this->parseCommand($line, $position);
@@ -53,15 +53,15 @@ final readonly class MessageParser
     private function validateLine(string $line): void
     {
         if ($line === '') {
-            throw new InvalidMessage('Message cannot be empty.');
+            throw new InvalidMessageException('Message cannot be empty.');
         }
 
         if ($line[0] === ' ') {
-            throw new InvalidMessage('Message cannot begin with a space.');
+            throw new InvalidMessageException('Message cannot begin with a space.');
         }
 
         if (strpbrk($line, "\0\r\n") !== false) {
-            throw new InvalidMessage('Message contains a forbidden byte.');
+            throw new InvalidMessageException('Message contains a forbidden byte.');
         }
     }
 
@@ -73,7 +73,7 @@ final readonly class MessageParser
         $tagsEnd = strpos($line, ' ', $position);
 
         if ($tagsEnd === false) {
-            throw new InvalidMessage('Tag section is not followed by a command.');
+            throw new InvalidMessageException('Tag section is not followed by a command.');
         }
 
         $tagSection = substr($line, $position + 1, $tagsEnd - $position - 1);
@@ -109,11 +109,11 @@ final readonly class MessageParser
         $sourceEnd = strpos($line, ' ', $sourceStart);
 
         if ($sourceEnd === false) {
-            throw new InvalidMessage('Source is not followed by a command.');
+            throw new InvalidMessageException('Source is not followed by a command.');
         }
 
         if ($sourceEnd === $sourceStart) {
-            throw new InvalidMessage('Source cannot be empty.');
+            throw new InvalidMessageException('Source cannot be empty.');
         }
 
         return [
@@ -136,7 +136,7 @@ final readonly class MessageParser
         $command = substr($line, $position, $commandEnd - $position);
 
         if (preg_match('/\A(?:[A-Za-z]+|[0-9]{3})\z/', $command) !== 1) {
-            throw new InvalidMessage('Message contains an invalid command.');
+            throw new InvalidMessageException('Message contains an invalid command.');
         }
 
         return [strtoupper($command), $commandEnd];

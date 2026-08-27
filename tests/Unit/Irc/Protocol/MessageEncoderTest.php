@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Protocol;
 
-use PhpIrc\Irc\Protocol\InvalidMessage;
+use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageTag;
@@ -153,7 +153,7 @@ final class MessageEncoderTest extends IntegrationTestCase
     /**
      * @return iterable<string, array{message: Message}>
      */
-    public static function invalidMessages(): iterable
+    public static function InvalidMessageExceptions(): iterable
     {
         yield 'empty source' => [
             'message' => new Message([], '', 'TESTCMD', []),
@@ -215,10 +215,10 @@ final class MessageEncoderTest extends IntegrationTestCase
     }
 
     #[Test]
-    #[DataProvider('invalidMessages')]
+    #[DataProvider('InvalidMessageExceptions')]
     public function it_rejects_invalid_messages(Message $message): void
     {
-        $this->expectException(InvalidMessage::class);
+        $this->expectException(InvalidMessageException::class);
 
         new MessageEncoder()->encode($message);
     }
