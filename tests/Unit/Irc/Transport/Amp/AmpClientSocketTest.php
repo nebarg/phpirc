@@ -9,9 +9,9 @@ use Amp\Socket\Socket as AmpSocket;
 use PhpIrc\Irc\Transport\Amp\AmpClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class AmpClientSocketTest extends IntegrationTestCase
+final class AmpClientSocketTest extends TestCase
 {
     #[Test]
     public function it_delegates_raw_io_and_closure_to_the_amp_socket(): void

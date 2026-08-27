@@ -10,9 +10,9 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageTag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class MessageEncoderTest extends IntegrationTestCase
+final class MessageEncoderTest extends TestCase
 {
     /**
      * @return iterable<string, array{message: Message, expected: string}>

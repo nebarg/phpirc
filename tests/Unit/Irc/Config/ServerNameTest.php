@@ -8,9 +8,9 @@ use InvalidArgumentException;
 use PhpIrc\Irc\Config\ServerName;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class ServerNameTest extends IntegrationTestCase
+final class ServerNameTest extends TestCase
 {
     #[Test]
     public function it_accepts_a_valid_server_name(): void

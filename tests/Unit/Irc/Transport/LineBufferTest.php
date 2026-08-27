@@ -9,9 +9,9 @@ use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class LineBufferTest extends IntegrationTestCase
+final class LineBufferTest extends TestCase
 {
     private const int MAX_INCOMPLETE_BYTES = ClientMessageSizeValidator::MAX_TAG_BYTES + ClientMessageSizeValidator::MAX_MAIN_BYTES + 3;
 

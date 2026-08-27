@@ -8,10 +8,10 @@ use PhpIrc\Irc\Command\PingHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\TestCase;
 
-final class PingHandlerTest extends IntegrationTestCase
+final class PingHandlerTest extends TestCase
 {
     #[Test]
     public function it_handles_the_ping_command(): void

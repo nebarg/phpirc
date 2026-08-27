@@ -9,11 +9,11 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\TestCase;
 
-final class ClientConnectionFactoryTest extends IntegrationTestCase
+final class ClientConnectionFactoryTest extends TestCase
 {
     #[Test]
     public function it_creates_a_new_connection_for_each_socket(): void

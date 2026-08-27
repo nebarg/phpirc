@@ -12,9 +12,9 @@ use PhpIrc\Irc\Config\ServerName;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\Container\Container;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class ClientListenerInitializerTest extends IntegrationTestCase
+final class ClientListenerInitializerTest extends TestCase
 {
     /** @return iterable<string, array{list<ListenerConfig>}> */
     public static function unsupportedListenerSets(): iterable

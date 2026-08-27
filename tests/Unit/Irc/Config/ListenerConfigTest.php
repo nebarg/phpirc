@@ -8,9 +8,9 @@ use InvalidArgumentException;
 use PhpIrc\Irc\Config\ListenerConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class ListenerConfigTest extends IntegrationTestCase
+final class ListenerConfigTest extends TestCase
 {
     #[Test]
     public function it_combines_the_address_and_port(): void

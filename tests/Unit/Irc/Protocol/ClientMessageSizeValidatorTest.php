@@ -8,9 +8,9 @@ use Override;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class ClientMessageSizeValidatorTest extends IntegrationTestCase
+final class ClientMessageSizeValidatorTest extends TestCase
 {
     private ClientMessageSizeValidator $validator;
 

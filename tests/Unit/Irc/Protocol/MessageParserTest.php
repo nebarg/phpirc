@@ -9,9 +9,9 @@ use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Protocol\MessageTag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class MessageParserTest extends IntegrationTestCase
+final class MessageParserTest extends TestCase
 {
     #[Test]
     public function it_parses_a_command_and_middle_parameter(): void

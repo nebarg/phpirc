@@ -16,12 +16,12 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Revolt\EventLoop;
 use RuntimeException;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\TestCase;
 
-final class IrcServerTest extends IntegrationTestCase
+final class IrcServerTest extends TestCase
 {
     #[Test]
     public function it_accepts_and_runs_clients_until_the_listener_closes(): void

@@ -16,11 +16,11 @@ use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\TestCase;
 
-final class ClientConnectionTest extends IntegrationTestCase
+final class ClientConnectionTest extends TestCase
 {
     #[Test]
     public function it_reads_parses_and_dispatches_a_complete_message(): void

@@ -10,11 +10,11 @@ use PhpIrc\Irc\Command\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingCommandHandler;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\TestCase;
 
-final class CommandDispatcherTest extends IntegrationTestCase
+final class CommandDispatcherTest extends TestCase
 {
     #[Test]
     public function it_dispatches_to_the_handler_for_the_message_command(): void

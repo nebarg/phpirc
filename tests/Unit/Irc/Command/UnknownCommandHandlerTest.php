@@ -8,10 +8,10 @@ use PhpIrc\Irc\Command\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\TestCase;
 
-final class UnknownCommandHandlerTest extends IntegrationTestCase
+final class UnknownCommandHandlerTest extends TestCase
 {
     #[Test]
     public function it_sends_an_unknown_command_numeric(): void

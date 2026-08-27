@@ -9,9 +9,9 @@ use Amp\Socket\Socket as AmpSocket;
 use PhpIrc\Irc\Transport\Amp\AmpClientListener;
 use PhpIrc\Irc\Transport\Amp\AmpClientSocket;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\IntegrationTestCase;
+use Tests\TestCase;
 
-final class AmpClientListenerTest extends IntegrationTestCase
+final class AmpClientListenerTest extends TestCase
 {
     #[Test]
     public function it_wraps_an_accepted_amp_socket(): void
