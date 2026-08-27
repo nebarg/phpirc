@@ -5,18 +5,15 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Command;
 
 use PhpIrc\Irc\Config\ServerName;
-use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
+use PhpIrc\Irc\Transport\Connection;
 
-final readonly class UnknownCommandHandler implements CommandHandler
+final readonly class UnknownCommandHandler
 {
-    public function __construct(private ServerName $serverName) {}
-
-    public function command(): string
-    {
-        return 'unknown';
-    }
+    public function __construct(
+        private ServerName $serverName,
+    ) {}
 
     public function handle(Connection $connection, Message $message): void
     {
@@ -29,8 +26,8 @@ final readonly class UnknownCommandHandler implements CommandHandler
                     '*',
                     $message->command,
                     'Unknown command',
-                ]
-            )
+                ],
+            ),
         );
     }
 }

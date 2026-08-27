@@ -24,7 +24,7 @@ final class CommandDispatcherTest extends IntegrationTestCase
             handlers: [$handler],
             unknownCommand: $this->unknownCommandHandler(),
         );
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
         $message = $this->message('ping');
 
         $dispatcher->handle($connection, $message);
@@ -42,7 +42,7 @@ final class CommandDispatcherTest extends IntegrationTestCase
             handlers: [$handler],
             unknownCommand: $this->unknownCommandHandler(),
         );
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
 
         $dispatcher->handle($connection, $this->message('WHATEVER'));
 

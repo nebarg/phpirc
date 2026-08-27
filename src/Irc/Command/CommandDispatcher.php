@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Command;
 
 use LogicException;
-use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Protocol\Message;
-use RuntimeException;
+use PhpIrc\Irc\Transport\Connection;
 
 final readonly class CommandDispatcher implements MessageHandler
 {
@@ -25,14 +24,10 @@ final readonly class CommandDispatcher implements MessageHandler
         $index = [];
 
         foreach ($handlers as $handler) {
-            if (! $handler instanceof CommandHandler) {
-                throw new RuntimeException("$handler must implement CommandHandler");
-            }
-
             $command = strtoupper($handler->command());
 
             if (isset($index[$command])) {
-                throw new LogicException("Duplicate $command handler found.");
+                throw new LogicException("Duplicate {$command} handler found.");
             }
 
             $index[$command] = $handler;

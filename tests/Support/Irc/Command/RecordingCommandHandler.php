@@ -16,7 +16,9 @@ final class RecordingCommandHandler implements CommandHandler
     /** @var list<Message> */
     public array $messages = [];
 
-    public function __construct(private readonly string $handledCommand) {}
+    public function __construct(
+        private readonly string $handledCommand,
+    ) {}
 
     public function command(): string
     {

@@ -9,13 +9,13 @@ use PhpIrc\Irc\Protocol\InputTooLongException;
 
 final class LineBuffer
 {
-    private const int MAX_INCOMPLETE_BYTES = ClientMessageSizeValidator::MAX_TAG_BYTES
-        + ClientMessageSizeValidator::MAX_MAIN_BYTES
-        + 3;
+    private const int MAX_INCOMPLETE_BYTES = ClientMessageSizeValidator::MAX_TAG_BYTES + ClientMessageSizeValidator::MAX_MAIN_BYTES + 3;
 
     private string $buffer = '';
 
-    public function __construct(private readonly ClientMessageSizeValidator $validator) {}
+    public function __construct(
+        private readonly ClientMessageSizeValidator $validator,
+    ) {}
 
     /**
      * @return list<string>
@@ -38,6 +38,7 @@ final class LineBuffer
         return $messages;
     }
 
+    /** @return list<string> */
     private function extractMessages(): array
     {
         $result = [];

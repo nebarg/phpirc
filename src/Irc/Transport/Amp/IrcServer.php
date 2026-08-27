@@ -25,7 +25,7 @@ final readonly class IrcServer
             while (($socket = $this->listener->accept()) !== null) {
                 $connection = $this->connections->create($socket);
 
-                async(static fn () => $connection->run())
+                async($connection->run(...))
                     ->catch(function (Throwable $exception): void {
                         $this->logger->error(
                             'IRC client connection failed.',

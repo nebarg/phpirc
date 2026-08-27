@@ -29,7 +29,7 @@ final class ClientMessageSizeValidator
         if (strlen($tagData) > self::MAX_TAG_BYTES) {
             throw new InputTooLongException(sprintf(
                 'Tags cannot be greater than %d bytes',
-                self::MAX_TAG_BYTES
+                self::MAX_TAG_BYTES,
             ));
         }
 
@@ -46,7 +46,7 @@ final class ClientMessageSizeValidator
         if (strlen($main) > self::MAX_MAIN_BYTES) {
             throw new InputTooLongException(sprintf(
                 'Message cannot be greater than %d bytes',
-                self::MAX_MAIN_BYTES
+                self::MAX_MAIN_BYTES,
             ));
         }
     }

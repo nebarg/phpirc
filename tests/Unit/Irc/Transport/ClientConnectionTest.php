@@ -7,7 +7,6 @@ namespace Tests\Unit\Irc\Transport;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
-use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -27,7 +26,7 @@ final class ClientConnectionTest extends IntegrationTestCase
     public function it_reads_parses_and_dispatches_a_complete_message(): void
     {
         $socket = new FakeClientSocket(["PRIVMSG #php :hello there\r\n"]);
-        $handler = new RecordingMessageHandler;
+        $handler = new RecordingMessageHandler();
         $connection = $this->connection($socket, $handler);
 
         $connection->run();
@@ -46,7 +45,7 @@ final class ClientConnectionTest extends IntegrationTestCase
             "lo\r",
             "\n",
         ]);
-        $handler = new RecordingMessageHandler;
+        $handler = new RecordingMessageHandler();
 
         $this->connection($socket, $handler)->run();
 
@@ -61,7 +60,7 @@ final class ClientConnectionTest extends IntegrationTestCase
         $socket = new FakeClientSocket([
             "PING :one\r\nPONG :one\r\nNICK Grant\r\n",
         ]);
-        $handler = new RecordingMessageHandler;
+        $handler = new RecordingMessageHandler();
 
         $this->connection($socket, $handler)->run();
 
@@ -77,8 +76,8 @@ final class ClientConnectionTest extends IntegrationTestCase
     #[Test]
     public function it_stops_reading_and_closes_the_socket_at_eof(): void
     {
-        $socket = new FakeClientSocket;
-        $handler = new RecordingMessageHandler;
+        $socket = new FakeClientSocket();
+        $handler = new RecordingMessageHandler();
 
         $this->connection($socket, $handler)->run();
 
@@ -88,18 +87,17 @@ final class ClientConnectionTest extends IntegrationTestCase
     }
 
     #[Test]
-    public function it_closes_the_socket_and_rethrows_invalid_messages(): void
+    public function it_ignores_an_invalid_message_and_processes_the_next_message(): void
     {
-        $socket = new FakeClientSocket(["12\r\n"]);
-        $handler = new RecordingMessageHandler;
+        $socket = new FakeClientSocket(["PONG: hello\r\nPING :token\r\n"]);
+        $handler = new RecordingMessageHandler();
 
-        try {
-            $this->connection($socket, $handler)->run();
-            $this->fail('Expected an invalid message exception.');
-        } catch (InvalidMessageException) {
-            $this->assertSame(1, $socket->closeCalls);
-            $this->assertSame([], $handler->messages);
-        }
+        $this->connection($socket, $handler)->run();
+
+        $this->assertSame(1, $socket->closeCalls);
+        $this->assertCount(1, $handler->messages);
+        $this->assertSame('PING', $handler->messages[0]->command);
+        $this->assertSame(['token'], $handler->messages[0]->parameters);
     }
 
     #[Test]
@@ -108,7 +106,7 @@ final class ClientConnectionTest extends IntegrationTestCase
         $socket = new FakeClientSocket([
             str_repeat('a', ClientMessageSizeValidator::MAX_MAIN_BYTES + 1) . "\r\n",
         ]);
-        $handler = new RecordingMessageHandler;
+        $handler = new RecordingMessageHandler();
 
         try {
             $this->connection($socket, $handler)->run();
@@ -142,8 +140,8 @@ final class ClientConnectionTest extends IntegrationTestCase
     #[Test]
     public function it_encodes_messages_before_writing_them_to_the_socket(): void
     {
-        $socket = new FakeClientSocket;
-        $handler = new RecordingMessageHandler;
+        $socket = new FakeClientSocket();
+        $handler = new RecordingMessageHandler();
         $connection = $this->connection($socket, $handler);
 
         $connection->send(new Message(
@@ -162,8 +160,8 @@ final class ClientConnectionTest extends IntegrationTestCase
     #[Test]
     public function it_delegates_explicit_closure_to_the_socket(): void
     {
-        $socket = new FakeClientSocket;
-        $handler = new RecordingMessageHandler;
+        $socket = new FakeClientSocket();
+        $handler = new RecordingMessageHandler();
 
         $this->connection($socket, $handler)->close();
 
@@ -174,9 +172,9 @@ final class ClientConnectionTest extends IntegrationTestCase
     {
         return new ClientConnection(
             socket: $socket,
-            buffer: new LineBuffer(new ClientMessageSizeValidator),
-            parser: new MessageParser,
-            encoder: new MessageEncoder,
+            buffer: new LineBuffer(new ClientMessageSizeValidator()),
+            parser: new MessageParser(),
+            encoder: new MessageEncoder(),
             handler: $handler,
         );
     }

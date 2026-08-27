@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport\Amp;
 
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -51,11 +50,18 @@ final class IrcServerTest extends IntegrationTestCase
     }
 
     #[Test]
-    public function it_logs_a_client_failure_without_preventing_other_clients(): void
+    public function it_logs_a_client_read_failure_without_preventing_other_clients(): void
     {
-        $invalidSocket = new FakeClientSocket(["12\r\n"]);
+        $failure = new RuntimeException('Read failed.');
+        $failingSocket = $this->createMock(ClientSocket::class);
+        $failingSocket
+            ->expects($this->once())
+            ->method('read')
+            ->willThrowException($failure);
+        $failingSocket->expects($this->once())->method('close');
+
         $healthySocket = new FakeClientSocket(["PING :token\r\n"]);
-        $listener = new FakeClientListener([$invalidSocket, $healthySocket]);
+        $listener = new FakeClientListener([$failingSocket, $healthySocket]);
         $handler = new RecordingMessageHandler();
         $logger = $this->createMock(LoggerInterface::class);
         $logger
@@ -64,14 +70,13 @@ final class IrcServerTest extends IntegrationTestCase
             ->with(
                 'IRC client connection failed.',
                 $this->callback(
-                    static fn (array $context): bool => ($context['exception'] ?? null) instanceof InvalidMessageException,
+                    static fn (array $context): bool => ($context['exception'] ?? null) === $failure,
                 ),
             );
 
         $this->server($listener, $handler, $logger)->run();
         EventLoop::run();
 
-        $this->assertSame(1, $invalidSocket->closeCalls);
         $this->assertSame(1, $healthySocket->closeCalls);
         $this->assertCount(1, $handler->messages);
         $this->assertSame('PING', $handler->messages[0]->command);

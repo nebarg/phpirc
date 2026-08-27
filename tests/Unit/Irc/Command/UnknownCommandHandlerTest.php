@@ -16,7 +16,7 @@ final class UnknownCommandHandlerTest extends IntegrationTestCase
     #[Test]
     public function it_sends_an_unknown_command_numeric(): void
     {
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
 
         new UnknownCommandHandler(new ServerName('irc.test'))->handle(
             $connection,

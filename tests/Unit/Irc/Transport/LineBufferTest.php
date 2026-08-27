@@ -13,16 +13,14 @@ use Tests\IntegrationTestCase;
 
 final class LineBufferTest extends IntegrationTestCase
 {
-    private const int MAX_INCOMPLETE_BYTES = ClientMessageSizeValidator::MAX_TAG_BYTES
-        + ClientMessageSizeValidator::MAX_MAIN_BYTES
-        + 3;
+    private const int MAX_INCOMPLETE_BYTES = ClientMessageSizeValidator::MAX_TAG_BYTES + ClientMessageSizeValidator::MAX_MAIN_BYTES + 3;
 
     private LineBuffer $buffer;
 
     #[Override]
     protected function setUp(): void
     {
-        $this->buffer = new LineBuffer(new ClientMessageSizeValidator);
+        $this->buffer = new LineBuffer(new ClientMessageSizeValidator());
     }
 
     #[Test]
@@ -124,9 +122,12 @@ final class LineBufferTest extends IntegrationTestCase
     #[Test]
     public function it_rejects_an_incomplete_line_above_the_absolute_buffer_limit(): void
     {
+        $maximumLength = self::MAX_INCOMPLETE_BYTES;
+        assert($maximumLength >= 0, 'The configured buffer limit must be non-negative.');
+
         $this->assertSame(
             [],
-            $this->buffer->push(str_repeat('a', self::MAX_INCOMPLETE_BYTES)),
+            $this->buffer->push(str_repeat('a', $maximumLength)),
         );
 
         $this->expectException(InputTooLongException::class);

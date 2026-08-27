@@ -22,7 +22,7 @@ final class PingHandlerTest extends IntegrationTestCase
     #[Test]
     public function it_responds_with_a_pong_containing_the_same_token(): void
     {
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
 
         $this->handler()->handle(
             $connection,
@@ -42,7 +42,7 @@ final class PingHandlerTest extends IntegrationTestCase
     #[Test]
     public function it_sends_no_origin_when_the_token_is_missing(): void
     {
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
 
         $this->handler()->handle($connection, $this->message([]));
 
@@ -52,7 +52,7 @@ final class PingHandlerTest extends IntegrationTestCase
     #[Test]
     public function it_sends_no_origin_when_the_token_is_empty(): void
     {
-        $connection = new RecordingConnection;
+        $connection = new RecordingConnection();
 
         $this->handler()->handle($connection, $this->message(['']));
 

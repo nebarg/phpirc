@@ -17,14 +17,15 @@ final class ClientMessageSizeValidatorTest extends IntegrationTestCase
     #[Override]
     protected function setUp(): void
     {
-        $this->validator = new ClientMessageSizeValidator;
+        $this->validator = new ClientMessageSizeValidator();
     }
 
     #[Test]
     public function it_accepts_tag_data_at_the_byte_limit(): void
     {
         $prefix = 'ourtag=';
-        $tagData = $prefix . str_repeat(
+        $tagData = $prefix
+        . str_repeat(
             'a',
             ClientMessageSizeValidator::MAX_TAG_BYTES - strlen($prefix),
         );
@@ -106,7 +107,9 @@ final class ClientMessageSizeValidatorTest extends IntegrationTestCase
     private function mainSectionWithLength(int $length): string
     {
         $prefix = 'PRIVMSG #channel :';
+        $contentLength = $length - strlen($prefix);
+        assert($contentLength >= 0, 'The requested line must be at least as long as its prefix.');
 
-        return $prefix . str_repeat('a', $length - strlen($prefix));
+        return $prefix . str_repeat('a', $contentLength);
     }
 }

@@ -12,10 +12,10 @@ final readonly class MessageEncoder
     public function encode(Message $message): string
     {
         return $this->encodeTags($message->tags)
-        . $this->encodeSource($message->source)
-        . $this->encodeCommand($message->command)
-        . $this->encodeParameters($message->parameters)
-        . "\r\n";
+            . $this->encodeSource($message->source)
+            . $this->encodeCommand($message->command)
+            . $this->encodeParameters($message->parameters)
+            . "\r\n";
     }
 
     /** @param list<MessageTag> $tags */
@@ -46,7 +46,7 @@ final readonly class MessageEncoder
         return '@' . implode(';', $result) . ' ';
     }
 
-    private function encodeSource(null|string $source): string
+    private function encodeSource(?string $source): string
     {
         if ($source === null) {
             return '';
@@ -60,7 +60,7 @@ final readonly class MessageEncoder
             throw new InvalidMessageException('Message contains an invalid character.');
         }
 
-        return ":$source ";
+        return ":{$source} ";
     }
 
     private function encodeCommand(string $command): string
@@ -88,11 +88,9 @@ final readonly class MessageEncoder
             }
 
             if ($index === $last) {
-                $needsColon = $parameter === ''
-                    || $parameter[0] === ':'
-                    || str_contains($parameter, ' ');
+                $needsColon = $parameter === '' || $parameter[0] === ':' || str_contains($parameter, ' ');
 
-                $result[] = $needsColon ? ":$parameter" : $parameter;
+                $result[] = $needsColon ? ":{$parameter}" : $parameter;
                 break;
             }
 
