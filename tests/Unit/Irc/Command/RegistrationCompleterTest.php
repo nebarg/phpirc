@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Command;
 
 use PhpIrc\Irc\Command\CommandContext;
+use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\RegistrationCompleter;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -98,12 +99,15 @@ final class RegistrationCompleterTest extends TestCase
 
     private function completer(): RegistrationCompleter
     {
+        $serverName = new ServerName('irc.test');
+
         return new RegistrationCompleter(
             new ServerConfig(
-                serverName: new ServerName('irc.test'),
+                serverName: $serverName,
                 networkName: 'TestNet',
                 listeners: [],
             ),
+            new NumericResponseFactory($serverName),
         );
     }
 }

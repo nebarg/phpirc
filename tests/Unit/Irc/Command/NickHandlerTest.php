@@ -6,7 +6,7 @@ namespace Tests\Unit\Irc\Command;
 
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\NickHandler;
-use PhpIrc\Irc\Command\NumericResponseSender;
+use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\RegistrationCompleter;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -187,13 +187,14 @@ final class NickHandlerTest extends TestCase
         return new NickHandler(
             clients: $clients,
             nicknames: new NicknameValidator(),
-            responses: new NumericResponseSender($serverName),
+            responses: new NumericResponseFactory($serverName),
             registration: new RegistrationCompleter(
                 new ServerConfig(
                     serverName: $serverName,
                     networkName: 'TestNet',
                     listeners: [],
                 ),
+                new NumericResponseFactory($serverName),
             ),
         );
     }
@@ -202,8 +203,6 @@ final class NickHandlerTest extends TestCase
     private function message(array $parameters): Message
     {
         return new Message(
-            tags: [],
-            source: null,
             command: 'NICK',
             parameters: $parameters,
         );

@@ -151,8 +151,6 @@ final class ClientConnectionTest extends TestCase
         $connection = $this->connection($socket, $handler);
 
         $connection->send(new Message(
-            tags: [],
-            source: null,
             command: 'privmsg',
             parameters: ['#php', 'hello there'],
         ));

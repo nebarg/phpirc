@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Command;
 
 use PhpIrc\Irc\Config\ServerConfig;
-use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
 
 final readonly class RegistrationCompleter
 {
     public function __construct(
         private ServerConfig $config,
+        private NumericResponseFactory $responses,
     ) {}
 
     public function completeIfReady(CommandContext $context): void
@@ -23,14 +23,10 @@ final readonly class RegistrationCompleter
         }
 
         $context->connection->send(
-            new Message(
-                tags: [],
-                source: $this->config->serverName->value,
-                command: ResponseCode::Welcome->value,
-                parameters: [
-                    $nickname,
-                    "Welcome to the {$this->config->networkName} Network, {$nickname}",
-                ],
+            $this->responses->create(
+                code: ResponseCode::Welcome,
+                target: $nickname,
+                text: "Welcome to the {$this->config->networkName} Network, {$nickname}",
             ),
         );
     }

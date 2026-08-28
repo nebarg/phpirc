@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Command;
 
 use PhpIrc\Irc\Command\CommandContext;
+use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\PingHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Network\Client;
@@ -65,8 +66,6 @@ final class PingHandlerTest extends TestCase
     private function message(array $parameters): Message
     {
         return new Message(
-            tags: [],
-            source: null,
             command: 'PING',
             parameters: $parameters,
         );
@@ -85,7 +84,9 @@ final class PingHandlerTest extends TestCase
 
     private function handler(): PingHandler
     {
-        return new PingHandler(new ServerName('irc.test'));
+        $serverName = new ServerName('irc.test');
+
+        return new PingHandler($serverName, new NumericResponseFactory($serverName));
     }
 
     private function context(RecordingConnection $connection): CommandContext

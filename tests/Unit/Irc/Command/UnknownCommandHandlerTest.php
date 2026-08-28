@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Command;
 
 use PhpIrc\Irc\Command\CommandContext;
+use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Network\Client;
@@ -20,11 +21,11 @@ final class UnknownCommandHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
 
-        new UnknownCommandHandler(new ServerName('irc.test'))->handle(
+        $responseFactory = new NumericResponseFactory(new ServerName('irc.test'));
+
+        new UnknownCommandHandler($responseFactory)->handle(
             new CommandContext($connection, new Client()),
             new Message(
-                tags: [],
-                source: null,
                 command: 'WHATEVER',
                 parameters: ['ignored'],
             ),

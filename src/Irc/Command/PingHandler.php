@@ -12,6 +12,7 @@ final readonly class PingHandler implements CommandHandler
 {
     public function __construct(
         private ServerName $serverName,
+        private NumericResponseFactory $responses,
     ) {}
 
     public function command(): string
@@ -22,26 +23,24 @@ final readonly class PingHandler implements CommandHandler
     public function handle(CommandContext $context, Message $message): void
     {
         if ($message->parameters === [] || $message->parameters[0] === '') {
-            $response = new Message(
-                [],
-                $this->serverName->value,
-                ResponseCode::NoOrigin->value,
-                [
-                    '*',
-                    'No origin specified',
-                ],
+            $context->connection->send(
+                $this->responses->create(
+                    code: ResponseCode::NoOrigin,
+                    target: $context->client->nickname,
+                ),
             );
-        } else {
-            $response = new Message(
-                [],
-                $this->serverName->value,
-                'PONG',
-                [
-                    $this->serverName->value,
-                    $message->parameters[0],
-                ],
-            );
+
+            return;
         }
+
+        $response = new Message(
+            command: 'PONG',
+            parameters: [
+                $this->serverName->value,
+                $message->parameters[0],
+            ],
+            source: $this->serverName->value,
+        );
 
         $context->connection->send($response);
     }

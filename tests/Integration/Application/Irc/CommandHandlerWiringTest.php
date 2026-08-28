@@ -55,8 +55,6 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $handler->handle(
             new CommandContext($connection, new Client()),
             new Message(
-                tags: [],
-                source: null,
                 command: 'PING',
                 parameters: ['registry-token'],
             ),

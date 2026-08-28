@@ -20,50 +20,48 @@ final class MessageEncoderTest extends TestCase
     public static function validTags(): iterable
     {
         yield 'no tags' => [
-            'message' => new Message([], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD'),
             'expected' => 'TESTCMD' . "\r\n",
         ];
         yield 'tag without a value' => [
-            'message' => new Message([new MessageTag('aaa', null)], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('aaa', null)]),
             'expected' => '@aaa TESTCMD' . "\r\n",
         ];
         yield 'tag with an empty value' => [
-            'message' => new Message([new MessageTag('empty', '')], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('empty', '')]),
             'expected' => '@empty TESTCMD' . "\r\n",
         ];
         yield 'tag with a value' => [
-            'message' => new Message([new MessageTag('aaa', 'bbb')], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('aaa', 'bbb')]),
             'expected' => '@aaa=bbb TESTCMD' . "\r\n",
         ];
         yield 'tag with a backslash' => [
-            'message' => new Message([new MessageTag('slash', 'a\\b')], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('slash', 'a\\b')]),
             'expected' => '@slash=a\\\\b TESTCMD' . "\r\n",
         ];
         yield 'tag with a semicolon' => [
-            'message' => new Message([new MessageTag('semi', 'a;b')], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('semi', 'a;b')]),
             'expected' => '@semi=a\:b TESTCMD' . "\r\n",
         ];
         yield 'tag with a space' => [
-            'message' => new Message([new MessageTag('space', 'hello world')], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('space', 'hello world')]),
             'expected' => '@space=hello\sworld TESTCMD' . "\r\n",
         ];
         yield 'tag with a carriage return' => [
-            'message' => new Message([new MessageTag('return', "hello\rworld")], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('return', "hello\rworld")]),
             'expected' => '@return=hello\rworld TESTCMD' . "\r\n",
         ];
         yield 'tag with a line feed' => [
-            'message' => new Message([new MessageTag('newline', "hello\nworld")], null, 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', tags: [new MessageTag('newline', "hello\nworld")]),
             'expected' => '@newline=hello\nworld TESTCMD' . "\r\n",
         ];
         yield 'multiple tags' => [
             'message' => new Message(
-                [
+                command: 'TESTCMD',
+                tags: [
                     new MessageTag('aaa', 'bbb'),
                     new MessageTag('ccc', null),
                 ],
-                null,
-                'TESTCMD',
-                [],
             ),
             'expected' => '@aaa=bbb;ccc TESTCMD' . "\r\n",
         ];
@@ -86,15 +84,14 @@ final class MessageEncoderTest extends TestCase
 
         $this->assertSame(
             ':nick!user@host TESTCMD' . "\r\n",
-            $encoder->encode(new Message([], 'nick!user@host', 'TESTCMD', [])),
+            $encoder->encode(new Message(command: 'TESTCMD', source: 'nick!user@host')),
         );
         $this->assertSame(
             '@aaa=bbb :nick!user@host TESTCMD' . "\r\n",
             $encoder->encode(new Message(
-                [new MessageTag('aaa', 'bbb')],
-                'nick!user@host',
-                'TESTCMD',
-                [],
+                command: 'TESTCMD',
+                source: 'nick!user@host',
+                tags: [new MessageTag('aaa', 'bbb')],
             )),
         );
     }
@@ -104,7 +101,7 @@ final class MessageEncoderTest extends TestCase
     {
         $this->assertSame(
             'PRIVMSG' . "\r\n",
-            new MessageEncoder()->encode(new Message([], null, 'privmsg', [])),
+            new MessageEncoder()->encode(new Message(command: 'privmsg')),
         );
     }
 
@@ -146,7 +143,7 @@ final class MessageEncoderTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            new MessageEncoder()->encode(new Message([], null, 'TESTCMD', $parameters)),
+            new MessageEncoder()->encode(new Message(command: 'TESTCMD', parameters: $parameters)),
         );
     }
 
@@ -156,61 +153,61 @@ final class MessageEncoderTest extends TestCase
     public static function InvalidMessageExceptions(): iterable
     {
         yield 'empty source' => [
-            'message' => new Message([], '', 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', source: ''),
         ];
         yield 'null byte in source' => [
-            'message' => new Message([], "nick\0name", 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', source: "nick\0name"),
         ];
         yield 'carriage return in source' => [
-            'message' => new Message([], "nick\rname", 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', source: "nick\rname"),
         ];
         yield 'line feed in source' => [
-            'message' => new Message([], "nick\nname", 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', source: "nick\nname"),
         ];
         yield 'space in source' => [
-            'message' => new Message([], 'nick name', 'TESTCMD', []),
+            'message' => new Message(command: 'TESTCMD', source: 'nick name'),
         ];
         yield 'empty command' => [
-            'message' => new Message([], null, '', []),
+            'message' => new Message(command: ''),
         ];
         yield 'null byte in command' => [
-            'message' => new Message([], null, "TEST\0CMD", []),
+            'message' => new Message(command: "TEST\0CMD"),
         ];
         yield 'carriage return in command' => [
-            'message' => new Message([], null, "TEST\rCMD", []),
+            'message' => new Message(command: "TEST\rCMD"),
         ];
         yield 'line feed in command' => [
-            'message' => new Message([], null, "TEST\nCMD", []),
+            'message' => new Message(command: "TEST\nCMD"),
         ];
         yield 'space in command' => [
-            'message' => new Message([], null, 'TEST CMD', []),
+            'message' => new Message(command: 'TEST CMD'),
         ];
         yield 'short numeric command' => [
-            'message' => new Message([], null, '12', []),
+            'message' => new Message(command: '12'),
         ];
         yield 'long numeric command' => [
-            'message' => new Message([], null, '0001', []),
+            'message' => new Message(command: '0001'),
         ];
         yield 'alphanumeric command' => [
-            'message' => new Message([], null, 'PRIVMSG1', []),
+            'message' => new Message(command: 'PRIVMSG1'),
         ];
         yield 'null byte in parameter' => [
-            'message' => new Message([], null, 'TESTCMD', ["bad\0parameter"]),
+            'message' => new Message(command: 'TESTCMD', parameters: ["bad\0parameter"]),
         ];
         yield 'carriage return in parameter' => [
-            'message' => new Message([], null, 'TESTCMD', ["bad\rparameter"]),
+            'message' => new Message(command: 'TESTCMD', parameters: ["bad\rparameter"]),
         ];
         yield 'line feed in parameter' => [
-            'message' => new Message([], null, 'TESTCMD', ["bad\nparameter"]),
+            'message' => new Message(command: 'TESTCMD', parameters: ["bad\nparameter"]),
         ];
         yield 'empty middle parameter' => [
-            'message' => new Message([], null, 'TESTCMD', ['', 'something']),
+            'message' => new Message(command: 'TESTCMD', parameters: ['', 'something']),
         ];
         yield 'middle parameter beginning with a colon' => [
-            'message' => new Message([], null, 'TESTCMD', [':value', 'something']),
+            'message' => new Message(command: 'TESTCMD', parameters: [':value', 'something']),
         ];
         yield 'middle parameter containing spaces' => [
-            'message' => new Message([], null, 'TESTCMD', ['hello world', 'something']),
+            'message' => new Message(command: 'TESTCMD', parameters: ['hello world', 'something']),
         ];
     }
 

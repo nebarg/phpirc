@@ -76,10 +76,7 @@ final class CommandDispatcherTest extends TestCase
     private function message(string $command): Message
     {
         return new Message(
-            tags: [],
-            source: null,
             command: $command,
-            parameters: [],
         );
     }
 }

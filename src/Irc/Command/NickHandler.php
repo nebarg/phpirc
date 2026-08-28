@@ -14,7 +14,7 @@ final readonly class NickHandler implements CommandHandler
     public function __construct(
         private ClientRegistry $clients,
         private NicknameValidator $nicknames,
-        private NumericResponseSender $responses,
+        private NumericResponseFactory $responses,
         private RegistrationCompleter $registration,
     ) {}
 
@@ -28,20 +28,23 @@ final readonly class NickHandler implements CommandHandler
         $nickname = $message->parameters[0] ?? '';
 
         if ($nickname === '') {
-            $this->responses->send(
-                $context,
-                ResponseCode::NoNicknameGiven,
-                ['No nickname given'],
+            $context->connection->send(
+                $this->responses->create(
+                    code: ResponseCode::NoNicknameGiven,
+                    target: $context->client->nickname,
+                ),
             );
 
             return;
         }
 
         if (! $this->nicknames->isValid($nickname)) {
-            $this->responses->send(
-                $context,
-                ResponseCode::ErroneousNickname,
-                [$nickname, 'Erroneous nickname'],
+            $context->connection->send(
+                $this->responses->create(
+                    code: ResponseCode::ErroneousNickname,
+                    target: $context->client->nickname,
+                    parameters: [$nickname],
+                ),
             );
 
             return;
@@ -51,10 +54,12 @@ final readonly class NickHandler implements CommandHandler
         $wasRegistered = $context->client->registration->isComplete();
 
         if (! $this->clients->claimNickname($context->client, $nickname)) {
-            $this->responses->send(
-                $context,
-                ResponseCode::NicknameInUse,
-                [$nickname, 'Nickname is already in use'],
+            $context->connection->send(
+                $this->responses->create(
+                    code: ResponseCode::NicknameInUse,
+                    target: $context->client->nickname,
+                    parameters: [$nickname],
+                ),
             );
 
             return;
@@ -63,10 +68,9 @@ final readonly class NickHandler implements CommandHandler
         if ($wasRegistered) {
             $context->connection->send(
                 new Message(
-                    tags: [],
-                    source: $oldNickname,
                     command: 'NICK',
                     parameters: [$nickname],
+                    source: $oldNickname,
                 ),
             );
 
