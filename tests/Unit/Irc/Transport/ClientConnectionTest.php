@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
+use PhpIrc\Irc\Network\Client;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Protocol\Message;
@@ -12,7 +14,6 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientSocket;
-use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
@@ -27,13 +28,15 @@ final class ClientConnectionTest extends TestCase
     {
         $socket = new FakeClientSocket(["PRIVMSG #php :hello there\r\n"]);
         $handler = new RecordingMessageHandler();
-        $connection = $this->connection($socket, $handler);
+        $client = new Client();
+        $connection = $this->connection($socket, $handler, $client);
 
         $connection->run();
 
         $this->assertCount(1, $handler->messages);
         $this->assertSame('PRIVMSG', $handler->messages[0]->command);
         $this->assertSame(['#php', 'hello there'], $handler->messages[0]->parameters);
+        $this->assertSame($client, $handler->contexts[0]->client);
         $this->assertSame($connection, $handler->connections[0]);
     }
 
@@ -71,6 +74,8 @@ final class ClientConnectionTest extends TestCase
                 $handler->messages,
             ),
         );
+        $this->assertSame($handler->contexts[0], $handler->contexts[1]);
+        $this->assertSame($handler->contexts[0], $handler->contexts[2]);
     }
 
     #[Test]
@@ -122,7 +127,7 @@ final class ClientConnectionTest extends TestCase
     {
         $socket = new FakeClientSocket(["PING :token\r\n"]);
         $handler = new class implements MessageHandler {
-            public function handle(Connection $connection, Message $message): void
+            public function handle(CommandContext $context, Message $message): void
             {
                 throw new RuntimeException('Handler failed.');
             }
@@ -168,9 +173,13 @@ final class ClientConnectionTest extends TestCase
         $this->assertSame(1, $socket->closeCalls);
     }
 
-    private function connection(ClientSocket $socket, MessageHandler $handler): ClientConnection
-    {
+    private function connection(
+        ClientSocket $socket,
+        MessageHandler $handler,
+        ?Client $client = null,
+    ): ClientConnection {
         return new ClientConnection(
+            client: $client ?? new Client(),
             socket: $socket,
             buffer: new LineBuffer(new ClientMessageSizeValidator()),
             parser: new MessageParser(),

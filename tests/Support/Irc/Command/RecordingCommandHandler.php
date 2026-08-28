@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Support\Irc\Command;
 
+use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\Connection;
 
 final class RecordingCommandHandler implements CommandHandler
 {
+    /** @var list<CommandContext> */
+    public array $contexts = [];
+
     /** @var list<Connection> */
     public array $connections = [];
 
@@ -25,9 +29,10 @@ final class RecordingCommandHandler implements CommandHandler
         return $this->handledCommand;
     }
 
-    public function handle(Connection $connection, Message $message): void
+    public function handle(CommandContext $context, Message $message): void
     {
-        $this->connections[] = $connection;
+        $this->contexts[] = $context;
+        $this->connections[] = $context->connection;
         $this->messages[] = $message;
     }
 }

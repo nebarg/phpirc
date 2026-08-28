@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Command;
 
+use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Network\Client;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -19,7 +21,7 @@ final class UnknownCommandHandlerTest extends TestCase
         $connection = new RecordingConnection();
 
         new UnknownCommandHandler(new ServerName('irc.test'))->handle(
-            $connection,
+            new CommandContext($connection, new Client()),
             new Message(
                 tags: [],
                 source: null,

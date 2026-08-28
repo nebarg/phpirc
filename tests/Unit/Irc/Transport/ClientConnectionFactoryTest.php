@@ -27,6 +27,22 @@ final class ClientConnectionFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_creates_a_new_client_for_each_connection(): void
+    {
+        $handler = new RecordingMessageHandler();
+        $factory = $this->factory($handler);
+
+        $factory->create(new FakeClientSocket(["PING :one\r\n"]))->run();
+        $factory->create(new FakeClientSocket(["PING :two\r\n"]))->run();
+
+        $this->assertCount(2, $handler->contexts);
+        $this->assertNotSame(
+            $handler->contexts[0]->client,
+            $handler->contexts[1]->client,
+        );
+    }
+
+    #[Test]
     public function it_does_not_share_buffered_input_between_connections(): void
     {
         $handler = new RecordingMessageHandler();

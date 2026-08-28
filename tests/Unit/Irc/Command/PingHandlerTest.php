@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Command;
 
+use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PingHandler;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Network\Client;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -25,7 +27,7 @@ final class PingHandlerTest extends TestCase
         $connection = new RecordingConnection();
 
         $this->handler()->handle(
-            $connection,
+            $this->context($connection),
             $this->message(['opaque-token']),
         );
 
@@ -44,7 +46,7 @@ final class PingHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
 
-        $this->handler()->handle($connection, $this->message([]));
+        $this->handler()->handle($this->context($connection), $this->message([]));
 
         $this->assertNoOriginResponse($connection);
     }
@@ -54,7 +56,7 @@ final class PingHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
 
-        $this->handler()->handle($connection, $this->message(['']));
+        $this->handler()->handle($this->context($connection), $this->message(['']));
 
         $this->assertNoOriginResponse($connection);
     }
@@ -84,5 +86,10 @@ final class PingHandlerTest extends TestCase
     private function handler(): PingHandler
     {
         return new PingHandler(new ServerName('irc.test'));
+    }
+
+    private function context(RecordingConnection $connection): CommandContext
+    {
+        return new CommandContext($connection, new Client());
     }
 }

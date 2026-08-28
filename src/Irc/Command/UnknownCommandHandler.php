@@ -7,17 +7,16 @@ namespace PhpIrc\Irc\Command;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
-use PhpIrc\Irc\Transport\Connection;
 
-final readonly class UnknownCommandHandler
+final readonly class UnknownCommandHandler implements MessageHandler
 {
     public function __construct(
         private ServerName $serverName,
     ) {}
 
-    public function handle(Connection $connection, Message $message): void
+    public function handle(CommandContext $context, Message $message): void
     {
-        $connection->send(
+        $context->connection->send(
             new Message(
                 [],
                 $this->serverName->value,

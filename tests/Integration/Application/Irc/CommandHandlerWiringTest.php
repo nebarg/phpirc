@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
+use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Command\PingHandler;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Network\Client;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,7 +51,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $serverName = $this->container->get(ServerName::class);
 
         $handler->handle(
-            $connection,
+            new CommandContext($connection, new Client()),
             new Message(
                 tags: [],
                 source: null,

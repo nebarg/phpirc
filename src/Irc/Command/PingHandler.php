@@ -7,7 +7,6 @@ namespace PhpIrc\Irc\Command;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
-use PhpIrc\Irc\Transport\Connection;
 
 final readonly class PingHandler implements CommandHandler
 {
@@ -20,7 +19,7 @@ final readonly class PingHandler implements CommandHandler
         return 'PING';
     }
 
-    public function handle(Connection $connection, Message $message): void
+    public function handle(CommandContext $context, Message $message): void
     {
         if ($message->parameters === [] || $message->parameters[0] === '') {
             $response = new Message(
@@ -44,6 +43,6 @@ final readonly class PingHandler implements CommandHandler
             );
         }
 
-        $connection->send($response);
+        $context->connection->send($response);
     }
 }

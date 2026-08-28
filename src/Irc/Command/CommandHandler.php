@@ -2,12 +2,7 @@
 
 namespace PhpIrc\Irc\Command;
 
-use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\Connection;
-
-interface CommandHandler
+interface CommandHandler extends MessageHandler
 {
     public function command(): string;
-
-    public function handle(Connection $connection, Message $message): void;
 }

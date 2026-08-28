@@ -6,7 +6,6 @@ namespace PhpIrc\Irc\Command;
 
 use LogicException;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\Connection;
 
 final readonly class CommandDispatcher implements MessageHandler
 {
@@ -19,7 +18,7 @@ final readonly class CommandDispatcher implements MessageHandler
      */
     public function __construct(
         iterable $handlers,
-        private UnknownCommandHandler $unknownCommand,
+        private MessageHandler $unknownCommand,
     ) {
         $index = [];
 
@@ -36,12 +35,12 @@ final readonly class CommandDispatcher implements MessageHandler
         $this->handlers = $index;
     }
 
-    public function handle(Connection $connection, Message $message): void
+    public function handle(CommandContext $context, Message $message): void
     {
         $command = $this->handlers[strtoupper($message->command)] ?? null;
 
         $command === null
-            ? $this->unknownCommand->handle($connection, $message)
-            : $command->handle($connection, $message);
+            ? $this->unknownCommand->handle($context, $message)
+            : $command->handle($context, $message);
     }
 }
