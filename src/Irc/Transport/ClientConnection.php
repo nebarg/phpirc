@@ -7,6 +7,7 @@ namespace PhpIrc\Irc\Transport;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Network\Client;
+use PhpIrc\Irc\Network\ClientRegistry;
 use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
@@ -16,6 +17,7 @@ final class ClientConnection implements Connection
 {
     public function __construct(
         private readonly Client $client,
+        private readonly ClientRegistry $clients,
         private readonly ClientSocket $socket,
         private readonly LineBuffer $buffer,
         private readonly MessageParser $parser,
@@ -40,6 +42,7 @@ final class ClientConnection implements Connection
                 }
             }
         } finally {
+            $this->clients->release($this->client);
             $this->close();
         }
     }

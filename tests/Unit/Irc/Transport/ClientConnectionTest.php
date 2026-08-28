@@ -7,6 +7,7 @@ namespace Tests\Unit\Irc\Transport;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Network\Client;
+use PhpIrc\Irc\Network\ClientRegistry;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Protocol\Message;
@@ -173,13 +174,32 @@ final class ClientConnectionTest extends TestCase
         $this->assertSame(1, $socket->closeCalls);
     }
 
+    #[Test]
+    public function it_releases_the_clients_nickname_when_the_connection_ends(): void
+    {
+        $client = new Client();
+        $clients = new ClientRegistry();
+        $clients->claimNickname($client, 'Grant');
+
+        $this->connection(
+            socket: new FakeClientSocket(),
+            handler: new RecordingMessageHandler(),
+            client: $client,
+            clients: $clients,
+        )->run();
+
+        $this->assertNull($clients->findByNickname('Grant'));
+    }
+
     private function connection(
         ClientSocket $socket,
         MessageHandler $handler,
         ?Client $client = null,
+        ?ClientRegistry $clients = null,
     ): ClientConnection {
         return new ClientConnection(
             client: $client ?? new Client(),
+            clients: $clients ?? new ClientRegistry(),
             socket: $socket,
             buffer: new LineBuffer(new ClientMessageSizeValidator()),
             parser: new MessageParser(),

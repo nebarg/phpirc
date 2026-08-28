@@ -8,6 +8,7 @@ use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
+use PhpIrc\Irc\Command\NickHandler;
 use PhpIrc\Irc\Command\PingHandler;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -30,6 +31,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ->all();
 
         $this->assertContains(PingHandler::class, $handlers);
+        $this->assertContains(NickHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
