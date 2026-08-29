@@ -106,9 +106,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ->run();
 
         $this->assertSame(
-            [
-                ":{$config->serverName->value} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
-            ],
+            $this->registrationWrites($config),
             $socket->writes,
         );
     }
@@ -129,9 +127,24 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertSame(
             [
                 ":{$config->serverName->value} CAP * LS :\r\n",
-                ":{$config->serverName->value} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
+                ...$this->registrationWrites($config),
             ],
             $socket->writes,
         );
+    }
+
+    /** @return list<string> */
+    private function registrationWrites(ServerConfig $config): array
+    {
+        $serverName = $config->serverName->value;
+
+        return [
+            ":{$serverName} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
+            ":{$serverName} 002 Grant :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
+            ":{$serverName} 003 Grant :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
+            ":{$serverName} 004 Grant {$serverName} {$config->softwareVersion} - -\r\n",
+            ":{$serverName} 005 Grant CASEMAPPING=rfc1459 NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
+            ":{$serverName} 422 Grant :MOTD File is missing\r\n",
+        ];
     }
 }

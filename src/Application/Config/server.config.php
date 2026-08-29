@@ -15,4 +15,5 @@ return new ServerConfig(
             port: (int) env('LISTEN_PORT', default: 6667),
         ),
     ],
+    softwareVersion: (string) env('IRC_SERVER_VERSION', default: 'phpirc-0.1.0'),
 );

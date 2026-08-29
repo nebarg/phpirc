@@ -15,9 +15,14 @@ final class ResponseCodeTest extends TestCase
     public static function defaultTexts(): iterable
     {
         yield 'welcome' => [ResponseCode::Welcome, null];
+        yield 'your host' => [ResponseCode::YourHost, null];
+        yield 'created' => [ResponseCode::Created, null];
+        yield 'my info' => [ResponseCode::MyInfo, null];
+        yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
         yield 'invalid CAP command' => [ResponseCode::InvalidCapCommand, 'Invalid CAP command'];
         yield 'no origin' => [ResponseCode::NoOrigin, 'No origin specified'];
         yield 'unknown command' => [ResponseCode::UnknownCommand, 'Unknown command'];
+        yield 'no MOTD' => [ResponseCode::NoMotd, 'MOTD File is missing'];
         yield 'no nickname given' => [ResponseCode::NoNicknameGiven, 'No nickname given'];
         yield 'erroneous nickname' => [ResponseCode::ErroneousNickname, 'Erroneous nickname'];
         yield 'nickname in use' => [ResponseCode::NicknameInUse, 'Nickname is already in use'];

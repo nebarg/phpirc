@@ -7,6 +7,7 @@ namespace Tests\Unit\Irc\Command;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\RegistrationCompleter;
+use PhpIrc\Irc\Command\RegistrationWelcome;
 use PhpIrc\Irc\Command\UserHandler;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -100,10 +101,11 @@ final class UserHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertResponse(
-            $connection,
-            '001',
+        $this->assertCount(6, $connection->messages);
+        $this->assertSame('001', $connection->messages[0]->command);
+        $this->assertSame(
             ['Grant', 'Welcome to the TestNet Network, Grant'],
+            $connection->messages[0]->parameters,
         );
     }
 
@@ -182,12 +184,14 @@ final class UserHandlerTest extends TestCase
         return new UserHandler(
             responses: $responses,
             registration: new RegistrationCompleter(
-                new ServerConfig(
-                    serverName: $serverName,
-                    networkName: 'TestNet',
-                    listeners: [],
+                new RegistrationWelcome(
+                    new ServerConfig(
+                        serverName: $serverName,
+                        networkName: 'TestNet',
+                        listeners: [],
+                    ),
+                    $responses,
                 ),
-                $responses,
             ),
         );
     }

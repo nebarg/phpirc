@@ -8,6 +8,7 @@ use PhpIrc\Irc\Command\CapHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\RegistrationCompleter;
+use PhpIrc\Irc\Command\RegistrationWelcome;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Network\Client;
@@ -93,7 +94,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(1, $connection->messages);
+        $this->assertCount(6, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
             ['Grant', 'Welcome to the TestNet Network, Grant'],
@@ -164,12 +165,14 @@ final class CapHandlerTest extends TestCase
             serverName: $serverName,
             responses: $responses,
             registration: new RegistrationCompleter(
-                new ServerConfig(
-                    serverName: $serverName,
-                    networkName: 'TestNet',
-                    listeners: [],
+                new RegistrationWelcome(
+                    new ServerConfig(
+                        serverName: $serverName,
+                        networkName: 'TestNet',
+                        listeners: [],
+                    ),
+                    $responses,
                 ),
-                $responses,
             ),
         );
     }

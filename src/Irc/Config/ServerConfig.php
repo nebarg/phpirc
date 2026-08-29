@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Config;
 
+use DateTimeImmutable;
+
 final readonly class ServerConfig
 {
+    public DateTimeImmutable $startedAt;
+
     /**
      * @param array<ListenerConfig> $listeners
      */
@@ -13,5 +17,9 @@ final readonly class ServerConfig
         public ServerName $serverName,
         public string $networkName,
         public array $listeners,
-    ) {}
+        public string $softwareVersion = 'phpirc-0.1.0',
+        ?DateTimeImmutable $startedAt = null,
+    ) {
+        $this->startedAt = $startedAt ?? new DateTimeImmutable();
+    }
 }

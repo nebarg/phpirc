@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Command;
 
+use DateTimeImmutable;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\NumericResponseFactory;
 use PhpIrc\Irc\Command\RegistrationCompleter;
+use PhpIrc\Irc\Command\RegistrationWelcome;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Network\Client;
@@ -42,7 +44,7 @@ final class RegistrationCompleterTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(1, $connection->messages);
+        $this->assertCount(6, $connection->messages);
         $this->assertSame([], $connection->messages[0]->tags);
         $this->assertSame('irc.test', $connection->messages[0]->source);
         $this->assertSame('001', $connection->messages[0]->command);
@@ -63,7 +65,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
         $completer->completeIfReady($context);
 
-        $this->assertCount(1, $connection->messages);
+        $this->assertCount(6, $connection->messages);
     }
 
     #[Test]
@@ -84,7 +86,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(1, $connection->messages);
+        $this->assertCount(6, $connection->messages);
     }
 
     private function readyClient(): Client
@@ -101,13 +103,19 @@ final class RegistrationCompleterTest extends TestCase
     {
         $serverName = new ServerName('irc.test');
 
+        $responses = new NumericResponseFactory($serverName);
+
         return new RegistrationCompleter(
-            new ServerConfig(
-                serverName: $serverName,
-                networkName: 'TestNet',
-                listeners: [],
+            new RegistrationWelcome(
+                new ServerConfig(
+                    serverName: $serverName,
+                    networkName: 'TestNet',
+                    listeners: [],
+                    softwareVersion: 'phpirc-test',
+                    startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
+                ),
+                $responses,
             ),
-            new NumericResponseFactory($serverName),
         );
     }
 }
