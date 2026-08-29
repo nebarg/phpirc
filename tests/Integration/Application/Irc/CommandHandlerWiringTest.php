@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
+use PhpIrc\Irc\Command\CapHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Command\NickHandler;
 use PhpIrc\Irc\Command\PingHandler;
+use PhpIrc\Irc\Command\UserHandler;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Network\Client;
@@ -32,6 +34,8 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
 
         $this->assertContains(PingHandler::class, $handlers);
         $this->assertContains(NickHandler::class, $handlers);
+        $this->assertContains(UserHandler::class, $handlers);
+        $this->assertContains(CapHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
@@ -86,5 +90,48 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             $socket->writes,
         );
         $this->assertSame(1, $socket->closeCalls);
+    }
+
+    #[Test]
+    public function it_registers_a_raw_client_with_nick_and_user(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK Grant\r\nUSER grant 0 * :Grant Burrows\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ":{$config->serverName->value} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_delays_raw_client_registration_until_cap_end(): void
+    {
+        $socket = new FakeClientSocket([
+            "CAP LS 302\r\nNICK Grant\r\nUSER grant 0 * :Grant Burrows\r\nCAP END\r\nCAP END\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ":{$config->serverName->value} CAP * LS :\r\n",
+                ":{$config->serverName->value} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
+            ],
+            $socket->writes,
+        );
     }
 }

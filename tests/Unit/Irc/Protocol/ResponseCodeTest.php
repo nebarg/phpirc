@@ -15,11 +15,14 @@ final class ResponseCodeTest extends TestCase
     public static function defaultTexts(): iterable
     {
         yield 'welcome' => [ResponseCode::Welcome, null];
+        yield 'invalid CAP command' => [ResponseCode::InvalidCapCommand, 'Invalid CAP command'];
         yield 'no origin' => [ResponseCode::NoOrigin, 'No origin specified'];
         yield 'unknown command' => [ResponseCode::UnknownCommand, 'Unknown command'];
         yield 'no nickname given' => [ResponseCode::NoNicknameGiven, 'No nickname given'];
         yield 'erroneous nickname' => [ResponseCode::ErroneousNickname, 'Erroneous nickname'];
         yield 'nickname in use' => [ResponseCode::NicknameInUse, 'Nickname is already in use'];
+        yield 'need more parameters' => [ResponseCode::NeedMoreParameters, 'Not enough parameters'];
+        yield 'already registered' => [ResponseCode::AlreadyRegistered, 'You may not reregister'];
     }
 
     #[Test]

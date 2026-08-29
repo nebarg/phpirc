@@ -17,7 +17,7 @@ final readonly class NumericResponseFactory
     /** @param list<string> $parameters */
     public function create(
         ResponseCode $code,
-        ?string $target,
+        ?string $target = null,
         array $parameters = [],
         ?string $text = null,
     ): Message {

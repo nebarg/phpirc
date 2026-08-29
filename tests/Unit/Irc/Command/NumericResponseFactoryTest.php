@@ -17,7 +17,6 @@ final class NumericResponseFactoryTest extends TestCase
     {
         $response = $this->factory()->create(
             code: ResponseCode::NoNicknameGiven,
-            target: null,
         );
 
         $this->assertSame([], $response->tags);
