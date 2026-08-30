@@ -11,6 +11,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -191,6 +192,7 @@ final class UserHandlerTest extends TestCase
                         listeners: [],
                     ),
                     $responses,
+                    new AsciiCaseMapper(),
                 ),
             ),
         );

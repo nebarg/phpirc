@@ -11,6 +11,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -115,6 +116,7 @@ final class RegistrationCompleterTest extends TestCase
                     startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
                 ),
                 $responses,
+                new AsciiCaseMapper(),
             ),
         );
     }

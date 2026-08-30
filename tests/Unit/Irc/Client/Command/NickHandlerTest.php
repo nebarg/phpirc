@@ -13,6 +13,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -32,7 +33,7 @@ final class NickHandlerTest extends TestCase
     #[Test]
     public function it_handles_the_nick_command(): void
     {
-        $this->assertSame('NICK', $this->handler(new ClientRegistry())->command());
+        $this->assertSame('NICK', $this->handler($this->registry())->command());
     }
 
     /** @param list<string> $parameters */
@@ -42,7 +43,7 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -62,7 +63,7 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -82,7 +83,7 @@ final class NickHandlerTest extends TestCase
     {
         $owner = new Client();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
         $clients->claimNickname($owner, 'John');
         $connection = new RecordingConnection();
 
@@ -105,7 +106,7 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -124,7 +125,7 @@ final class NickHandlerTest extends TestCase
         $client = new Client();
         $client->setUsername('john');
         $client->setRealName('John Doe');
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -145,7 +146,7 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
         $clients->claimNickname($client, 'OldJohn');
 
         $this->handler($clients)->handle(
@@ -163,7 +164,7 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = $this->registry();
         $clients->claimNickname($client, 'OldJohn');
         $client->setUsername('john');
         $client->setRealName('John Doe');
@@ -199,9 +200,15 @@ final class NickHandlerTest extends TestCase
                         listeners: [],
                     ),
                     $responses,
+                    new AsciiCaseMapper(),
                 ),
             ),
         );
+    }
+
+    private function registry(): ClientRegistry
+    {
+        return new ClientRegistry(new AsciiCaseMapper());
     }
 
     /** @param list<string> $parameters */

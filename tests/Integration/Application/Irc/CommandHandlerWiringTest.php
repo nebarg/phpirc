@@ -143,7 +143,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
             ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - -\r\n",
-            ":{$serverName} 005 John CASEMAPPING=rfc1459 NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
+            ":{$serverName} 005 John CASEMAPPING=ascii NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
             ":{$serverName} 422 John :MOTD File is missing\r\n",
         ];
     }

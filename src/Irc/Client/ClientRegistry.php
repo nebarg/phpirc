@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client;
 
+use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
+
 final class ClientRegistry
 {
     /** @var array<string, Client> */
     private array $clients = [];
+
+    public function __construct(
+        private CaseMapper $caseMapper,
+    ) {}
 
     public function claimNickname(Client $client, string $nickname): bool
     {
@@ -48,14 +54,6 @@ final class ClientRegistry
 
     private function normaliseNickname(string $nickname): string
     {
-        return strtr(
-            strtolower($nickname),
-            [
-                '[' => '{',
-                ']' => '}',
-                '\\' => '|',
-                '^' => '~',
-            ],
-        );
+        return $this->caseMapper->normalise($nickname);
     }
 }

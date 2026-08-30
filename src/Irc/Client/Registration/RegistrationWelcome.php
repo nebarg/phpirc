@@ -7,6 +7,7 @@ namespace PhpIrc\Irc\Client\Registration;
 use DateTimeInterface;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 use PhpIrc\Irc\Transport\Connection;
@@ -16,6 +17,7 @@ final readonly class RegistrationWelcome
     public function __construct(
         private ServerConfig $config,
         private NumericResponseFactory $responses,
+        private CaseMapper $caseMapper,
     ) {}
 
     public function send(Connection $connection, string $nickname): void
@@ -62,7 +64,7 @@ final readonly class RegistrationWelcome
                 code: ResponseCode::ISupport,
                 target: $nickname,
                 parameters: [
-                    'CASEMAPPING=rfc1459',
+                    'CASEMAPPING=' . $this->caseMapper->name(),
                     'NICKLEN=' . NicknameValidator::MAX_LENGTH,
                     "NETWORK={$this->config->networkName}",
                 ],

@@ -8,6 +8,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
+use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Protocol\Message;
@@ -176,7 +177,7 @@ final class ClientConnectionTest extends TestCase
     public function it_releases_the_clients_nickname_when_the_connection_ends(): void
     {
         $client = new Client();
-        $clients = new ClientRegistry();
+        $clients = new ClientRegistry(new AsciiCaseMapper());
         $clients->claimNickname($client, 'John');
 
         $this->connection(
@@ -197,7 +198,7 @@ final class ClientConnectionTest extends TestCase
     ): ClientConnection {
         return new ClientConnection(
             client: $client ?? new Client(),
-            clients: $clients ?? new ClientRegistry(),
+            clients: $clients ?? new ClientRegistry(new AsciiCaseMapper()),
             socket: $socket,
             buffer: new LineBuffer(new ClientMessageSizeValidator()),
             parser: new MessageParser(),
