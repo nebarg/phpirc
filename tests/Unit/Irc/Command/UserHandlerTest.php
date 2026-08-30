@@ -24,10 +24,10 @@ final class UserHandlerTest extends TestCase
     public static function insufficientParameters(): iterable
     {
         yield 'none' => [[]];
-        yield 'username only' => [['grant']];
-        yield 'two parameters' => [['grant', '0']];
-        yield 'three parameters' => [['grant', '0', '*']];
-        yield 'empty username' => [['', '0', '*', 'Grant Burrows']];
+        yield 'username only' => [['john']];
+        yield 'two parameters' => [['john', '0']];
+        yield 'three parameters' => [['john', '0', '*']];
+        yield 'empty username' => [['', '0', '*', 'John Doe']];
     }
 
     #[Test]
@@ -66,11 +66,11 @@ final class UserHandlerTest extends TestCase
 
         $this->handler()->handle(
             new CommandContext($connection, $client),
-            $this->message(['grant', '0', '*', 'Grant Burrows']),
+            $this->message(['john', '0', '*', 'John Doe']),
         );
 
-        $this->assertSame('grant', $client->username);
-        $this->assertSame('Grant Burrows', $client->realName);
+        $this->assertSame('john', $client->username);
+        $this->assertSame('John Doe', $client->realName);
         $this->assertSame([], $connection->messages);
     }
 
@@ -81,11 +81,11 @@ final class UserHandlerTest extends TestCase
 
         $this->handler()->handle(
             new CommandContext(new RecordingConnection(), $client),
-            $this->message(['grant', '8', 'ignored.example', 'Grant Burrows']),
+            $this->message(['john', '8', 'ignored.example', 'John Doe']),
         );
 
-        $this->assertSame('grant', $client->username);
-        $this->assertSame('Grant Burrows', $client->realName);
+        $this->assertSame('john', $client->username);
+        $this->assertSame('John Doe', $client->realName);
     }
 
     #[Test]
@@ -93,18 +93,18 @@ final class UserHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setNickname('Grant');
+        $client->setNickname('John');
 
         $this->handler()->handle(
             new CommandContext($connection, $client),
-            $this->message(['grant', '0', '*', 'Grant Burrows']),
+            $this->message(['john', '0', '*', 'John Doe']),
         );
 
         $this->assertTrue($client->registration->isComplete());
         $this->assertCount(6, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
-            ['Grant', 'Welcome to the TestNet Network, Grant'],
+            ['John', 'Welcome to the TestNet Network, John'],
             $connection->messages[0]->parameters,
         );
     }
@@ -140,7 +140,7 @@ final class UserHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setNickname('Grant');
+        $client->setNickname('John');
         $client->setUsername('first');
         $client->setRealName('First Name');
         $client->completeRegistrationIfReady();
@@ -155,7 +155,7 @@ final class UserHandlerTest extends TestCase
         $this->assertResponse(
             $connection,
             '462',
-            ['Grant', 'You may not reregister'],
+            ['John', 'You may not reregister'],
         );
     }
 
@@ -164,12 +164,12 @@ final class UserHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setNickname('Grant');
+        $client->setNickname('John');
         $client->registration->suspendForCapabilityNegotiation();
 
         $this->handler()->handle(
             new CommandContext($connection, $client),
-            $this->message(['grant', '0', '*', 'Grant Burrows']),
+            $this->message(['john', '0', '*', 'John Doe']),
         );
 
         $this->assertFalse($client->registration->isComplete());

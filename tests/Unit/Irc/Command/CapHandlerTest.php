@@ -45,7 +45,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertFalse($client->completeRegistrationIfReady());
-        $this->assertCapabilityReply($connection, ['Grant', 'LS', '']);
+        $this->assertCapabilityReply($connection, ['John', 'LS', '']);
     }
 
     #[Test]
@@ -53,14 +53,14 @@ final class CapHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setNickname('Grant');
+        $client->setNickname('John');
 
         $this->handler()->handle(
             new CommandContext($connection, $client),
             $this->message(['LIST']),
         );
 
-        $this->assertCapabilityReply($connection, ['Grant', 'LIST', '']);
+        $this->assertCapabilityReply($connection, ['John', 'LIST', '']);
     }
 
     #[Test]
@@ -77,7 +77,7 @@ final class CapHandlerTest extends TestCase
         $this->assertFalse($client->completeRegistrationIfReady());
         $this->assertCapabilityReply(
             $connection,
-            ['Grant', 'NAK', 'multi-prefix sasl'],
+            ['John', 'NAK', 'multi-prefix sasl'],
         );
     }
 
@@ -97,7 +97,7 @@ final class CapHandlerTest extends TestCase
         $this->assertCount(6, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
-            ['Grant', 'Welcome to the TestNet Network, Grant'],
+            ['John', 'Welcome to the TestNet Network, John'],
             $connection->messages[0]->parameters,
         );
     }
@@ -131,7 +131,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCapabilityReply($connection, ['Grant', 'LS', '']);
+        $this->assertCapabilityReply($connection, ['John', 'LS', '']);
     }
 
     /** @param list<string> $parameters */
@@ -180,9 +180,9 @@ final class CapHandlerTest extends TestCase
     private function readyClient(): Client
     {
         $client = new Client();
-        $client->setNickname('Grant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
 
         return $client;
     }

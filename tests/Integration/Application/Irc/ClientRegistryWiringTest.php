@@ -28,9 +28,9 @@ final class ClientRegistryWiringTest extends IntegrationTestCase
     public function it_builds_the_registration_completer_from_server_configuration(): void
     {
         $client = new Client();
-        $client->setNickname('Grant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
         $connection = new RecordingConnection();
 
         $this->container

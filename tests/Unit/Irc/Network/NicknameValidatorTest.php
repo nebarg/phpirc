@@ -14,13 +14,13 @@ final class NicknameValidatorTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function validNicknames(): iterable
     {
-        yield 'letters' => ['Grant'];
-        yield 'numbers after first character' => ['Grant42'];
-        yield 'hyphen after first character' => ['Grant-Test'];
-        yield 'square brackets' => ['[Grant]'];
-        yield 'curly brackets' => ['{Grant}'];
-        yield 'backslash' => ['Grant\\Test'];
-        yield 'pipe' => ['Grant|Test'];
+        yield 'letters' => ['John'];
+        yield 'numbers after first character' => ['John42'];
+        yield 'hyphen after first character' => ['John-Test'];
+        yield 'square brackets' => ['[John]'];
+        yield 'curly brackets' => ['{John}'];
+        yield 'backslash' => ['John\\Test'];
+        yield 'pipe' => ['John|Test'];
         yield 'other traditional special characters' => ['G_`^'];
         yield 'maximum length' => [str_repeat('a', NicknameValidator::MAX_LENGTH)];
     }
@@ -29,18 +29,18 @@ final class NicknameValidatorTest extends TestCase
     public static function invalidNicknames(): iterable
     {
         yield 'empty' => [''];
-        yield 'starts with number' => ['1Grant'];
-        yield 'starts with hyphen' => ['-Grant'];
-        yield 'channel prefix' => ['#Grant'];
-        yield 'colon' => [':Grant'];
-        yield 'dollar' => ['$Grant'];
-        yield 'comma' => ['Grant,Test'];
-        yield 'asterisk' => ['Grant*'];
-        yield 'question mark' => ['Grant?'];
-        yield 'exclamation mark' => ['Grant!'];
-        yield 'at sign' => ['Grant@'];
-        yield 'space' => ['Grant Test'];
-        yield 'dot' => ['Grant.Test'];
+        yield 'starts with number' => ['1John'];
+        yield 'starts with hyphen' => ['-John'];
+        yield 'channel prefix' => ['#John'];
+        yield 'colon' => [':John'];
+        yield 'dollar' => ['$John'];
+        yield 'comma' => ['John,Test'];
+        yield 'asterisk' => ['John*'];
+        yield 'question mark' => ['John?'];
+        yield 'exclamation mark' => ['John!'];
+        yield 'at sign' => ['John@'];
+        yield 'space' => ['John Test'];
+        yield 'dot' => ['John.Test'];
         yield 'non-ascii' => ['Gránt'];
         yield 'over maximum length' => [str_repeat('a', NicknameValidator::MAX_LENGTH + 1)];
     }

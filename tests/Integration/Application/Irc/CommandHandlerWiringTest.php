@@ -96,7 +96,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     public function it_registers_a_raw_client_with_nick_and_user(): void
     {
         $socket = new FakeClientSocket([
-            "NICK Grant\r\nUSER grant 0 * :Grant Burrows\r\n",
+            "NICK John\r\nUSER john 0 * :John Doe\r\n",
         ]);
         $config = $this->container->get(ServerConfig::class);
 
@@ -115,7 +115,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     public function it_delays_raw_client_registration_until_cap_end(): void
     {
         $socket = new FakeClientSocket([
-            "CAP LS 302\r\nNICK Grant\r\nUSER grant 0 * :Grant Burrows\r\nCAP END\r\nCAP END\r\n",
+            "CAP LS 302\r\nNICK John\r\nUSER john 0 * :John Doe\r\nCAP END\r\nCAP END\r\n",
         ]);
         $config = $this->container->get(ServerConfig::class);
 
@@ -139,12 +139,12 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $serverName = $config->serverName->value;
 
         return [
-            ":{$serverName} 001 Grant :Welcome to the {$config->networkName} Network, Grant\r\n",
-            ":{$serverName} 002 Grant :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
-            ":{$serverName} 003 Grant :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
-            ":{$serverName} 004 Grant {$serverName} {$config->softwareVersion} - -\r\n",
-            ":{$serverName} 005 Grant CASEMAPPING=rfc1459 NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
-            ":{$serverName} 422 Grant :MOTD File is missing\r\n",
+            ":{$serverName} 001 John :Welcome to the {$config->networkName} Network, John\r\n",
+            ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
+            ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
+            ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - -\r\n",
+            ":{$serverName} 005 John CASEMAPPING=rfc1459 NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
+            ":{$serverName} 422 John :MOTD File is missing\r\n",
         ];
     }
 }

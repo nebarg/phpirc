@@ -21,25 +21,25 @@ final class RegistrationWelcomeTest extends TestCase
     {
         $connection = new RecordingConnection();
 
-        $this->welcome()->send($connection, 'Grant');
+        $this->welcome()->send($connection, 'John');
 
         $this->assertEquals(
             [
-                $this->response('001', ['Grant', 'Welcome to the TestNet Network, Grant']),
-                $this->response('002', ['Grant', 'Your host is irc.test, running version phpirc-test']),
-                $this->response('003', ['Grant', 'This server was created 2026-08-29T10:15:30+01:00']),
-                $this->response('004', ['Grant', 'irc.test', 'phpirc-test', '-', '-']),
+                $this->response('001', ['John', 'Welcome to the TestNet Network, John']),
+                $this->response('002', ['John', 'Your host is irc.test, running version phpirc-test']),
+                $this->response('003', ['John', 'This server was created 2026-08-29T10:15:30+01:00']),
+                $this->response('004', ['John', 'irc.test', 'phpirc-test', '-', '-']),
                 $this->response(
                     '005',
                     [
-                        'Grant',
+                        'John',
                         'CASEMAPPING=rfc1459',
                         'NICKLEN=30',
                         'NETWORK=TestNet',
                         'are supported by this server',
                     ],
                 ),
-                $this->response('422', ['Grant', 'MOTD File is missing']),
+                $this->response('422', ['John', 'MOTD File is missing']),
             ],
             $connection->messages,
         );

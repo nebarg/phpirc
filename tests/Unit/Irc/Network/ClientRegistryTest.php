@@ -17,12 +17,12 @@ final class ClientRegistryTest extends TestCase
         $client = new Client();
         $registry = new ClientRegistry();
 
-        $claimed = $registry->claimNickname($client, 'Grant');
+        $claimed = $registry->claimNickname($client, 'John');
 
         $this->assertTrue($claimed);
-        $this->assertSame('Grant', $client->nickname);
-        $this->assertSame($client, $registry->findByNickname('grant'));
-        $this->assertSame($client, $registry->findByNickname('GRANT'));
+        $this->assertSame('John', $client->nickname);
+        $this->assertSame($client, $registry->findByNickname('john'));
+        $this->assertSame($client, $registry->findByNickname('JOHN'));
     }
 
     #[Test]
@@ -31,13 +31,13 @@ final class ClientRegistryTest extends TestCase
         $owner = new Client();
         $other = new Client();
         $registry = new ClientRegistry();
-        $registry->claimNickname($owner, 'Grant');
+        $registry->claimNickname($owner, 'John');
 
-        $claimed = $registry->claimNickname($other, 'GRANT');
+        $claimed = $registry->claimNickname($other, 'JOHN');
 
         $this->assertFalse($claimed);
         $this->assertNull($other->nickname);
-        $this->assertSame($owner, $registry->findByNickname('Grant'));
+        $this->assertSame($owner, $registry->findByNickname('John'));
     }
 
     #[Test]
@@ -45,11 +45,11 @@ final class ClientRegistryTest extends TestCase
     {
         $owner = new Client();
         $registry = new ClientRegistry();
-        $registry->claimNickname($owner, '[Grant]\\^');
+        $registry->claimNickname($owner, '[John]\\^');
 
-        $this->assertSame($owner, $registry->findByNickname('{grant}|~'));
+        $this->assertSame($owner, $registry->findByNickname('{john}|~'));
         $this->assertFalse(
-            $registry->claimNickname(new Client(), '{GRANT}|~'),
+            $registry->claimNickname(new Client(), '{JOHN}|~'),
         );
     }
 
@@ -58,13 +58,13 @@ final class ClientRegistryTest extends TestCase
     {
         $client = new Client();
         $registry = new ClientRegistry();
-        $registry->claimNickname($client, 'Grant');
+        $registry->claimNickname($client, 'John');
 
-        $claimed = $registry->claimNickname($client, 'OtherGrant');
+        $claimed = $registry->claimNickname($client, 'OtherJohn');
 
         $this->assertTrue($claimed);
-        $this->assertNull($registry->findByNickname('Grant'));
-        $this->assertSame($client, $registry->findByNickname('OtherGrant'));
+        $this->assertNull($registry->findByNickname('John'));
+        $this->assertSame($client, $registry->findByNickname('OtherJohn'));
     }
 
     #[Test]
@@ -72,11 +72,11 @@ final class ClientRegistryTest extends TestCase
     {
         $client = new Client();
         $registry = new ClientRegistry();
-        $registry->claimNickname($client, 'Grant');
+        $registry->claimNickname($client, 'John');
 
         $registry->release($client);
 
-        $this->assertNull($registry->findByNickname('Grant'));
+        $this->assertNull($registry->findByNickname('John'));
     }
 
     #[Test]

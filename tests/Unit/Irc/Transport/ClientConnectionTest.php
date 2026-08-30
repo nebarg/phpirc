@@ -62,7 +62,7 @@ final class ClientConnectionTest extends TestCase
     public function it_dispatches_multiple_messages_in_their_original_order(): void
     {
         $socket = new FakeClientSocket([
-            "PING :one\r\nPONG :one\r\nNICK Grant\r\n",
+            "PING :one\r\nPONG :one\r\nNICK John\r\n",
         ]);
         $handler = new RecordingMessageHandler();
 
@@ -177,7 +177,7 @@ final class ClientConnectionTest extends TestCase
     {
         $client = new Client();
         $clients = new ClientRegistry();
-        $clients->claimNickname($client, 'Grant');
+        $clients->claimNickname($client, 'John');
 
         $this->connection(
             socket: new FakeClientSocket(),
@@ -186,7 +186,7 @@ final class ClientConnectionTest extends TestCase
             clients: $clients,
         )->run();
 
-        $this->assertNull($clients->findByNickname('Grant'));
+        $this->assertNull($clients->findByNickname('John'));
     }
 
     private function connection(

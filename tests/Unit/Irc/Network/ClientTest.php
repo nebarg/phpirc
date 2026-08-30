@@ -30,15 +30,15 @@ final class ClientTest extends TestCase
         $client = new Client();
 
         if ($hasNickname) {
-            $client->setNickname('Grant');
+            $client->setNickname('John');
         }
 
         if ($hasUsername) {
-            $client->setUsername('grant');
+            $client->setUsername('john');
         }
 
         if ($hasRealName) {
-            $client->setRealName('Grant Burrows');
+            $client->setRealName('John Doe');
         }
 
         $this->assertFalse($client->completeRegistrationIfReady());
@@ -49,9 +49,9 @@ final class ClientTest extends TestCase
     public function it_completes_when_all_identity_fields_are_present(): void
     {
         $client = new Client();
-        $client->setNickname('Grant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
 
         $this->assertTrue($client->completeRegistrationIfReady());
         $this->assertTrue($client->registration->isComplete());
@@ -62,9 +62,9 @@ final class ClientTest extends TestCase
     public function it_does_not_complete_while_capability_negotiation_is_active(): void
     {
         $client = new Client();
-        $client->setNickname('Grant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
         $client->registration->suspendForCapabilityNegotiation();
 
         $this->assertFalse($client->completeRegistrationIfReady());

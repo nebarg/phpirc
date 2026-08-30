@@ -16,12 +16,12 @@ final class MessageParserTest extends TestCase
     #[Test]
     public function it_parses_a_command_and_middle_parameter(): void
     {
-        $message = new MessageParser()->parse('NICK Grant');
+        $message = new MessageParser()->parse('NICK John');
 
         $this->assertSame([], $message->tags);
         $this->assertNull($message->source);
         $this->assertSame('NICK', $message->command);
-        $this->assertSame(['Grant'], $message->parameters);
+        $this->assertSame(['John'], $message->parameters);
     }
 
     #[Test]
@@ -36,11 +36,11 @@ final class MessageParserTest extends TestCase
     #[Test]
     public function it_parses_a_source_and_numeric_command(): void
     {
-        $message = new MessageParser()->parse(':irc.example 001 Grant :Welcome');
+        $message = new MessageParser()->parse(':irc.example 001 John :Welcome');
 
         $this->assertSame('irc.example', $message->source);
         $this->assertSame('001', $message->command);
-        $this->assertSame(['Grant', 'Welcome'], $message->parameters);
+        $this->assertSame(['John', 'Welcome'], $message->parameters);
     }
 
     #[Test]
@@ -146,7 +146,7 @@ final class MessageParserTest extends TestCase
     public static function InvalidMessageExceptions(): iterable
     {
         yield 'empty message' => [''];
-        yield 'leading space' => [' NICK Grant'];
+        yield 'leading space' => [' NICK John'];
         yield 'tags without command' => ['@a=b'];
         yield 'source without command' => [':nick'];
         yield 'empty source' => [': PRIVMSG #php :Hello'];
@@ -154,7 +154,7 @@ final class MessageParserTest extends TestCase
         yield 'long numeric command' => ['0001'];
         yield 'alphanumeric command' => ['PRIVMSG1 #php :Hello'];
         yield 'embedded null' => ["NICK bad\0nick"];
-        yield 'carriage return and line feed' => ["NICK Grant\r\n"];
+        yield 'carriage return and line feed' => ["NICK John\r\n"];
     }
 
     #[Test]

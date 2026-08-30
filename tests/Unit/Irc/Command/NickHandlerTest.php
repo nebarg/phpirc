@@ -83,20 +83,20 @@ final class NickHandlerTest extends TestCase
         $owner = new Client();
         $client = new Client();
         $clients = new ClientRegistry();
-        $clients->claimNickname($owner, 'Grant');
+        $clients->claimNickname($owner, 'John');
         $connection = new RecordingConnection();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
-            $this->message(['GRANT']),
+            $this->message(['JOHN']),
         );
 
         $this->assertNull($client->nickname);
-        $this->assertSame($owner, $clients->findByNickname('Grant'));
+        $this->assertSame($owner, $clients->findByNickname('John'));
         $this->assertResponse(
             $connection,
             '433',
-            ['*', 'GRANT', 'Nickname is already in use'],
+            ['*', 'JOHN', 'Nickname is already in use'],
         );
     }
 
@@ -109,11 +109,11 @@ final class NickHandlerTest extends TestCase
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
-            $this->message(['Grant']),
+            $this->message(['John']),
         );
 
-        $this->assertSame('Grant', $client->nickname);
-        $this->assertSame($client, $clients->findByNickname('Grant'));
+        $this->assertSame('John', $client->nickname);
+        $this->assertSame($client, $clients->findByNickname('John'));
         $this->assertSame([], $connection->messages);
     }
 
@@ -122,20 +122,20 @@ final class NickHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
         $clients = new ClientRegistry();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
-            $this->message(['Grant']),
+            $this->message(['John']),
         );
 
         $this->assertTrue($client->registration->isComplete());
         $this->assertCount(6, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
-            ['Grant', 'Welcome to the TestNet Network, Grant'],
+            ['John', 'Welcome to the TestNet Network, John'],
             $connection->messages[0]->parameters,
         );
     }
@@ -146,15 +146,15 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = new ClientRegistry();
-        $clients->claimNickname($client, 'OldGrant');
+        $clients->claimNickname($client, 'OldJohn');
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
-            $this->message(['NewGrant']),
+            $this->message(['NewJohn']),
         );
 
-        $this->assertNull($clients->findByNickname('OldGrant'));
-        $this->assertSame($client, $clients->findByNickname('NewGrant'));
+        $this->assertNull($clients->findByNickname('OldJohn'));
+        $this->assertSame($client, $clients->findByNickname('NewJohn'));
         $this->assertSame([], $connection->messages);
     }
 
@@ -164,22 +164,22 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = new ClientRegistry();
-        $clients->claimNickname($client, 'OldGrant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $clients->claimNickname($client, 'OldJohn');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
         $client->completeRegistrationIfReady();
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
-            $this->message(['NewGrant']),
+            $this->message(['NewJohn']),
         );
 
-        $this->assertNull($clients->findByNickname('OldGrant'));
-        $this->assertSame($client, $clients->findByNickname('NewGrant'));
+        $this->assertNull($clients->findByNickname('OldJohn'));
+        $this->assertSame($client, $clients->findByNickname('NewJohn'));
         $this->assertCount(1, $connection->messages);
-        $this->assertSame('OldGrant', $connection->messages[0]->source);
+        $this->assertSame('OldJohn', $connection->messages[0]->source);
         $this->assertSame('NICK', $connection->messages[0]->command);
-        $this->assertSame(['NewGrant'], $connection->messages[0]->parameters);
+        $this->assertSame(['NewJohn'], $connection->messages[0]->parameters);
     }
 
     private function handler(ClientRegistry $clients): NickHandler

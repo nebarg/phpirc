@@ -23,7 +23,7 @@ final class RegistrationCompleterTest extends TestCase
     {
         $connection = new RecordingConnection();
         $client = new Client();
-        $client->setNickname('Grant');
+        $client->setNickname('John');
 
         $this->completer()->completeIfReady(
             new CommandContext($connection, $client),
@@ -49,7 +49,7 @@ final class RegistrationCompleterTest extends TestCase
         $this->assertSame('irc.test', $connection->messages[0]->source);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
-            ['Grant', 'Welcome to the TestNet Network, Grant'],
+            ['John', 'Welcome to the TestNet Network, John'],
             $connection->messages[0]->parameters,
         );
     }
@@ -92,9 +92,9 @@ final class RegistrationCompleterTest extends TestCase
     private function readyClient(): Client
     {
         $client = new Client();
-        $client->setNickname('Grant');
-        $client->setUsername('grant');
-        $client->setRealName('Grant Burrows');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
 
         return $client;
     }

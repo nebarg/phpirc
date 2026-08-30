@@ -33,12 +33,12 @@ final class NumericResponseFactoryTest extends TestCase
     {
         $response = $this->factory()->create(
             code: ResponseCode::UnknownCommand,
-            target: 'Grant',
+            target: 'John',
             parameters: ['WHATEVER'],
         );
 
         $this->assertSame(
-            ['Grant', 'WHATEVER', 'Unknown command'],
+            ['John', 'WHATEVER', 'Unknown command'],
             $response->parameters,
         );
     }
@@ -48,13 +48,13 @@ final class NumericResponseFactoryTest extends TestCase
     {
         $response = $this->factory()->create(
             code: ResponseCode::Welcome,
-            target: 'Grant',
+            target: 'John',
             text: 'Welcome to TestNet',
         );
 
         $this->assertSame('001', $response->command);
         $this->assertSame(
-            ['Grant', 'Welcome to TestNet'],
+            ['John', 'Welcome to TestNet'],
             $response->parameters,
         );
     }

@@ -111,8 +111,8 @@ final class MessageEncoderTest extends TestCase
     public static function validParameters(): iterable
     {
         yield 'single parameter' => [
-            'parameters' => ['Grant'],
-            'expected' => 'TESTCMD Grant' . "\r\n",
+            'parameters' => ['John'],
+            'expected' => 'TESTCMD John' . "\r\n",
         ];
         yield 'multiple parameters' => [
             'parameters' => ['#php', 'Hello'],
