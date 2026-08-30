@@ -17,8 +17,8 @@ final class ClientRegistry
 
     public function claimNickname(Client $client, string $nickname): bool
     {
-        $normalisedNickname = $this->normaliseNickname($nickname);
-        $owner = $this->clients[$normalisedNickname] ?? null;
+        $clientId = $this->clientId($nickname);
+        $owner = $this->clients[$clientId] ?? null;
 
         if ($owner !== null && $owner !== $client) {
             return false;
@@ -29,14 +29,14 @@ final class ClientRegistry
         }
 
         $client->setNickname($nickname);
-        $this->clients[$normalisedNickname] = $client;
+        $this->clients[$clientId] = $client;
 
         return true;
     }
 
     public function findByNickname(string $nickname): ?Client
     {
-        return $this->clients[$this->normaliseNickname($nickname)] ?? null;
+        return $this->clients[$this->clientId($nickname)] ?? null;
     }
 
     public function release(Client $client): void
@@ -45,14 +45,14 @@ final class ClientRegistry
             return;
         }
 
-        $nickname = $this->normaliseNickname($client->nickname);
+        $clientId = $this->clientId($client->nickname);
 
-        if (($this->clients[$nickname] ?? null) === $client) {
-            unset($this->clients[$nickname]);
+        if (($this->clients[$clientId] ?? null) === $client) {
+            unset($this->clients[$clientId]);
         }
     }
 
-    private function normaliseNickname(string $nickname): string
+    private function clientId(string $nickname): string
     {
         return $this->caseMapper->normalise($nickname);
     }

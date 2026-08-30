@@ -18,12 +18,12 @@ final class ChannelRegistry
 
     public function find(string $name): ?Channel
     {
-        return $this->channels[$this->normaliseChannelName($name)] ?? null;
+        return $this->channels[$this->channelId($name)] ?? null;
     }
 
     public function join(string $name, Client $client): Channel
     {
-        $channelId = $this->normaliseChannelName($name);
+        $channelId = $this->channelId($name);
         $channel = $this->channels[$channelId] ?? new Channel($name);
         $this->channels[$channelId] = $channel;
 
@@ -34,7 +34,7 @@ final class ChannelRegistry
 
     public function leave(Channel $channel, Client $client): bool
     {
-        $channelId = $this->normaliseChannelName($channel->name);
+        $channelId = $this->channelId($channel->name);
         $existingChannel = $this->channels[$channelId] ?? null;
 
         if ($existingChannel !== $channel) {
@@ -57,7 +57,7 @@ final class ChannelRegistry
         }
     }
 
-    private function normaliseChannelName(string $name): string
+    private function channelId(string $name): string
     {
         return $this->caseMapper->normalise($name);
     }
