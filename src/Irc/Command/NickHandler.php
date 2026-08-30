@@ -9,7 +9,7 @@ use PhpIrc\Irc\Network\NicknameValidator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
 
-final readonly class NickHandler implements CommandHandler
+final readonly class NickHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
         private ClientRegistry $clients,

@@ -19,6 +19,7 @@ final readonly class CommandDispatcher implements MessageHandler
     public function __construct(
         iterable $handlers,
         private MessageHandler $unknownCommand,
+        private MessageHandler $notRegistered,
     ) {
         $index = [];
 
@@ -39,8 +40,16 @@ final readonly class CommandDispatcher implements MessageHandler
     {
         $command = $this->handlers[strtoupper($message->command)] ?? null;
 
-        $command === null
-            ? $this->unknownCommand->handle($context, $message)
-            : $command->handle($context, $message);
+        if ($command === null) {
+            $this->unknownCommand->handle($context, $message);
+            return;
+        }
+
+        if (! $context->client->registration->isComplete() && ! $command instanceof PreRegistrationCommandHandler) {
+            $this->notRegistered->handle($context, $message);
+            return;
+        }
+
+        $command->handle($context, $message);
     }
 }

@@ -7,7 +7,7 @@ namespace PhpIrc\Irc\Command;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
 
-final readonly class UserHandler implements CommandHandler
+final readonly class UserHandler implements PreRegistrationCommandHandler
 {
     private const int MIN_PARAMETERS_ALLOWED = 4;
 

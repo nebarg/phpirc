@@ -8,7 +8,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\ResponseCode;
 
-final readonly class PingHandler implements CommandHandler
+final readonly class PingHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
         private ServerName $serverName,

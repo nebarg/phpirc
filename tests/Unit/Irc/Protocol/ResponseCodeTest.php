@@ -26,6 +26,7 @@ final class ResponseCodeTest extends TestCase
         yield 'no nickname given' => [ResponseCode::NoNicknameGiven, 'No nickname given'];
         yield 'erroneous nickname' => [ResponseCode::ErroneousNickname, 'Erroneous nickname'];
         yield 'nickname in use' => [ResponseCode::NicknameInUse, 'Nickname is already in use'];
+        yield 'not registered' => [ResponseCode::NotRegistered, 'You have not registered'];
         yield 'need more parameters' => [ResponseCode::NeedMoreParameters, 'Not enough parameters'];
         yield 'already registered' => [ResponseCode::AlreadyRegistered, 'You may not reregister'];
     }

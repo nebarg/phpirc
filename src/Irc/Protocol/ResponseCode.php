@@ -18,23 +18,25 @@ enum ResponseCode: string
     case NoNicknameGiven = '431';
     case ErroneousNickname = '432';
     case NicknameInUse = '433';
+    case NotRegistered = '451';
     case NeedMoreParameters = '461';
     case AlreadyRegistered = '462';
 
     public function defaultText(): ?string
     {
         return match ($this) {
-            self::InvalidCapCommand => 'Invalid CAP command',
+            self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
+            self::ISupport => 'are supported by this server',
             self::NoOrigin => 'No origin specified',
+            self::InvalidCapCommand => 'Invalid CAP command',
             self::UnknownCommand => 'Unknown command',
             self::NoMotd => 'MOTD File is missing',
             self::NoNicknameGiven => 'No nickname given',
             self::ErroneousNickname => 'Erroneous nickname',
             self::NicknameInUse => 'Nickname is already in use',
+            self::NotRegistered => 'You have not registered',
             self::NeedMoreParameters => 'Not enough parameters',
             self::AlreadyRegistered => 'You may not reregister',
-            self::ISupport => 'are supported by this server',
-            self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
         };
     }
 }
