@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Application\Irc;
 
+use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
-use PhpIrc\Irc\Command\RegistrationCompleter;
 use PhpIrc\Irc\Config\ServerConfig;
-use PhpIrc\Irc\Network\Client;
-use PhpIrc\Irc\Network\ClientRegistry;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Transport\RecordingConnection;

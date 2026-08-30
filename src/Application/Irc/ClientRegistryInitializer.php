@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Application\Irc;
 
-use PhpIrc\Irc\Network\ClientRegistry;
+use PhpIrc\Irc\Client\ClientRegistry;
 use Tempest\Container\Container;
 use Tempest\Container\Initializer;
 use Tempest\Container\Singleton;

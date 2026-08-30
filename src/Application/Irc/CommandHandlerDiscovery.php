@@ -20,7 +20,7 @@ final class CommandHandlerDiscovery implements Discovery
 
     public function discover(DiscoveryLocation $location, ClassReflector $class): void
     {
-        if (! str_starts_with($class->getName(), 'PhpIrc\\Irc\\Command\\')) {
+        if (! str_starts_with($class->getName(), 'PhpIrc\\Irc\\')) {
             return;
         }
 

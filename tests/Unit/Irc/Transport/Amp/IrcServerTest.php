@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport\Amp;
 
-use PhpIrc\Irc\Network\ClientRegistry;
+use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;

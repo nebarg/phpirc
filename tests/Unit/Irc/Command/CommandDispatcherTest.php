@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Command;
 
 use LogicException;
+use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
-use PhpIrc\Irc\Network\Client;
 use PhpIrc\Irc\Protocol\Message;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Command\RecordingCommandHandler;

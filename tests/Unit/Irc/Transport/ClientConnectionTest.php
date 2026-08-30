@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
-use PhpIrc\Irc\Network\Client;
-use PhpIrc\Irc\Network\ClientRegistry;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
 use PhpIrc\Irc\Protocol\Message;

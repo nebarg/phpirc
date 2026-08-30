@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace PhpIrc\Application\Irc;
 
 use PhpIrc\Irc\Command\CommandDispatcher;
+use PhpIrc\Irc\Command\Fallback\NotRegisteredHandler;
+use PhpIrc\Irc\Command\Fallback\UnknownCommandHandler;
 use PhpIrc\Irc\Command\MessageHandler;
-use PhpIrc\Irc\Command\NotRegisteredHandler;
-use PhpIrc\Irc\Command\UnknownCommandHandler;
 use Tempest\Container\Container;
 use Tempest\Container\Initializer;
 use Tempest\Container\Singleton;
