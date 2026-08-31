@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Client\Client;
-use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
@@ -18,19 +17,21 @@ final readonly class ClientConnectionFactory
         private MessageParser $parser,
         private MessageEncoder $encoder,
         private MessageHandler $handler,
-        private ClientRegistry $clients,
+        private ClientConnectionLifecycle $lifecycle,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
     {
         return new ClientConnection(
             client: new Client(),
-            clients: $this->clients,
             socket: $socket,
-            buffer: new LineBuffer($this->validator),
-            parser: $this->parser,
-            encoder: $this->encoder,
+            codec: new MessageCodec(
+                buffer: new LineBuffer($this->validator),
+                parser: $this->parser,
+                encoder: $this->encoder,
+            ),
             handler: $this->handler,
+            lifecycle: $this->lifecycle,
         );
     }
 }
