@@ -19,6 +19,9 @@ final class ResponseCodeTest extends TestCase
         yield 'created' => [ResponseCode::Created, null];
         yield 'my info' => [ResponseCode::MyInfo, null];
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
+        yield 'names reply' => [ResponseCode::NamesReply, null];
+        yield 'end of names' => [ResponseCode::EndOfNames, 'End of /NAMES list'];
+        yield 'no such channel' => [ResponseCode::NoSuchChannel, 'No such channel'];
         yield 'invalid CAP command' => [ResponseCode::InvalidCapCommand, 'Invalid CAP command'];
         yield 'no origin' => [ResponseCode::NoOrigin, 'No origin specified'];
         yield 'unknown command' => [ResponseCode::UnknownCommand, 'Unknown command'];

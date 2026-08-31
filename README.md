@@ -17,9 +17,8 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Unknown-command and not-registered responses
 - [x] ASCII IRC casemapping for nicknames and channels
 - [x] In-memory channel, membership and channel-registry foundations
+- [x] `JOIN`, channel broadcasting and names replies
 - [x] Unit and integration test suite
-
-Channel state currently exists internally but is not yet exposed through IRC commands.
 
 ## Running the server
 
@@ -67,9 +66,9 @@ composer qa
 
 ## Roadmap
 
-- [ ] Client delivery and channel broadcasting
-- [ ] `JOIN` and `NAMES`, including channel numerics
-- [ ] Channel cleanup when clients disconnect
+- [x] Client delivery and channel broadcasting
+- [ ] Standalone `NAMES` command
+- [x] Channel cleanup when clients disconnect
 - [ ] `PART` and `QUIT`
 - [ ] `PRIVMSG` and `NOTICE` for clients and channels
 - [ ] Topics, channel modes and operator commands such as `KICK`

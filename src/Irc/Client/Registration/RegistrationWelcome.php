@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Client\Registration;
 
 use DateTimeInterface;
+use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
@@ -65,8 +66,11 @@ final readonly class RegistrationWelcome
                 target: $nickname,
                 parameters: [
                     'CASEMAPPING=' . $this->caseMapper->name(),
+                    'CHANTYPES=#',
+                    'CHANNELLEN=' . ChannelNameValidator::MAX_LENGTH,
                     'NICKLEN=' . NicknameValidator::MAX_LENGTH,
                     "NETWORK={$this->config->networkName}",
+                    'PREFIX=(o)@',
                 ],
             ),
         );

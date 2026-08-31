@@ -35,8 +35,11 @@ final class RegistrationWelcomeTest extends TestCase
                     [
                         'John',
                         'CASEMAPPING=ascii',
+                        'CHANTYPES=#',
+                        'CHANNELLEN=64',
                         'NICKLEN=30',
                         'NETWORK=TestNet',
+                        'PREFIX=(o)@',
                         'are supported by this server',
                     ],
                 ),

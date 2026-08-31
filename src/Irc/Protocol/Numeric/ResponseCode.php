@@ -11,6 +11,9 @@ enum ResponseCode: string
     case Created = '003';
     case MyInfo = '004';
     case ISupport = '005';
+    case NamesReply = '353';
+    case EndOfNames = '366';
+    case NoSuchChannel = '403';
     case NoOrigin = '409';
     case InvalidCapCommand = '410';
     case UnknownCommand = '421';
@@ -25,8 +28,10 @@ enum ResponseCode: string
     public function defaultText(): ?string
     {
         return match ($this) {
-            self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
+            self::Welcome, self::YourHost, self::Created, self::MyInfo, self::NamesReply => null,
             self::ISupport => 'are supported by this server',
+            self::EndOfNames => 'End of /NAMES list',
+            self::NoSuchChannel => 'No such channel',
             self::NoOrigin => 'No origin specified',
             self::InvalidCapCommand => 'Invalid CAP command',
             self::UnknownCommand => 'Unknown command',

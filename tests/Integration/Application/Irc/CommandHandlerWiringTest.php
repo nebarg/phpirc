@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
+use PhpIrc\Irc\Channel\Command\JoinHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\Command\NickHandler;
@@ -36,6 +37,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(NickHandler::class, $handlers);
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
+        $this->assertContains(JoinHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
@@ -133,6 +135,31 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         );
     }
 
+    #[Test]
+    public function it_handles_a_raw_join_after_registration(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
     /** @return list<string> */
     private function registrationWrites(ServerConfig $config): array
     {
@@ -143,7 +170,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
             ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - -\r\n",
-            ":{$serverName} 005 John CASEMAPPING=ascii NICKLEN=30 NETWORK={$config->networkName} :are supported by this server\r\n",
+            ":{$serverName} 005 John CASEMAPPING=ascii CHANTYPES=# CHANNELLEN=64 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(o)@ :are supported by this server\r\n",
             ":{$serverName} 422 John :MOTD File is missing\r\n",
         ];
     }
