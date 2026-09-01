@@ -6,6 +6,7 @@ namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
+use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\Command\NickHandler;
@@ -38,6 +39,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
+        $this->assertContains(PartHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
@@ -155,6 +157,32 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":John JOIN #php\r\n",
                 ":{$serverName} 353 John = #php @John\r\n",
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_part_after_joining_a_channel(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nPART #php\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+                ":John PART #php\r\n",
             ],
             $socket->writes,
         );

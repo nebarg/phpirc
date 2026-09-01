@@ -21,6 +21,7 @@ enum ResponseCode: string
     case NoNicknameGiven = '431';
     case ErroneousNickname = '432';
     case NicknameInUse = '433';
+    case NotOnChannel = '442';
     case NotRegistered = '451';
     case NeedMoreParameters = '461';
     case AlreadyRegistered = '462';
@@ -39,6 +40,7 @@ enum ResponseCode: string
             self::NoNicknameGiven => 'No nickname given',
             self::ErroneousNickname => 'Erroneous nickname',
             self::NicknameInUse => 'Nickname is already in use',
+            self::NotOnChannel => 'You\'re not on that channel',
             self::NotRegistered => 'You have not registered',
             self::NeedMoreParameters => 'Not enough parameters',
             self::AlreadyRegistered => 'You may not reregister',
