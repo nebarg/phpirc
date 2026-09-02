@@ -91,8 +91,8 @@ final class JoinHandlerTest extends TestCase
 
         $channel = $channels->find('#php');
         $this->assertNotNull($channel);
-        $this->assertSame($client, $channel->memberships()[0]->client);
-        $this->assertTrue($channel->memberships()[0]->isOperator);
+        $this->assertSame($client, $channel->members()[0]->client);
+        $this->assertTrue($channel->members()[0]->isOperator);
         $this->assertCount(3, $connection->messages);
         $this->assertSame('John', $connection->messages[0]->source);
         $this->assertSame('JOIN', $connection->messages[0]->command);
@@ -160,7 +160,7 @@ final class JoinHandlerTest extends TestCase
         );
 
         $this->assertSame([], $connection->messages);
-        $this->assertCount(1, $channel->memberships());
+        $this->assertCount(1, $channel->members());
     }
 
     #[Test]

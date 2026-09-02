@@ -48,7 +48,7 @@ final class ChannelTest extends TestCase
         $second = $channel->join($client);
 
         $this->assertSame($first, $second);
-        $this->assertSame([$first], $channel->memberships());
+        $this->assertSame([$first], $channel->members());
     }
 
     #[Test]
@@ -72,7 +72,25 @@ final class ChannelTest extends TestCase
         $first = $channel->join(new Client());
         $second = $channel->join(new Client());
 
-        $this->assertSame([$first, $second], $channel->memberships());
+        $this->assertSame([$first, $second], $channel->members());
+    }
+
+    #[Test]
+    public function it_counts_its_current_members(): void
+    {
+        $channel = new Channel('#php');
+        $first = new Client();
+
+        $this->assertSame(0, $channel->memberCount());
+
+        $channel->join($first);
+        $channel->join(new Client());
+
+        $this->assertSame(2, $channel->memberCount());
+
+        $channel->leave($first);
+
+        $this->assertSame(1, $channel->memberCount());
     }
 
     #[Test]

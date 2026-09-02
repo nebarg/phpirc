@@ -73,6 +73,12 @@ final class ChannelRegistry
         }
     }
 
+    /** @return list<Channel> */
+    public function all(): array
+    {
+        return array_values($this->channels);
+    }
+
     private function channelId(string $name): string
     {
         return $this->caseMapper->normalise($name);

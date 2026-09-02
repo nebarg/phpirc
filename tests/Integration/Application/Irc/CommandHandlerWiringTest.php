@@ -6,6 +6,7 @@ namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
+use PhpIrc\Irc\Channel\Command\ListHandler;
 use PhpIrc\Irc\Channel\Command\NamesHandler;
 use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Client\Client;
@@ -44,6 +45,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
+        $this->assertContains(ListHandler::class, $handlers);
         $this->assertContains(NamesHandler::class, $handlers);
         $this->assertContains(PartHandler::class, $handlers);
         $this->assertContains(PrivmsgHandler::class, $handlers);
@@ -192,6 +194,34 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
                 ":{$serverName} 353 John = #php @John\r\n",
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_list_after_joining_a_channel(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nLIST\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+                ":{$serverName} 321 John Channel :Users  Name\r\n",
+                ":{$serverName} 322 John #php 1 :\r\n",
+                ":{$serverName} 323 John :End of /LIST\r\n",
             ],
             $socket->writes,
         );

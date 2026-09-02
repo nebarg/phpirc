@@ -53,7 +53,7 @@ final class Channel
     }
 
     /** @return list<Membership> */
-    public function memberships(): array
+    public function members(): array
     {
         return array_values($this->members);
     }
@@ -61,6 +61,11 @@ final class Channel
     public function isEmpty(): bool
     {
         return $this->members === [];
+    }
+
+    public function memberCount(): int
+    {
+        return count($this->members);
     }
 
     private function clientId(Client $client): int

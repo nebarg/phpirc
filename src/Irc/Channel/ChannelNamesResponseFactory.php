@@ -19,7 +19,7 @@ final readonly class ChannelNamesResponseFactory
     {
         $names = [];
 
-        foreach ($channel->memberships() as $membership) {
+        foreach ($channel->members() as $membership) {
             $nickname = $membership->client->nickname;
 
             if ($nickname === null) {

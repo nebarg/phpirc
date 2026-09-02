@@ -17,7 +17,7 @@ final readonly class ChannelBroadcaster
 
     public function broadcast(Channel $channel, Message $message): void
     {
-        foreach ($channel->memberships() as $member) {
+        foreach ($channel->members() as $member) {
             $connection = $this->clients->connectionFor($member->client);
 
             $connection?->send($message);
@@ -26,7 +26,7 @@ final readonly class ChannelBroadcaster
 
     public function broadcastExcept(Channel $channel, Message $message, Client $exception): void
     {
-        foreach ($channel->memberships() as $member) {
+        foreach ($channel->members() as $member) {
             if ($member->client === $exception) {
                 continue;
             }
@@ -42,7 +42,7 @@ final readonly class ChannelBroadcaster
         $peers = [];
 
         foreach ($this->channels->channelsFor($client) as $channel) {
-            foreach ($channel->memberships() as $membership) {
+            foreach ($channel->members() as $membership) {
                 if ($membership->client === $client) {
                     continue;
                 }

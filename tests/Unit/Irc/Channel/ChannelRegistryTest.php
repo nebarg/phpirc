@@ -38,7 +38,7 @@ final class ChannelRegistryTest extends TestCase
         $this->assertSame($channel, $sameChannel);
         $this->assertTrue($channel->has($first));
         $this->assertTrue($channel->has($second));
-        $this->assertCount(2, $channel->memberships());
+        $this->assertCount(2, $channel->members());
     }
 
     #[Test]
@@ -53,6 +53,20 @@ final class ChannelRegistryTest extends TestCase
 
         $this->assertSame([$first, $second], $registry->channelsFor($client));
         $this->assertSame([], $registry->channelsFor(new Client()));
+    }
+
+    #[Test]
+    public function it_returns_every_channel_in_creation_order(): void
+    {
+        $registry = $this->registry();
+
+        $this->assertSame([], $registry->all());
+
+        $first = $registry->join('#one', new Client());
+        $registry->join('#ONE', new Client());
+        $second = $registry->join('#two', new Client());
+
+        $this->assertSame([$first, $second], $registry->all());
     }
 
     #[Test]

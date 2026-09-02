@@ -19,6 +19,9 @@ final class ResponseCodeTest extends TestCase
         yield 'created' => [ResponseCode::Created, null];
         yield 'my info' => [ResponseCode::MyInfo, null];
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
+        yield 'list start' => [ResponseCode::ListStart, 'Users  Name'];
+        yield 'list entry' => [ResponseCode::ListEntry, null];
+        yield 'list end' => [ResponseCode::ListEnd, 'End of /LIST'];
         yield 'names reply' => [ResponseCode::NamesReply, null];
         yield 'end of names' => [ResponseCode::EndOfNames, 'End of /NAMES list'];
         yield 'no such nick' => [ResponseCode::NoSuchNick, 'No such nick/channel'];

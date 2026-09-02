@@ -11,6 +11,9 @@ enum ResponseCode: string
     case Created = '003';
     case MyInfo = '004';
     case ISupport = '005';
+    case ListStart = '321';
+    case ListEntry = '322';
+    case ListEnd = '323';
     case NamesReply = '353';
     case EndOfNames = '366';
     case NoSuchNick = '401';
@@ -32,8 +35,10 @@ enum ResponseCode: string
     public function defaultText(): ?string
     {
         return match ($this) {
-            self::Welcome, self::YourHost, self::Created, self::MyInfo, self::NamesReply => null,
+            self::Welcome, self::YourHost, self::Created, self::MyInfo, self::NamesReply, self::ListEntry => null,
             self::ISupport => 'are supported by this server',
+            self::ListStart => 'Users  Name',
+            self::ListEnd => 'End of /LIST',
             self::EndOfNames => 'End of /NAMES list',
             self::NoSuchNick => 'No such nick/channel',
             self::NoSuchChannel => 'No such channel',
