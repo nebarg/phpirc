@@ -16,4 +16,19 @@ final readonly class Message
         public ?string $source = null,
         public array $tags = [],
     ) {}
+
+    public function parameter(int $position): string
+    {
+        return $this->parameters[$position] ?? '';
+    }
+
+    public function optionalParameter(int $position): ?string
+    {
+        return $this->parameters[$position] ?? null;
+    }
+
+    public function isParameterMissing(int $position): bool
+    {
+        return $this->parameter($position) === '';
+    }
 }

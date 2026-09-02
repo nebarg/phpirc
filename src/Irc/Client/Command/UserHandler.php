@@ -38,7 +38,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             return;
         }
 
-        if (count($message->parameters) < self::MIN_PARAMETERS_ALLOWED || $message->parameters[0] === '') {
+        if (count($message->parameters) < self::MIN_PARAMETERS_ALLOWED || $message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
@@ -50,8 +50,8 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             return;
         }
 
-        $context->client->setUsername($message->parameters[0]);
-        $context->client->setRealName($message->parameters[3]);
+        $context->client->setUsername($message->parameter(0));
+        $context->client->setRealName($message->parameter(3));
 
         $this->registration->completeIfReady($context);
     }

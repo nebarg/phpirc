@@ -29,9 +29,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $nickname = $message->parameters[0] ?? '';
-
-        if ($nickname === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoNicknameGiven,
@@ -41,6 +39,8 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
 
             return;
         }
+
+        $nickname = $message->parameter(0);
 
         if (! $this->nicknames->isValid($nickname)) {
             $context->connection->send(

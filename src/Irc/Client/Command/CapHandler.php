@@ -27,7 +27,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $subcommand = strtoupper($message->parameters[0] ?? '');
+        $subcommand = strtoupper($message->parameter(0));
 
         switch ($subcommand) {
             case 'LS':
@@ -70,7 +70,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         $this->sendCapabilityReply(
             $context,
             'NAK',
-            $message->parameters[1] ?? '',
+            $message->parameter(1),
         );
     }
 

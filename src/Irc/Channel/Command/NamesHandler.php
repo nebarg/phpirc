@@ -24,10 +24,9 @@ final readonly class NamesHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $channels = $message->parameters[0] ?? '';
         $target = $context->responseTarget();
 
-        if ($channels === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->createEndResponse(
                     target: $target,
@@ -37,6 +36,8 @@ final readonly class NamesHandler implements CommandHandler
 
             return;
         }
+
+        $channels = $message->parameter(0);
 
         foreach (explode(',', $channels) as $channelName) {
             $channel = $this->channels->find($channelName);

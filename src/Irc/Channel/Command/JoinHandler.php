@@ -31,9 +31,7 @@ final readonly class JoinHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $channels = $message->parameters[0] ?? '';
-
-        if ($channels === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
@@ -44,6 +42,8 @@ final readonly class JoinHandler implements CommandHandler
 
             return;
         }
+
+        $channels = $message->parameter(0);
 
         foreach (explode(',', $channels) as $channelName) {
             if (! $this->channelNames->isValid($channelName)) {

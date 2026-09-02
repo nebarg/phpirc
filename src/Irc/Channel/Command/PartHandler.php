@@ -27,9 +27,7 @@ final readonly class PartHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $channels = $message->parameters[0] ?? '';
-
-        if ($channels === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
@@ -41,7 +39,8 @@ final readonly class PartHandler implements CommandHandler
             return;
         }
 
-        $leavingMessage = $message->parameters[1] ?? null;
+        $channels = $message->parameter(0);
+        $leavingMessage = $message->optionalParameter(1);
 
         foreach (explode(',', $channels) as $channelName) {
             $channel = $this->channels->find($channelName);

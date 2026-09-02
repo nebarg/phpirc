@@ -25,7 +25,7 @@ final readonly class PingHandler implements PreRegistrationCommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        if ($message->parameters === [] || $message->parameters[0] === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoOrigin,
@@ -36,11 +36,13 @@ final readonly class PingHandler implements PreRegistrationCommandHandler
             return;
         }
 
+        $token = $message->parameter(0);
+
         $response = new Message(
             command: 'PONG',
             parameters: [
                 $this->serverName->value,
-                $message->parameters[0],
+                $token,
             ],
             source: $this->serverName->value,
         );

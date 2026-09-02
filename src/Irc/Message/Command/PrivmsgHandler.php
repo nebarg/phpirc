@@ -29,9 +29,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $targets = $message->parameters[0] ?? '';
-
-        if ($targets === '') {
+        if ($message->isParameterMissing(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoRecipient,
@@ -42,9 +40,9 @@ final readonly class PrivmsgHandler implements CommandHandler
             return;
         }
 
-        $text = $message->parameters[1] ?? '';
+        $targets = $message->parameter(0);
 
-        if ($text === '') {
+        if ($message->isParameterMissing(1)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoTextToSend,
@@ -54,6 +52,8 @@ final readonly class PrivmsgHandler implements CommandHandler
 
             return;
         }
+
+        $text = $message->parameter(1);
 
         foreach (explode(',', $targets) as $target) {
             $channel = $this->channels->find($target);
