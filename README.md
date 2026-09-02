@@ -9,15 +9,17 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] IRC message parsing and encoding, including message tags
 - [x] TCP listener, line buffering, message-size validation and connection cleanup
 - [x] Automatic command-handler discovery and dispatch
-- [x] `CAP LS` and `CAP END` registration negotiation
-- [x] `NICK`, including validation, collisions and nickname changes
-- [x] `USER` and client registration
-- [x] `PING` responses
-- [x] Registration welcome numerics and `005` feature advertisement
+- [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
+- [x] Nickname validation, collision detection and nickname changes
+- [x] Registration welcome messages and `005` feature advertisement
+- [x] `PING` and `PONG`
+- [x] Joining and leaving channels with `JOIN` and `PART`
+- [x] Channel member lists, including operator prefixes, after joining
+- [x] `PRIVMSG` delivery to users and channels, including multiple targets
 - [x] Unknown-command and not-registered responses
 - [x] ASCII IRC casemapping for nicknames and channels
-- [x] In-memory channel, membership and channel-registry foundations
-- [x] `JOIN`, channel broadcasting and names replies
+- [x] In-memory client, channel and membership state
+- [x] Nickname and channel cleanup when clients disconnect
 - [x] Unit and integration test suite
 
 ## Running the server
@@ -66,11 +68,9 @@ composer qa
 
 ## Roadmap
 
-- [x] Client delivery and channel broadcasting
 - [ ] Standalone `NAMES` command
-- [x] Channel cleanup when clients disconnect
-- [ ] `PART` and `QUIT`
-- [ ] `PRIVMSG` and `NOTICE` for clients and channels
+- [ ] `QUIT` notifications
+- [ ] `NOTICE` for clients and channels
 - [ ] Topics, channel modes and operator commands such as `KICK`
 - [ ] Multiple listeners and TLS
 - [ ] Broader IRCv3 capability support
