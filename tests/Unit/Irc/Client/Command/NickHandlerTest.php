@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Client\Command;
 
+use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\NickHandler;
@@ -191,10 +193,48 @@ final class NickHandlerTest extends TestCase
         $this->assertSame(['NewJohn'], $connection->messages[0]->parameters);
     }
 
-    private function handler(ClientRegistry $clients): NickHandler
+    #[Test]
+    public function it_broadcasts_a_registered_clients_nickname_change_once_to_shared_channel_peers(): void
     {
+        $clients = $this->registry();
+        $channels = new ChannelRegistry(new AsciiCaseMapper());
+        $john = new Client();
+        $johnConnection = new RecordingConnection();
+        $clients->register($john, $johnConnection);
+        $clients->claimNickname($john, 'OldJohn');
+        $john->setUsername('john');
+        $john->setRealName('John Doe');
+        $john->completeRegistrationIfReady();
+        $jane = new Client();
+        $janeConnection = new RecordingConnection();
+        $clients->register($jane, $janeConnection);
+        $clients->claimNickname($jane, 'Jane');
+        $outsider = new Client();
+        $outsiderConnection = new RecordingConnection();
+        $clients->register($outsider, $outsiderConnection);
+        $clients->claimNickname($outsider, 'Outside');
+        $channels->join('#one', $john);
+        $channels->join('#one', $jane);
+        $channels->join('#two', $john);
+        $channels->join('#two', $jane);
+
+        $this->handler($clients, $channels)->handle(
+            new CommandContext($johnConnection, $john),
+            $this->message(['NewJohn']),
+        );
+
+        $this->assertNicknameChange($johnConnection);
+        $this->assertNicknameChange($janeConnection);
+        $this->assertSame([], $outsiderConnection->messages);
+    }
+
+    private function handler(
+        ClientRegistry $clients,
+        ?ChannelRegistry $channels = null,
+    ): NickHandler {
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
+        $channels ??= new ChannelRegistry(new AsciiCaseMapper());
 
         return new NickHandler(
             clients: $clients,
@@ -211,6 +251,7 @@ final class NickHandlerTest extends TestCase
                     new AsciiCaseMapper(),
                 ),
             ),
+            broadcaster: new ChannelBroadcaster($clients, $channels),
         );
     }
 
@@ -239,5 +280,14 @@ final class NickHandlerTest extends TestCase
         $this->assertSame('irc.test', $connection->messages[0]->source);
         $this->assertSame($command, $connection->messages[0]->command);
         $this->assertSame($parameters, $connection->messages[0]->parameters);
+    }
+
+    private function assertNicknameChange(RecordingConnection $connection): void
+    {
+        $this->assertCount(1, $connection->messages);
+        $this->assertSame([], $connection->messages[0]->tags);
+        $this->assertSame('OldJohn', $connection->messages[0]->source);
+        $this->assertSame('NICK', $connection->messages[0]->command);
+        $this->assertSame(['NewJohn'], $connection->messages[0]->parameters);
     }
 }

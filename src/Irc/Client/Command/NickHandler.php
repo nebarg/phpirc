@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
+use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
@@ -20,6 +21,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
         private NicknameValidator $nicknames,
         private NumericResponseFactory $responses,
         private RegistrationCompleter $registration,
+        private ChannelBroadcaster $broadcaster,
     ) {}
 
     public function command(): string
@@ -70,12 +72,16 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
         }
 
         if ($wasRegistered) {
-            $context->connection->send(
-                new Message(
-                    command: 'NICK',
-                    parameters: [$nickname],
-                    source: $oldNickname,
-                ),
+            $nicknameChanged = new Message(
+                command: 'NICK',
+                parameters: [$nickname],
+                source: $oldNickname,
+            );
+
+            $context->connection->send($nicknameChanged);
+            $this->broadcaster->broadcastToSharedChannelPeers(
+                $context->client,
+                $nicknameChanged,
             );
 
             return;
