@@ -14,7 +14,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Registration welcome messages and `005` feature advertisement
 - [x] `PING` and `PONG`
 - [x] Joining and leaving channels with `JOIN` and `PART`
-- [x] Channel member lists, including operator prefixes, after joining
+- [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] `PRIVMSG` delivery to users and channels, including multiple targets
 - [x] Unknown-command and not-registered responses
 - [x] ASCII IRC casemapping for nicknames and channels
@@ -68,10 +68,11 @@ composer qa
 
 ## Roadmap
 
-- [ ] Standalone `NAMES` command
-- [ ] `QUIT` notifications
-- [ ] `NOTICE` for clients and channels
-- [ ] Topics, channel modes and operator commands such as `KICK`
+- [ ] Client departure with `QUIT` and disconnect notifications
+- [ ] `NOTICE` delivery to clients and channels
+- [ ] Channel topics with `TOPIC`
+- [ ] Channel and membership modes
+- [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS
 - [ ] Broader IRCv3 capability support
 - [ ] Optional persistence where it provides value
