@@ -31,7 +31,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::AlreadyRegistered,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                 ),
             );
 
@@ -42,7 +42,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$this->command()],
                 ),
             );

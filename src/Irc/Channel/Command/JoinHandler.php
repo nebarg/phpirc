@@ -37,7 +37,7 @@ final readonly class JoinHandler implements CommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$this->command()],
                 ),
             );
@@ -50,7 +50,7 @@ final readonly class JoinHandler implements CommandHandler
                 $context->connection->send(
                     $this->responses->create(
                         code: ResponseCode::NoSuchChannel,
-                        target: $context->client->nickname,
+                        target: $context->responseTarget(),
                         parameters: [$channelName === '' ? '*' : $channelName],
                     ),
                 );
@@ -75,7 +75,7 @@ final readonly class JoinHandler implements CommandHandler
                 ),
             );
 
-            foreach ($this->namesResponses->createResponses($context->client->nickname ?? '*', $channel) as $response) {
+            foreach ($this->namesResponses->createResponses($context->responseTarget(), $channel) as $response) {
                 $context->connection->send($response);
             }
         }

@@ -35,7 +35,7 @@ final readonly class PrivmsgHandler implements CommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoRecipient,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                 ),
             );
 
@@ -48,7 +48,7 @@ final readonly class PrivmsgHandler implements CommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoTextToSend,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                 ),
             );
 
@@ -93,7 +93,7 @@ final readonly class PrivmsgHandler implements CommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoSuchNick,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$target === '' ? '*' : $target],
                 ),
             );

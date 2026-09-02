@@ -35,7 +35,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoNicknameGiven,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                 ),
             );
 
@@ -46,7 +46,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::ErroneousNickname,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$nickname],
                 ),
             );
@@ -61,7 +61,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NicknameInUse,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$nickname],
                 ),
             );

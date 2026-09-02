@@ -91,7 +91,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         $context->connection->send(
             $this->responses->create(
                 code: ResponseCode::InvalidCapCommand,
-                target: $context->client->nickname,
+                target: $context->responseTarget(),
                 parameters: [$subcommand === '' ? '*' : $subcommand],
             ),
         );
@@ -106,7 +106,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
             new Message(
                 command: $this->command(),
                 parameters: [
-                    $context->client->nickname ?? '*',
+                    $context->responseTarget(),
                     $subcommand,
                     $capabilities,
                 ],

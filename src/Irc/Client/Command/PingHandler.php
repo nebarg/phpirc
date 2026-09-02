@@ -29,7 +29,7 @@ final readonly class PingHandler implements PreRegistrationCommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoOrigin,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                 ),
             );
 

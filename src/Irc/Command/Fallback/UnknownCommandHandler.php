@@ -21,7 +21,7 @@ final readonly class UnknownCommandHandler implements MessageHandler
         $context->connection->send(
             $this->responses->create(
                 code: ResponseCode::UnknownCommand,
-                target: $context->client->nickname,
+                target: $context->responseTarget(),
                 parameters: [$message->command],
             ),
         );

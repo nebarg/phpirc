@@ -33,7 +33,7 @@ final readonly class PartHandler implements CommandHandler
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
-                    target: $context->client->nickname,
+                    target: $context->responseTarget(),
                     parameters: [$this->command()],
                 ),
             );
@@ -50,7 +50,7 @@ final readonly class PartHandler implements CommandHandler
                 $context->connection->send(
                     $this->responses->create(
                         code: ResponseCode::NoSuchChannel,
-                        target: $context->client->nickname,
+                        target: $context->responseTarget(),
                         parameters: [$channelName === '' ? '*' : $channelName],
                     ),
                 );
@@ -62,7 +62,7 @@ final readonly class PartHandler implements CommandHandler
                 $context->connection->send(
                     $this->responses->create(
                         code: ResponseCode::NotOnChannel,
-                        target: $context->client->nickname,
+                        target: $context->responseTarget(),
                         parameters: [$channel->name],
                     ),
                 );

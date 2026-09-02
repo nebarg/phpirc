@@ -21,7 +21,7 @@ final readonly class NotRegisteredHandler implements MessageHandler
         $context->connection->send(
             $this->responses->create(
                 code: ResponseCode::NotRegistered,
-                target: $context->client->nickname,
+                target: $context->responseTarget(),
             ),
         );
     }
