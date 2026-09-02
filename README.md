@@ -20,6 +20,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] ASCII IRC casemapping for nicknames and channels
 - [x] In-memory client, channel and membership state
 - [x] Nickname and channel cleanup when clients disconnect
+- [x] `QUIT` and unexpected-disconnect notifications to shared channel members
 - [x] Unit and integration test suite
 
 ## Running the server
@@ -68,7 +69,6 @@ composer qa
 
 ## Roadmap
 
-- [ ] Client departure with `QUIT` and disconnect notifications
 - [ ] `NOTICE` delivery to clients and channels
 - [ ] Channel topics with `TOPIC`
 - [ ] Channel and membership modes

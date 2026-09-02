@@ -11,6 +11,8 @@ use PhpIrc\Irc\Protocol\Message;
 
 final class ClientConnection implements Connection
 {
+    private bool $closed = false;
+
     public function __construct(
         private readonly Client $client,
         private readonly ClientSocket $socket,
@@ -35,6 +37,10 @@ final class ClientConnection implements Connection
             while (($bytes = $this->socket->read()) !== null) {
                 foreach ($this->codec->decode($bytes) as $message) {
                     $this->handler->handle($context, $message);
+
+                    if ($this->closed) {
+                        break 2;
+                    }
                 }
             }
         } finally {
@@ -57,6 +63,11 @@ final class ClientConnection implements Connection
 
     public function close(): void
     {
+        if ($this->closed) {
+            return;
+        }
+
+        $this->closed = true;
         $this->socket->close();
     }
 }

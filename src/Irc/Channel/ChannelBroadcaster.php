@@ -12,6 +12,7 @@ final readonly class ChannelBroadcaster
 {
     public function __construct(
         private ClientRegistry $clients,
+        private ChannelRegistry $channels,
     ) {}
 
     public function broadcast(Channel $channel, Message $message): void
@@ -34,5 +35,29 @@ final readonly class ChannelBroadcaster
 
             $connection?->send($message);
         }
+    }
+
+    public function broadcastToSharedChannelPeers(Client $client, Message $message): void
+    {
+        $peers = [];
+
+        foreach ($this->channels->channelsFor($client) as $channel) {
+            foreach ($channel->memberships() as $membership) {
+                if ($membership->client === $client) {
+                    continue;
+                }
+
+                $peers[$this->clientId($membership->client)] = $membership->client;
+            }
+        }
+
+        foreach ($peers as $peer) {
+            $this->clients->connectionFor($peer)?->send($message);
+        }
+    }
+
+    private function clientId(Client $client): int
+    {
+        return spl_object_id($client);
     }
 }

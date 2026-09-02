@@ -42,6 +42,20 @@ final class ChannelRegistryTest extends TestCase
     }
 
     #[Test]
+    public function it_finds_every_channel_joined_by_a_client(): void
+    {
+        $registry = $this->registry();
+        $client = new Client();
+        $other = new Client();
+        $first = $registry->join('#one', $client);
+        $second = $registry->join('#two', $client);
+        $registry->join('#other', $other);
+
+        $this->assertSame([$first, $second], $registry->channelsFor($client));
+        $this->assertSame([], $registry->channelsFor(new Client()));
+    }
+
+    #[Test]
     public function it_treats_rfc1459_specific_equivalents_as_distinct(): void
     {
         $registry = $this->registry();

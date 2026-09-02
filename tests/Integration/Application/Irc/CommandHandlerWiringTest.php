@@ -12,6 +12,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\Command\NickHandler;
 use PhpIrc\Irc\Client\Command\PingHandler;
+use PhpIrc\Irc\Client\Command\QuitHandler;
 use PhpIrc\Irc\Client\Command\UserHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
@@ -37,6 +38,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ->all();
 
         $this->assertContains(PingHandler::class, $handlers);
+        $this->assertContains(QuitHandler::class, $handlers);
         $this->assertContains(NickHandler::class, $handlers);
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
@@ -239,6 +241,29 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ],
             $socket->writes,
         );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_quit_and_stops_dispatching_messages(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nQUIT :Gone for lunch\r\nPING :ignored\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":{$config->serverName->value} ERROR :Closing Link: John (Quit: Gone for lunch)\r\n",
+            ],
+            $socket->writes,
+        );
+        $this->assertSame(1, $socket->closeCalls);
     }
 
     /** @return list<string> */

@@ -21,6 +21,22 @@ final class ChannelRegistry
         return $this->channels[$this->channelId($name)] ?? null;
     }
 
+    /** @return list<Channel> */
+    public function channelsFor(Client $client): array
+    {
+        $channels = [];
+
+        foreach ($this->channels as $channel) {
+            if (! $channel->has($client)) {
+                continue;
+            }
+
+            $channels[] = $channel;
+        }
+
+        return $channels;
+    }
+
     public function join(string $name, Client $client): Channel
     {
         $channelId = $this->channelId($name);

@@ -243,7 +243,7 @@ final class PrivmsgHandlerTest extends TestCase
             new PrivmsgHandler(
                 clients: $clients,
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients),
+                broadcaster: new ChannelBroadcaster($clients, $channels),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
             $clients,

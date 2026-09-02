@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -68,6 +70,8 @@ final class ClientConnectionFactoryTest extends TestCase
     private function factory(RecordingMessageHandler $handler): ClientConnectionFactory
     {
         $caseMapper = new AsciiCaseMapper();
+        $clients = new ClientRegistry($caseMapper);
+        $channels = new ChannelRegistry($caseMapper);
 
         return new ClientConnectionFactory(
             validator: new ClientMessageSizeValidator(),
@@ -75,8 +79,12 @@ final class ClientConnectionFactoryTest extends TestCase
             encoder: new MessageEncoder(),
             handler: $handler,
             lifecycle: new ClientConnectionLifecycle(
-                clients: new ClientRegistry($caseMapper),
-                channels: new ChannelRegistry($caseMapper),
+                clients: $clients,
+                departure: new ClientDeparture(
+                    clients: $clients,
+                    channels: $channels,
+                    broadcaster: new ChannelBroadcaster($clients, $channels),
+                ),
             ),
         );
     }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport\Amp;
 
+use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -121,6 +123,8 @@ final class IrcServerTest extends TestCase
         LoggerInterface $logger,
     ): IrcServer {
         $caseMapper = new AsciiCaseMapper();
+        $clients = new ClientRegistry($caseMapper);
+        $channels = new ChannelRegistry($caseMapper);
 
         return new IrcServer(
             listener: $listener,
@@ -130,8 +134,12 @@ final class IrcServerTest extends TestCase
                 encoder: new MessageEncoder(),
                 handler: $handler,
                 lifecycle: new ClientConnectionLifecycle(
-                    clients: new ClientRegistry($caseMapper),
-                    channels: new ChannelRegistry($caseMapper),
+                    clients: $clients,
+                    departure: new ClientDeparture(
+                        clients: $clients,
+                        channels: $channels,
+                        broadcaster: new ChannelBroadcaster($clients, $channels),
+                    ),
                 ),
             ),
             logger: $logger,

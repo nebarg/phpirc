@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport;
 
 use LogicException;
+use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
@@ -200,13 +202,41 @@ final class ClientConnectionTest extends TestCase
     }
 
     #[Test]
-    public function it_delegates_explicit_closure_to_the_socket(): void
+    public function it_closes_the_socket_only_once(): void
     {
         $socket = new FakeClientSocket();
         $handler = new RecordingMessageHandler();
 
-        $this->connection($socket, $handler)->close();
+        $connection = $this->connection($socket, $handler);
 
+        $connection->close();
+        $connection->close();
+
+        $this->assertSame(1, $socket->closeCalls);
+    }
+
+    #[Test]
+    public function it_stops_dispatching_messages_when_a_handler_closes_the_connection(): void
+    {
+        $socket = new FakeClientSocket([
+            "QUIT :Goodbye\r\nPRIVMSG Jane :This must not be sent\r\n",
+        ]);
+        $handler = new class implements MessageHandler {
+            /** @var list<Message> */
+            public array $messages = [];
+
+            public function handle(CommandContext $context, Message $message): void
+            {
+                $this->messages[] = $message;
+                $context->connection->close();
+            }
+        };
+
+        $this->connection($socket, $handler)->run();
+
+        $this->assertCount(1, $handler->messages);
+        $this->assertSame('QUIT', $handler->messages[0]->command);
+        $this->assertSame(1, $socket->readCalls);
         $this->assertSame(1, $socket->closeCalls);
     }
 
@@ -290,6 +320,8 @@ final class ClientConnectionTest extends TestCase
         ?ChannelRegistry $channels = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
+        $clientRegistry = $clients ?? new ClientRegistry($caseMapper);
+        $channelRegistry = $channels ?? new ChannelRegistry($caseMapper);
 
         return new ClientConnection(
             client: $client ?? new Client(),
@@ -301,8 +333,12 @@ final class ClientConnectionTest extends TestCase
             ),
             handler: $handler,
             lifecycle: new ClientConnectionLifecycle(
-                clients: $clients ?? new ClientRegistry($caseMapper),
-                channels: $channels ?? new ChannelRegistry($caseMapper),
+                clients: $clientRegistry,
+                departure: new ClientDeparture(
+                    clients: $clientRegistry,
+                    channels: $channelRegistry,
+                    broadcaster: new ChannelBroadcaster($clientRegistry, $channelRegistry),
+                ),
             ),
         );
     }

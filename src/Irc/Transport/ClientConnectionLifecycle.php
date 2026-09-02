@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Transport;
 
-use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 
 final readonly class ClientConnectionLifecycle
 {
     public function __construct(
         private ClientRegistry $clients,
-        private ChannelRegistry $channels,
+        private ClientDeparture $departure,
     ) {}
 
     public function connected(Client $client, Connection $connection): void
@@ -22,7 +22,6 @@ final readonly class ClientConnectionLifecycle
 
     public function disconnected(Client $client): void
     {
-        $this->channels->leaveAll($client);
-        $this->clients->unregister($client);
+        $this->departure->depart($client, 'Connection closed');
     }
 }

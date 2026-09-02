@@ -199,7 +199,7 @@ final class JoinHandlerTest extends TestCase
             new JoinHandler(
                 channels: $channels,
                 channelNames: new ChannelNameValidator(),
-                broadcaster: new ChannelBroadcaster($clients),
+                broadcaster: new ChannelBroadcaster($clients, $channels),
                 namesResponses: new ChannelNamesResponseFactory($responses),
                 responses: $responses,
             ),
