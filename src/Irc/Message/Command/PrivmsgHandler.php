@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Message\Command;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelRegistry;
-use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
+use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
@@ -16,9 +14,7 @@ use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 final readonly class PrivmsgHandler implements CommandHandler
 {
     public function __construct(
-        private ClientRegistry $clients,
-        private ChannelRegistry $channels,
-        private ChannelBroadcaster $broadcaster,
+        private MessageDelivery $delivery,
         private NumericResponseFactory $responses,
     ) {}
 
@@ -53,43 +49,14 @@ final readonly class PrivmsgHandler implements CommandHandler
             return;
         }
 
-        $text = $message->parameter(1);
+        $unresolvedTargets = $this->delivery->deliver(
+            sender: $context->client,
+            command: $this->command(),
+            targets: $targets,
+            text: $message->parameter(1),
+        );
 
-        foreach (explode(',', $targets) as $target) {
-            $channel = $this->channels->find($target);
-
-            if ($channel !== null) {
-                $this->broadcaster->broadcastExcept(
-                    $channel,
-                    new Message(
-                        command: $this->command(),
-                        parameters: [$channel->name, $text],
-                        source: $context->client->nickname,
-                    ),
-                    $context->client,
-                );
-
-                continue;
-            }
-
-            $user = $this->clients->findByNickname($target);
-
-            if ($user !== null) {
-                $connection = $this->clients->connectionFor($user);
-
-                if ($connection !== null) {
-                    $connection->send(
-                        new Message(
-                            command: $this->command(),
-                            parameters: [$user->nickname ?? $target, $text],
-                            source: $context->client->nickname,
-                        ),
-                    );
-
-                    continue;
-                }
-            }
-
+        foreach ($unresolvedTargets as $target) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoSuchNick,

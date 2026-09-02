@@ -11,6 +11,7 @@ use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
+use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -241,9 +242,11 @@ final class PrivmsgHandlerTest extends TestCase
 
         return [
             new PrivmsgHandler(
-                clients: $clients,
-                channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                delivery: new MessageDelivery(
+                    clients: $clients,
+                    channels: $channels,
+                    broadcaster: new ChannelBroadcaster($clients, $channels),
+                ),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
             $clients,
