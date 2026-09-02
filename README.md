@@ -70,6 +70,8 @@ composer qa
 ## Roadmap
 
 - [ ] Channel discovery with `LIST`
+- [ ] Server keepalive with `PING`/`PONG`, ping timeouts and stale-connection cleanup
+- [ ] Per-client flood protection, rate limits and slow-client handling
 - [ ] Channel topics with `TOPIC`
 - [ ] Channel and membership modes
 - [ ] Channel operator commands such as `KICK`
