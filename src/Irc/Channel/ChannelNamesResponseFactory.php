@@ -36,11 +36,16 @@ final readonly class ChannelNamesResponseFactory
                 parameters: ['=', $channel->name],
                 text: implode(' ', $names),
             ),
-            $this->responses->create(
-                code: ResponseCode::EndOfNames,
-                target: $target,
-                parameters: [$channel->name],
-            ),
+            $this->createEndResponse($target, $channel->name),
         ];
+    }
+
+    public function createEndResponse(string $target, string $channelName): Message
+    {
+        return $this->responses->create(
+            code: ResponseCode::EndOfNames,
+            target: $target,
+            parameters: [$channelName],
+        );
     }
 }

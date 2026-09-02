@@ -13,4 +13,9 @@ final readonly class CommandContext
         public Connection $connection,
         public Client $client,
     ) {}
+
+    public function responseTarget(): string
+    {
+        return $this->client->nickname ?? '*';
+    }
 }

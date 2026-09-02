@@ -42,6 +42,19 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_creates_an_end_of_names_numeric_for_a_channel_name(): void
+    {
+        $message = $this->factory()->createEndResponse('John', '#missing');
+
+        $this->assertSame('irc.test', $message->source);
+        $this->assertSame('366', $message->command);
+        $this->assertSame(
+            ['John', '#missing', 'End of /NAMES list'],
+            $message->parameters,
+        );
+    }
+
     private function factory(): ChannelNamesResponseFactory
     {
         return new ChannelNamesResponseFactory(

@@ -6,6 +6,7 @@ namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
+use PhpIrc\Irc\Channel\Command\NamesHandler;
 use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
@@ -40,6 +41,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
+        $this->assertContains(NamesHandler::class, $handlers);
         $this->assertContains(PartHandler::class, $handlers);
         $this->assertContains(PrivmsgHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
@@ -157,6 +159,33 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             [
                 ...$this->registrationWrites($config),
                 ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_raw_names_for_an_existing_channel(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nNAMES #PHP\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
                 ":{$serverName} 353 John = #php @John\r\n",
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
             ],
