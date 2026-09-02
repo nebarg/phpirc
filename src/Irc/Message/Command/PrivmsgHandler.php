@@ -12,13 +12,11 @@ use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 
 final readonly class PrivmsgHandler implements CommandHandler
 {
     public function __construct(
-        private ClientRegistry $users,
-        private ClientConnectionRegistry $connections,
+        private ClientRegistry $clients,
         private ChannelRegistry $channels,
         private ChannelBroadcaster $broadcaster,
         private NumericResponseFactory $responses,
@@ -74,10 +72,10 @@ final readonly class PrivmsgHandler implements CommandHandler
                 continue;
             }
 
-            $user = $this->users->findByNickname($target);
+            $user = $this->clients->findByNickname($target);
 
             if ($user !== null) {
-                $connection = $this->connections->find($user);
+                $connection = $this->clients->connectionFor($user);
 
                 if ($connection !== null) {
                     $connection->send(

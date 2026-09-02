@@ -14,7 +14,6 @@ use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -49,8 +48,8 @@ final class PrivmsgHandlerTest extends TestCase
     #[DataProvider('missingTargets')]
     public function it_rejects_a_missing_target(array $parameters): void
     {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -70,8 +69,8 @@ final class PrivmsgHandlerTest extends TestCase
     #[DataProvider('missingTexts')]
     public function it_rejects_missing_text(array $parameters): void
     {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -89,8 +88,8 @@ final class PrivmsgHandlerTest extends TestCase
     #[Test]
     public function it_rejects_a_target_that_does_not_exist(): void
     {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -108,9 +107,9 @@ final class PrivmsgHandlerTest extends TestCase
     #[Test]
     public function it_delivers_a_message_to_a_client_case_insensitively(): void
     {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
-        [, $janeConnection] = $this->connectedClient('Jane', $clients, $connections);
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [, $janeConnection] = $this->connectedClient('Jane', $clients);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -128,8 +127,8 @@ final class PrivmsgHandlerTest extends TestCase
     #[Test]
     public function it_delivers_a_message_to_the_sending_client_when_they_target_themselves(): void
     {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -144,32 +143,11 @@ final class PrivmsgHandlerTest extends TestCase
     }
 
     #[Test]
-    public function it_treats_a_client_without_a_connection_as_a_missing_target(): void
-    {
-        [$handler, $clients, $connections] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
-        $jane = new Client();
-        $clients->claimNickname($jane, 'Jane');
-
-        $handler->handle(
-            new CommandContext($johnConnection, $john),
-            new Message(command: 'PRIVMSG', parameters: ['Jane', 'Hello']),
-        );
-
-        $this->assertCount(1, $johnConnection->messages);
-        $this->assertResponse(
-            $johnConnection,
-            '401',
-            ['John', 'Jane', 'No such nick/channel'],
-        );
-    }
-
-    #[Test]
     public function it_delivers_a_channel_message_to_every_member_except_the_sender(): void
     {
-        [$handler, $clients, $connections, $channels] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
-        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients, $connections);
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
         $channel = $channels->join('#PHP', $john);
         $channels->join('#php', $jane);
 
@@ -191,10 +169,10 @@ final class PrivmsgHandlerTest extends TestCase
     #[Test]
     public function an_outsider_can_send_to_an_existing_channel(): void
     {
-        [$handler, $clients, $connections, $channels] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
-        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients, $connections);
-        [$outsider, $outsiderConnection] = $this->connectedClient('Outside', $clients, $connections);
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        [$outsider, $outsiderConnection] = $this->connectedClient('Outside', $clients);
         $channels->join('#php', $john);
         $channels->join('#php', $jane);
 
@@ -219,9 +197,9 @@ final class PrivmsgHandlerTest extends TestCase
     #[Test]
     public function it_processes_each_target_in_a_comma_separated_list(): void
     {
-        [$handler, $clients, $connections, $channels] = $this->handler();
-        [$john, $johnConnection] = $this->connectedClient('John', $clients, $connections);
-        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients, $connections);
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
         $channels->join('#php', $john);
         $channels->join('#php', $jane);
 
@@ -254,24 +232,21 @@ final class PrivmsgHandlerTest extends TestCase
         );
     }
 
-    /** @return array{PrivmsgHandler, ClientRegistry, ClientConnectionRegistry, ChannelRegistry} */
+    /** @return array{PrivmsgHandler, ClientRegistry, ChannelRegistry} */
     private function handler(): array
     {
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
-        $connections = new ClientConnectionRegistry();
         $channels = new ChannelRegistry($caseMapper);
 
         return [
             new PrivmsgHandler(
-                users: $clients,
-                connections: $connections,
+                clients: $clients,
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($connections),
+                broadcaster: new ChannelBroadcaster($clients),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
             $clients,
-            $connections,
             $channels,
         ];
     }
@@ -280,12 +255,11 @@ final class PrivmsgHandlerTest extends TestCase
     private function connectedClient(
         string $nickname,
         ClientRegistry $clients,
-        ClientConnectionRegistry $connections,
     ): array {
         $client = new Client();
         $connection = new RecordingConnection();
+        $clients->register($client, $connection);
         $clients->claimNickname($client, $nickname);
-        $connections->register($client, $connection);
 
         return [$client, $connection];
     }

@@ -44,6 +44,7 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($client, $connection);
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -64,6 +65,7 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($client, $connection);
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -84,8 +86,10 @@ final class NickHandlerTest extends TestCase
         $owner = new Client();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($owner, new RecordingConnection());
         $clients->claimNickname($owner, 'John');
         $connection = new RecordingConnection();
+        $clients->register($client, $connection);
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -107,6 +111,7 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($client, $connection);
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -126,6 +131,7 @@ final class NickHandlerTest extends TestCase
         $client->setUsername('john');
         $client->setRealName('John Doe');
         $clients = $this->registry();
+        $clients->register($client, $connection);
 
         $this->handler($clients)->handle(
             new CommandContext($connection, $client),
@@ -147,6 +153,7 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($client, $connection);
         $clients->claimNickname($client, 'OldJohn');
 
         $this->handler($clients)->handle(
@@ -165,6 +172,7 @@ final class NickHandlerTest extends TestCase
         $connection = new RecordingConnection();
         $client = new Client();
         $clients = $this->registry();
+        $clients->register($client, $connection);
         $clients->claimNickname($client, 'OldJohn');
         $client->setUsername('john');
         $client->setRealName('John Doe');

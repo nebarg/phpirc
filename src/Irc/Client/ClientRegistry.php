@@ -4,55 +4,109 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client;
 
+use LogicException;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
+use PhpIrc\Irc\Transport\Connection;
 
 final class ClientRegistry
 {
-    /** @var array<string, Client> */
-    private array $clients = [];
+    /** @var array<int, ConnectedClient> */
+    private array $clientsById = [];
+
+    /** @var array<string, int> */
+    private array $clientIdsByNickname = [];
 
     public function __construct(
         private CaseMapper $caseMapper,
     ) {}
 
+    public function register(Client $client, Connection $connection): void
+    {
+        $clientId = $this->clientId($client);
+
+        if (isset($this->clientsById[$clientId])) {
+            throw new LogicException('Client is already registered.');
+        }
+
+        $this->clientsById[$clientId] = new ConnectedClient(
+            client: $client,
+            connection: $connection,
+        );
+    }
+
+    public function connectionFor(Client $client): ?Connection
+    {
+        $connectedClient = $this->clientsById[$this->clientId($client)] ?? null;
+
+        return $connectedClient?->connection;
+    }
+
+    public function unregister(Client $client): void
+    {
+        $clientId = $this->clientId($client);
+
+        $this->releaseNickname($client);
+
+        unset($this->clientsById[$clientId]);
+    }
+
     public function claimNickname(Client $client, string $nickname): bool
     {
-        $clientId = $this->clientId($nickname);
-        $owner = $this->clients[$clientId] ?? null;
+        $nicknameKey = $this->nicknameKey($nickname);
+        $clientId = $this->clientId($client);
+        $ownerId = $this->clientIdsByNickname[$nicknameKey] ?? null;
 
-        if ($owner !== null && $owner !== $client) {
+        if (! isset($this->clientsById[$clientId])) {
+            throw new LogicException('Client must be registered before claiming a nickname.');
+        }
+
+        if ($ownerId !== null && $ownerId !== $clientId) {
             return false;
         }
 
         if ($client->nickname !== null) {
-            $this->release($client);
+            $this->releaseNickname($client);
         }
 
         $client->setNickname($nickname);
-        $this->clients[$clientId] = $client;
+        $this->clientIdsByNickname[$nicknameKey] = $clientId;
 
         return true;
     }
 
     public function findByNickname(string $nickname): ?Client
     {
-        return $this->clients[$this->clientId($nickname)] ?? null;
+        $clientId = $this->clientIdsByNickname[$this->nicknameKey($nickname)] ?? null;
+
+        if ($clientId === null) {
+            return null;
+        }
+
+        $connectedClient = $this->clientsById[$clientId] ?? null;
+
+        return $connectedClient?->client;
     }
 
-    public function release(Client $client): void
+    private function releaseNickname(Client $client): void
     {
         if ($client->nickname === null) {
             return;
         }
 
-        $clientId = $this->clientId($client->nickname);
+        $nicknameKey = $this->nicknameKey($client->nickname);
+        $clientId = $this->clientId($client);
 
-        if (($this->clients[$clientId] ?? null) === $client) {
-            unset($this->clients[$clientId]);
+        if (($this->clientIdsByNickname[$nicknameKey] ?? null) === $clientId) {
+            unset($this->clientIdsByNickname[$nicknameKey]);
         }
     }
 
-    private function clientId(string $nickname): string
+    private function clientId(Client $client): int
+    {
+        return spl_object_id($client);
+    }
+
+    private function nicknameKey(string $nickname): string
     {
         return $this->caseMapper->normalise($nickname);
     }

@@ -12,7 +12,6 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
@@ -77,7 +76,6 @@ final class ClientConnectionFactoryTest extends TestCase
             handler: $handler,
             lifecycle: new ClientConnectionLifecycle(
                 clients: new ClientRegistry($caseMapper),
-                connections: new ClientConnectionRegistry(),
                 channels: new ChannelRegistry($caseMapper),
             ),
         );

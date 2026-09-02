@@ -10,12 +10,12 @@ use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -80,9 +80,9 @@ final class JoinHandlerTest extends TestCase
     #[Test]
     public function it_creates_and_joins_a_channel(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$client, $connection] = $this->connectedClient('John');
-        $connections->register($client, $connection);
+        $clients->register($client, $connection);
 
         $handler->handle(
             new CommandContext($connection, $client),
@@ -114,12 +114,12 @@ final class JoinHandlerTest extends TestCase
     #[Test]
     public function it_broadcasts_a_join_and_sends_the_existing_names_to_the_new_member(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John');
         [$jane, $janeConnection] = $this->connectedClient('Jane');
         $channels->join('#PHP', $john);
-        $connections->register($john, $johnConnection);
-        $connections->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+        $clients->register($jane, $janeConnection);
 
         $handler->handle(
             new CommandContext($janeConnection, $jane),
@@ -149,10 +149,10 @@ final class JoinHandlerTest extends TestCase
     #[Test]
     public function joining_a_channel_twice_is_silent(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$client, $connection] = $this->connectedClient('John');
         $channel = $channels->join('#php', $client);
-        $connections->register($client, $connection);
+        $clients->register($client, $connection);
 
         $handler->handle(
             new CommandContext($connection, $client),
@@ -166,9 +166,9 @@ final class JoinHandlerTest extends TestCase
     #[Test]
     public function it_processes_each_channel_in_a_comma_separated_list(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$client, $connection] = $this->connectedClient('John');
-        $connections->register($client, $connection);
+        $clients->register($client, $connection);
 
         $handler->handle(
             new CommandContext($connection, $client),
@@ -187,23 +187,24 @@ final class JoinHandlerTest extends TestCase
         );
     }
 
-    /** @return array{JoinHandler, ChannelRegistry, ClientConnectionRegistry} */
+    /** @return array{JoinHandler, ChannelRegistry, ClientRegistry} */
     private function handler(): array
     {
-        $channels = new ChannelRegistry(new AsciiCaseMapper());
-        $connections = new ClientConnectionRegistry();
+        $caseMapper = new AsciiCaseMapper();
+        $channels = new ChannelRegistry($caseMapper);
+        $clients = new ClientRegistry($caseMapper);
         $responses = new NumericResponseFactory(new ServerName('irc.test'));
 
         return [
             new JoinHandler(
                 channels: $channels,
                 channelNames: new ChannelNameValidator(),
-                broadcaster: new ChannelBroadcaster($connections),
+                broadcaster: new ChannelBroadcaster($clients),
                 namesResponses: new ChannelNamesResponseFactory($responses),
                 responses: $responses,
             ),
             $channels,
-            $connections,
+            $clients,
         ];
     }
 

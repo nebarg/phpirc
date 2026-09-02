@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use LogicException;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
@@ -17,7 +18,6 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
@@ -25,6 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
 
 final class ClientConnectionTest extends TestCase
@@ -133,7 +134,7 @@ final class ClientConnectionTest extends TestCase
     {
         $socket = new FakeClientSocket(["PING :token\r\n"]);
         $client = new Client();
-        $connections = new ClientConnectionRegistry();
+        $clients = new ClientRegistry(new AsciiCaseMapper());
         $handler = new class implements MessageHandler {
             public function handle(CommandContext $context, Message $message): void
             {
@@ -146,13 +147,37 @@ final class ClientConnectionTest extends TestCase
                 socket: $socket,
                 handler: $handler,
                 client: $client,
-                connections: $connections,
+                clients: $clients,
             )->run();
             $this->fail('Expected the handler exception.');
         } catch (RuntimeException $exception) {
             $this->assertSame('Handler failed.', $exception->getMessage());
             $this->assertSame(1, $socket->closeCalls);
-            $this->assertNull($connections->find($client));
+            $this->assertNull($clients->connectionFor($client));
+        }
+    }
+
+    #[Test]
+    public function it_does_not_unregister_an_existing_client_when_registration_fails(): void
+    {
+        $socket = new FakeClientSocket();
+        $client = new Client();
+        $clients = new ClientRegistry(new AsciiCaseMapper());
+        $existingConnection = new RecordingConnection();
+        $clients->register($client, $existingConnection);
+
+        try {
+            $this->connection(
+                socket: $socket,
+                handler: new RecordingMessageHandler(),
+                client: $client,
+                clients: $clients,
+            )->run();
+            $this->fail('Expected a logic exception.');
+        } catch (LogicException $exception) {
+            $this->assertSame('Client is already registered.', $exception->getMessage());
+            $this->assertSame(1, $socket->closeCalls);
+            $this->assertSame($existingConnection, $clients->connectionFor($client));
         }
     }
 
@@ -190,11 +215,20 @@ final class ClientConnectionTest extends TestCase
     {
         $client = new Client();
         $clients = new ClientRegistry(new AsciiCaseMapper());
-        $clients->claimNickname($client, 'John');
+        $handler = new class($clients) implements MessageHandler {
+            public function __construct(
+                private readonly ClientRegistry $clients,
+            ) {}
+
+            public function handle(CommandContext $context, Message $message): void
+            {
+                $this->clients->claimNickname($context->client, 'John');
+            }
+        };
 
         $this->connection(
-            socket: new FakeClientSocket(),
-            handler: new RecordingMessageHandler(),
+            socket: new FakeClientSocket(["NICK John\r\n"]),
+            handler: $handler,
             client: $client,
             clients: $clients,
         )->run();
@@ -205,17 +239,17 @@ final class ClientConnectionTest extends TestCase
     #[Test]
     public function it_registers_the_connection_while_handling_messages_and_unregisters_it_afterwards(): void
     {
-        $connections = new ClientConnectionRegistry();
-        $handler = new class($connections) implements MessageHandler {
+        $clients = new ClientRegistry(new AsciiCaseMapper());
+        $handler = new class($clients) implements MessageHandler {
             public bool $connectionWasRegistered = false;
 
             public function __construct(
-                private readonly ClientConnectionRegistry $connections,
+                private readonly ClientRegistry $clients,
             ) {}
 
             public function handle(CommandContext $context, Message $message): void
             {
-                $this->connectionWasRegistered = $this->connections->find($context->client) === $context->connection;
+                $this->connectionWasRegistered = $this->clients->connectionFor($context->client) === $context->connection;
             }
         };
         $client = new Client();
@@ -224,11 +258,11 @@ final class ClientConnectionTest extends TestCase
             socket: new FakeClientSocket(["PING :token\r\n"]),
             handler: $handler,
             client: $client,
-            connections: $connections,
+            clients: $clients,
         )->run();
 
         $this->assertTrue($handler->connectionWasRegistered);
-        $this->assertNull($connections->find($client));
+        $this->assertNull($clients->connectionFor($client));
     }
 
     #[Test]
@@ -253,7 +287,6 @@ final class ClientConnectionTest extends TestCase
         MessageHandler $handler,
         ?Client $client = null,
         ?ClientRegistry $clients = null,
-        ?ClientConnectionRegistry $connections = null,
         ?ChannelRegistry $channels = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
@@ -269,7 +302,6 @@ final class ClientConnectionTest extends TestCase
             handler: $handler,
             lifecycle: new ClientConnectionLifecycle(
                 clients: $clients ?? new ClientRegistry($caseMapper),
-                connections: $connections ?? new ClientConnectionRegistry(),
                 channels: $channels ?? new ChannelRegistry($caseMapper),
             ),
         );

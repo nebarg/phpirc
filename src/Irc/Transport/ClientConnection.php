@@ -21,8 +21,11 @@ final class ClientConnection implements Connection
 
     public function run(): void
     {
+        $registered = false;
+
         try {
             $this->lifecycle->connected($this->client, $this);
+            $registered = true;
 
             $context = new CommandContext(
                 connection: $this,
@@ -36,7 +39,9 @@ final class ClientConnection implements Connection
             }
         } finally {
             try {
-                $this->lifecycle->disconnected($this->client, $this);
+                if ($registered) {
+                    $this->lifecycle->disconnected($this->client);
+                }
             } finally {
                 $this->close();
             }

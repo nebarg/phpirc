@@ -14,7 +14,6 @@ use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\Amp\IrcServer;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PHPUnit\Framework\Attributes\Test;
@@ -132,7 +131,6 @@ final class IrcServerTest extends TestCase
                 handler: $handler,
                 lifecycle: new ClientConnectionLifecycle(
                     clients: new ClientRegistry($caseMapper),
-                    connections: new ClientConnectionRegistry(),
                     channels: new ChannelRegistry($caseMapper),
                 ),
             ),

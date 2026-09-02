@@ -8,12 +8,12 @@ use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Transport\ClientConnectionRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -79,11 +79,11 @@ final class PartHandlerTest extends TestCase
     #[Test]
     public function it_rejects_a_channel_the_client_has_not_joined(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John');
         [$jane, $janeConnection] = $this->connectedClient('Jane');
         $channel = $channels->join('#php', $john);
-        $connections->register($john, $johnConnection);
+        $clients->register($john, $johnConnection);
 
         $handler->handle(
             new CommandContext($janeConnection, $jane),
@@ -104,13 +104,13 @@ final class PartHandlerTest extends TestCase
     #[Test]
     public function it_broadcasts_before_removing_the_client_from_the_channel(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John');
         [$jane, $janeConnection] = $this->connectedClient('Jane');
         $channel = $channels->join('#PHP', $john);
         $channels->join('#php', $jane);
-        $connections->register($john, $johnConnection);
-        $connections->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+        $clients->register($jane, $janeConnection);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -128,13 +128,13 @@ final class PartHandlerTest extends TestCase
     #[Test]
     public function it_includes_the_part_reason_in_the_broadcast(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John');
         [$jane, $janeConnection] = $this->connectedClient('Jane');
         $channels->join('#php', $john);
         $channels->join('#php', $jane);
-        $connections->register($john, $johnConnection);
-        $connections->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+        $clients->register($jane, $janeConnection);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -148,10 +148,10 @@ final class PartHandlerTest extends TestCase
     #[Test]
     public function it_removes_the_channel_when_its_final_member_parts(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$client, $connection] = $this->connectedClient('John');
         $channels->join('#php', $client);
-        $connections->register($client, $connection);
+        $clients->register($client, $connection);
 
         $handler->handle(
             new CommandContext($connection, $client),
@@ -165,14 +165,14 @@ final class PartHandlerTest extends TestCase
     #[Test]
     public function it_processes_each_channel_in_a_comma_separated_list(): void
     {
-        [$handler, $channels, $connections] = $this->handler();
+        [$handler, $channels, $clients] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John');
         [$jane, $janeConnection] = $this->connectedClient('Jane');
         $first = $channels->join('#one', $john);
         $channels->join('#one', $jane);
         $second = $channels->join('#two', $john);
-        $connections->register($john, $johnConnection);
-        $connections->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+        $clients->register($jane, $janeConnection);
 
         $handler->handle(
             new CommandContext($johnConnection, $john),
@@ -196,20 +196,21 @@ final class PartHandlerTest extends TestCase
         $this->assertNull($channels->find('#two'));
     }
 
-    /** @return array{PartHandler, ChannelRegistry, ClientConnectionRegistry} */
+    /** @return array{PartHandler, ChannelRegistry, ClientRegistry} */
     private function handler(): array
     {
-        $channels = new ChannelRegistry(new AsciiCaseMapper());
-        $connections = new ClientConnectionRegistry();
+        $caseMapper = new AsciiCaseMapper();
+        $channels = new ChannelRegistry($caseMapper);
+        $clients = new ClientRegistry($caseMapper);
 
         return [
             new PartHandler(
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($connections),
+                broadcaster: new ChannelBroadcaster($clients),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
             $channels,
-            $connections,
+            $clients,
         ];
     }
 

@@ -12,19 +12,17 @@ final readonly class ClientConnectionLifecycle
 {
     public function __construct(
         private ClientRegistry $clients,
-        private ClientConnectionRegistry $connections,
         private ChannelRegistry $channels,
     ) {}
 
     public function connected(Client $client, Connection $connection): void
     {
-        $this->connections->register($client, $connection);
+        $this->clients->register($client, $connection);
     }
 
-    public function disconnected(Client $client, Connection $connection): void
+    public function disconnected(Client $client): void
     {
         $this->channels->leaveAll($client);
-        $this->clients->release($client);
-        $this->connections->unregister($client, $connection);
+        $this->clients->unregister($client);
     }
 }
