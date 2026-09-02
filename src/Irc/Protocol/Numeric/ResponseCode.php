@@ -13,9 +13,12 @@ enum ResponseCode: string
     case ISupport = '005';
     case NamesReply = '353';
     case EndOfNames = '366';
+    case NoSuchNick = '401';
     case NoSuchChannel = '403';
     case NoOrigin = '409';
     case InvalidCapCommand = '410';
+    case NoRecipient = '411';
+    case NoTextToSend = '412';
     case UnknownCommand = '421';
     case NoMotd = '422';
     case NoNicknameGiven = '431';
@@ -32,9 +35,12 @@ enum ResponseCode: string
             self::Welcome, self::YourHost, self::Created, self::MyInfo, self::NamesReply => null,
             self::ISupport => 'are supported by this server',
             self::EndOfNames => 'End of /NAMES list',
+            self::NoSuchNick => 'No such nick/channel',
             self::NoSuchChannel => 'No such channel',
             self::NoOrigin => 'No origin specified',
             self::InvalidCapCommand => 'Invalid CAP command',
+            self::NoRecipient => 'No recipient given (PRIVMSG)',
+            self::NoTextToSend => 'No text to send',
             self::UnknownCommand => 'Unknown command',
             self::NoMotd => 'MOTD File is missing',
             self::NoNicknameGiven => 'No nickname given',

@@ -41,4 +41,25 @@ final class ChannelBroadcasterTest extends TestCase
         $this->assertSame([$message], $secondConnection->messages);
         $this->assertSame([], $outsiderConnection->messages);
     }
+
+    #[Test]
+    public function it_excludes_a_specific_member_from_the_broadcast(): void
+    {
+        $first = new Client();
+        $second = new Client();
+        $channel = new Channel('#php');
+        $channel->join($first);
+        $channel->join($second);
+        $connections = new ClientConnectionRegistry();
+        $firstConnection = new RecordingConnection();
+        $secondConnection = new RecordingConnection();
+        $connections->register($first, $firstConnection);
+        $connections->register($second, $secondConnection);
+        $message = new Message(command: 'PRIVMSG', parameters: ['#php', 'Hello'], source: 'John');
+
+        new ChannelBroadcaster($connections)->broadcastExcept($channel, $message, $first);
+
+        $this->assertSame([], $firstConnection->messages);
+        $this->assertSame([$message], $secondConnection->messages);
+    }
 }

@@ -21,9 +21,12 @@ final class ResponseCodeTest extends TestCase
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
         yield 'names reply' => [ResponseCode::NamesReply, null];
         yield 'end of names' => [ResponseCode::EndOfNames, 'End of /NAMES list'];
+        yield 'no such nick' => [ResponseCode::NoSuchNick, 'No such nick/channel'];
         yield 'no such channel' => [ResponseCode::NoSuchChannel, 'No such channel'];
         yield 'invalid CAP command' => [ResponseCode::InvalidCapCommand, 'Invalid CAP command'];
         yield 'no origin' => [ResponseCode::NoOrigin, 'No origin specified'];
+        yield 'no recipient' => [ResponseCode::NoRecipient, 'No recipient given (PRIVMSG)'];
+        yield 'no text to send' => [ResponseCode::NoTextToSend, 'No text to send'];
         yield 'unknown command' => [ResponseCode::UnknownCommand, 'Unknown command'];
         yield 'no MOTD' => [ResponseCode::NoMotd, 'MOTD File is missing'];
         yield 'no nickname given' => [ResponseCode::NoNicknameGiven, 'No nickname given'];

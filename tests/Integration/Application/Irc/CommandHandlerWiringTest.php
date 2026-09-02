@@ -17,6 +17,7 @@ use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -40,6 +41,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(CapHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
         $this->assertContains(PartHandler::class, $handlers);
+        $this->assertContains(PrivmsgHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
@@ -183,6 +185,28 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":{$serverName} 353 John = #php @John\r\n",
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
                 ":John PART #php\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_private_message_to_the_registered_client(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nPRIVMSG john :A note to myself\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John PRIVMSG John :A note to myself\r\n",
             ],
             $socket->writes,
         );
