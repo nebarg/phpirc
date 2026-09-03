@@ -26,7 +26,7 @@ final readonly class NoticeHandler implements PreRegistrationCommandHandler
             return;
         }
 
-        if ($message->isParameterMissing(0) || $message->isParameterMissing(1)) {
+        if ($message->isParameterMissingOrEmpty(0) || $message->isParameterMissingOrEmpty(1)) {
             return;
         }
 

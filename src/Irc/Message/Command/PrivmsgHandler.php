@@ -25,7 +25,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        if ($message->isParameterMissing(0)) {
+        if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoRecipient,
@@ -38,7 +38,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
         $targets = $message->parameter(0);
 
-        if ($message->isParameterMissing(1)) {
+        if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NoTextToSend,

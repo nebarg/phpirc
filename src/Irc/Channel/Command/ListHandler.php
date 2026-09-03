@@ -25,7 +25,7 @@ final readonly class ListHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $channels = $message->isParameterMissing(0)
+        $channels = $message->isParameterMissingOrEmpty(0)
             ? $this->channels->all()
             : $this->findChannels($message->parameter(0));
 

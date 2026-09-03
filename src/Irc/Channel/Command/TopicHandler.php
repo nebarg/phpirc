@@ -29,7 +29,7 @@ final readonly class TopicHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        if ($message->isParameterMissing(0)) {
+        if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,
@@ -55,9 +55,7 @@ final readonly class TopicHandler implements CommandHandler
             return;
         }
 
-        $topic = $message->optionalParameter(1);
-
-        if ($topic === null) {
+        if ($message->isParameterMissing(1)) {
             array_map(
                 $context->connection->send(...),
                 $this->topicResponses->createResponses($context->responseTarget(), $channel),
@@ -65,6 +63,8 @@ final readonly class TopicHandler implements CommandHandler
 
             return;
         }
+
+        $topic = $message->parameter(1);
 
         if (! $channel->has($context->client)) {
             $context->connection->send(
@@ -78,7 +78,7 @@ final readonly class TopicHandler implements CommandHandler
             return;
         }
 
-        if ($topic === '') {
+        if ($message->isParameterEmpty(1)) {
             $channel->clearTopic();
         } else {
             $channel->setTopic($topic, $context->responseTarget());

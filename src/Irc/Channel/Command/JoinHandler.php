@@ -33,7 +33,7 @@ final readonly class JoinHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        if ($message->isParameterMissing(0)) {
+        if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,

@@ -38,7 +38,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             return;
         }
 
-        if (count($message->parameters) < self::MIN_PARAMETERS_ALLOWED || $message->isParameterMissing(0)) {
+        if (count($message->parameters) < self::MIN_PARAMETERS_ALLOWED || $message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NeedMoreParameters,

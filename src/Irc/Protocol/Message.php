@@ -27,8 +27,25 @@ final readonly class Message
         return $this->parameters[$position] ?? null;
     }
 
+    /** Returns true when no parameter was provided at this position. */
     public function isParameterMissing(int $position): bool
     {
-        return $this->parameter($position) === '';
+        return ! array_key_exists($position, $this->parameters);
+    }
+
+    /** Returns true when a provided parameter contains no characters. */
+    public function isParameterEmpty(int $position): bool
+    {
+        return ! $this->isParameterMissing($position) && $this->parameters[$position] === '';
+    }
+
+    /**
+     * Returns true for typical "blank" behaviour: a missing or empty parameter.
+     *
+     * The explicit name avoids implying that valid IRC whitespace is blank.
+     */
+    public function isParameterMissingOrEmpty(int $position): bool
+    {
+        return $this->isParameterMissing($position) || $this->isParameterEmpty($position);
     }
 }

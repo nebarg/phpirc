@@ -26,7 +26,7 @@ final readonly class NamesHandler implements CommandHandler
     {
         $target = $context->responseTarget();
 
-        if ($message->isParameterMissing(0)) {
+        if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
                 $this->responses->createEndResponse(
                     target: $target,
