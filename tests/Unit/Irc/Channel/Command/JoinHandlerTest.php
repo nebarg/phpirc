@@ -8,6 +8,7 @@ use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
@@ -147,6 +148,57 @@ final class JoinHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_sends_an_existing_topic_before_the_names_when_joining(): void
+    {
+        [$handler, $channels, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John');
+        [$jane, $janeConnection] = $this->connectedClient('Jane');
+        $channel = $channels->join('#PHP', $john);
+        $channel->setTopic('PHP discussion', 'John');
+        $topic = $channel->topic;
+        $this->assertNotNull($topic);
+        $clients->register($john, $johnConnection);
+        $clients->register($jane, $janeConnection);
+
+        $handler->handle(
+            new CommandContext($janeConnection, $jane),
+            new Message(command: 'JOIN', parameters: ['#php']),
+        );
+
+        $this->assertCount(1, $johnConnection->messages);
+        $this->assertCount(5, $janeConnection->messages);
+        $this->assertResponse(
+            $janeConnection,
+            '332',
+            ['Jane', '#PHP', 'PHP discussion'],
+            index: 1,
+        );
+        $this->assertResponse(
+            $janeConnection,
+            '333',
+            [
+                'Jane',
+                '#PHP',
+                'John',
+                (string) $topic->setAt->getTimestamp(),
+            ],
+            index: 2,
+        );
+        $this->assertResponse(
+            $janeConnection,
+            '353',
+            ['Jane', '=', '#PHP', '@John Jane'],
+            index: 3,
+        );
+        $this->assertResponse(
+            $janeConnection,
+            '366',
+            ['Jane', '#PHP', 'End of /NAMES list'],
+            index: 4,
+        );
+    }
+
+    #[Test]
     public function joining_a_channel_twice_is_silent(): void
     {
         [$handler, $channels, $clients] = $this->handler();
@@ -201,6 +253,7 @@ final class JoinHandlerTest extends TestCase
                 channelNames: new ChannelNameValidator(),
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 namesResponses: new ChannelNamesResponseFactory($responses),
+                topicResponses: new ChannelTopicResponseFactory($responses),
                 responses: $responses,
             ),
             $channels,

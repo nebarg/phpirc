@@ -16,6 +16,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
+- [x] Viewing, setting and clearing channel topics with `TOPIC`
 - [x] `PRIVMSG` and `NOTICE` delivery to users and channels, including multiple targets
 - [x] Unknown-command and not-registered responses
 - [x] ASCII IRC casemapping for nicknames and channels
@@ -72,7 +73,6 @@ composer qa
 
 - [ ] Server keepalive with `PING`/`PONG`, ping timeouts and stale-connection cleanup
 - [ ] Per-client flood protection, rate limits and slow-client handling
-- [ ] Channel topics with `TOPIC`
 - [ ] Channel and membership modes
 - [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS

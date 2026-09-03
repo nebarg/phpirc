@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Channel;
 
+use DateTimeImmutable;
 use PhpIrc\Irc\Client\Client;
 
 final class Channel
 {
     /** @var array<int, Membership> */
     private array $members = [];
+
+    public private(set) ?Topic $topic = null;
 
     public function __construct(
         public readonly string $name,
@@ -66,6 +69,20 @@ final class Channel
     public function memberCount(): int
     {
         return count($this->members);
+    }
+
+    public function setTopic(string $topic, string $byNickname): void
+    {
+        $this->topic = new Topic(
+            text: $topic,
+            setBy: $byNickname,
+            setAt: new DateTimeImmutable(),
+        );
+    }
+
+    public function clearTopic(): void
+    {
+        $this->topic = null;
     }
 
     private function clientId(Client $client): int

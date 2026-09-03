@@ -14,6 +14,9 @@ enum ResponseCode: string
     case ListStart = '321';
     case ListEntry = '322';
     case ListEnd = '323';
+    case NoTopic = '331';
+    case Topic = '332';
+    case TopicWhoTime = '333';
     case NamesReply = '353';
     case EndOfNames = '366';
     case NoSuchNick = '401';
@@ -34,11 +37,14 @@ enum ResponseCode: string
 
     public function defaultText(): ?string
     {
+        // @mago-format-ignore-next
         return match ($this) {
-            self::Welcome, self::YourHost, self::Created, self::MyInfo, self::NamesReply, self::ListEntry => null,
+            self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
+            self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime => null,
             self::ISupport => 'are supported by this server',
             self::ListStart => 'Users  Name',
             self::ListEnd => 'End of /LIST',
+            self::NoTopic => 'No topic is set',
             self::EndOfNames => 'End of /NAMES list',
             self::NoSuchNick => 'No such nick/channel',
             self::NoSuchChannel => 'No such channel',

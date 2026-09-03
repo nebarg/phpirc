@@ -8,6 +8,7 @@ use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
@@ -21,6 +22,7 @@ final readonly class JoinHandler implements CommandHandler
         private ChannelNameValidator $channelNames,
         private ChannelBroadcaster $broadcaster,
         private ChannelNamesResponseFactory $namesResponses,
+        private ChannelTopicResponseFactory $topicResponses,
         private NumericResponseFactory $responses,
     ) {}
 
@@ -77,7 +79,10 @@ final readonly class JoinHandler implements CommandHandler
 
             array_map(
                 $context->connection->send(...),
-                $this->namesResponses->createResponses($context->responseTarget(), $channel)
+                [
+                    ...$this->topicResponses->createExistingTopicResponses($context->responseTarget(), $channel),
+                    ...$this->namesResponses->createResponses($context->responseTarget(), $channel),
+                ],
             );
         }
     }

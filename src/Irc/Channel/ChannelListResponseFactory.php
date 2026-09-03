@@ -30,7 +30,7 @@ final readonly class ChannelListResponseFactory
                     $channel->name,
                     (string) $channel->memberCount(),
                 ],
-                text: '',
+                text: $channel->topic->text ?? '',
             );
         }
 

@@ -40,6 +40,7 @@ final class ChannelListResponseFactoryTest extends TestCase
         $first = new Channel('#PHP');
         $first->join(new Client());
         $first->join(new Client());
+        $first->setTopic('PHP discussion', 'Jane');
         $second = new Channel('#general');
         $second->join(new Client());
 
@@ -50,7 +51,7 @@ final class ChannelListResponseFactoryTest extends TestCase
             array_map(static fn ($message): string => $message->command, $messages),
         );
         $this->assertSame(
-            ['John', '#PHP', '2', ''],
+            ['John', '#PHP', '2', 'PHP discussion'],
             $messages[1]->parameters,
         );
         $this->assertSame(
