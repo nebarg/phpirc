@@ -13,6 +13,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Nickname validation, collision detection and nickname changes
 - [x] Registration welcome messages and `005` feature advertisement
 - [x] Client and server `PING`/`PONG`, including stale-connection timeouts
+- [x] Per-client command-rate limits and excess-flood disconnections
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
@@ -61,6 +62,8 @@ IRC_NETWORK_NAME=PHPIRC
 IRC_SERVER_VERSION=phpirc-0.1.0
 IRC_PING_INTERVAL=120
 IRC_PONG_TIMEOUT=30
+IRC_FLOOD_BURST_MESSAGES=20
+IRC_FLOOD_MESSAGES_PER_SECOND=2
 LISTEN_ADDRESS=127.0.0.1
 LISTEN_PORT=6667
 ```
@@ -73,7 +76,7 @@ composer qa
 
 ## Roadmap
 
-- [ ] Per-client flood protection, rate limits and slow-client handling
+- [ ] Bounded outbound delivery and slow-client handling
 - [ ] Channel and membership modes
 - [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS

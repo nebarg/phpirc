@@ -20,6 +20,7 @@ use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
@@ -28,6 +29,7 @@ use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\Support\Irc\Transport\Time\ManualMonotonicClock;
 use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
 
@@ -129,6 +131,11 @@ final class IrcServerTest extends TestCase
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $config = new ServerConfig(
+            serverName: new ServerName('irc.test'),
+            networkName: 'Test Network',
+            listeners: [],
+        );
 
         return new IrcServer(
             listener: $listener,
@@ -147,11 +154,11 @@ final class IrcServerTest extends TestCase
                 ),
                 keepalives: new ConnectionKeepaliveFactory(
                     timers: new ManualTimerScheduler(),
-                    config: new ServerConfig(
-                        serverName: new ServerName('irc.test'),
-                        networkName: 'Test Network',
-                        listeners: [],
-                    ),
+                    config: $config,
+                ),
+                floodProtection: new FloodProtectionFactory(
+                    clock: new ManualMonotonicClock(),
+                    config: $config,
                 ),
             ),
             logger: $logger,

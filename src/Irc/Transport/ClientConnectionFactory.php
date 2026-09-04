@@ -9,6 +9,7 @@ use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
+use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 
 final readonly class ClientConnectionFactory
@@ -20,6 +21,7 @@ final readonly class ClientConnectionFactory
         private MessageHandler $handler,
         private ClientConnectionLifecycle $lifecycle,
         private ConnectionKeepaliveFactory $keepalives,
+        private FloodProtectionFactory $floodProtection,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
@@ -32,7 +34,7 @@ final readonly class ClientConnectionFactory
                 parser: $this->parser,
                 encoder: $this->encoder,
             ),
-            handler: $this->handler,
+            handler: $this->floodProtection->protect($this->handler),
             lifecycle: $this->lifecycle,
             keepalive: $this->keepalives->create(),
         );

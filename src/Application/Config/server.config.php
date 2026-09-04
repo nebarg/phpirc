@@ -1,5 +1,6 @@
 <?php
 
+use PhpIrc\Irc\Config\FloodProtectionConfig;
 use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ListenerConfig;
 use PhpIrc\Irc\Config\ServerConfig;
@@ -20,5 +21,9 @@ return new ServerConfig(
     keepalive: new KeepaliveConfig(
         pingIntervalSeconds: (int) env('IRC_PING_INTERVAL', default: 120),
         pongTimeoutSeconds: (int) env('IRC_PONG_TIMEOUT', default: 30),
+    ),
+    floodProtection: new FloodProtectionConfig(
+        burstMessages: (int) env('IRC_FLOOD_BURST_MESSAGES', default: 20),
+        messagesPerSecond: (int) env('IRC_FLOOD_MESSAGES_PER_SECOND', default: 2),
     ),
 );

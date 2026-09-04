@@ -125,6 +125,31 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     }
 
     #[Test]
+    public function it_disconnects_a_raw_client_that_exceeds_the_message_burst(): void
+    {
+        $config = $this->container->get(ServerConfig::class);
+        $messages = [];
+
+        for ($index = 1; $index <= ($config->floodProtection->burstMessages + 1); $index++) {
+            $messages[] = "PING :token-{$index}\r\n";
+        }
+
+        $socket = new FakeClientSocket([implode('', $messages)]);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertCount($config->floodProtection->burstMessages + 1, $socket->writes);
+        $this->assertSame(
+            ":{$config->serverName->value} ERROR :Excess flood\r\n",
+            $socket->writes[$config->floodProtection->burstMessages],
+        );
+        $this->assertSame(1, $socket->closeCalls);
+    }
+
+    #[Test]
     public function it_registers_a_raw_client_with_nick_and_user(): void
     {
         $socket = new FakeClientSocket([
