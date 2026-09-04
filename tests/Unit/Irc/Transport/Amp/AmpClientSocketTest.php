@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport\Amp;
 
 use Amp\ByteStream\StreamException;
+use Amp\Socket\InternetAddress;
 use Amp\Socket\Socket as AmpSocket;
 use PhpIrc\Irc\Transport\Amp\AmpClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
@@ -28,9 +29,14 @@ final class AmpClientSocketTest extends TestCase
         $socket
             ->expects($this->once())
             ->method('close');
+        $socket
+            ->expects($this->once())
+            ->method('getRemoteAddress')
+            ->willReturn(new InternetAddress('203.0.113.10', 6697));
 
         $adapter = new AmpClientSocket($socket);
 
+        $this->assertSame('203.0.113.10', $adapter->remoteAddress());
         $this->assertSame('incoming bytes', $adapter->read());
         $adapter->write('outgoing bytes');
         $adapter->close();

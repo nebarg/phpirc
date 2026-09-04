@@ -16,8 +16,9 @@ final class Client
 
     public private(set) ClientRegistration $registration;
 
-    public function __construct()
-    {
+    public function __construct(
+        public readonly string $hostname = 'localhost',
+    ) {
         $this->registration = new ClientRegistration();
     }
 

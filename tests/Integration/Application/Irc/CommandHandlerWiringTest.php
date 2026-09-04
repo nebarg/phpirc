@@ -17,6 +17,7 @@ use PhpIrc\Irc\Client\Command\PingHandler;
 use PhpIrc\Irc\Client\Command\PongHandler;
 use PhpIrc\Irc\Client\Command\QuitHandler;
 use PhpIrc\Irc\Client\Command\UserHandler;
+use PhpIrc\Irc\Client\Command\WhoHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
@@ -47,6 +48,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(NickHandler::class, $handlers);
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
+        $this->assertContains(WhoHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
         $this->assertContains(ListHandler::class, $handlers);
         $this->assertContains(NamesHandler::class, $handlers);
@@ -210,6 +212,30 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":John JOIN #php\r\n",
                 ":{$serverName} 353 John = #php @John\r\n",
                 ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_who_query_for_the_registered_client(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nWHO john\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":{$serverName} 352 John * john 127.0.0.1 {$serverName} John H :0 John Doe\r\n",
+                ":{$serverName} 315 John john :End of WHO list\r\n",
             ],
             $socket->writes,
         );

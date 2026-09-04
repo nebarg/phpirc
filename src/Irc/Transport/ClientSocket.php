@@ -4,6 +4,8 @@ namespace PhpIrc\Irc\Transport;
 
 interface ClientSocket
 {
+    public function remoteAddress(): string;
+
     /**
      * @throws ClientSocketException
      */

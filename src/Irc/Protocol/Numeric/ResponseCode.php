@@ -11,12 +11,14 @@ enum ResponseCode: string
     case Created = '003';
     case MyInfo = '004';
     case ISupport = '005';
+    case EndOfWho = '315';
     case ListStart = '321';
     case ListEntry = '322';
     case ListEnd = '323';
     case NoTopic = '331';
     case Topic = '332';
     case TopicWhoTime = '333';
+    case WhoReply = '352';
     case NamesReply = '353';
     case EndOfNames = '366';
     case NoSuchNick = '401';
@@ -40,8 +42,10 @@ enum ResponseCode: string
         // @mago-format-ignore-next
         return match ($this) {
             self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
-            self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime, self::WhoReply => null,
             self::ISupport => 'are supported by this server',
+            self::EndOfWho => 'End of WHO list',
             self::ListStart => 'Users  Name',
             self::ListEnd => 'End of /LIST',
             self::NoTopic => 'No topic is set',

@@ -28,8 +28,14 @@ final class FakeClientSocket implements ClientSocket
     public function __construct(
         array $chunks = [],
         private readonly ?Closure $beforeRead = null,
+        private readonly string $remoteAddress = '127.0.0.1',
     ) {
         $this->chunks = $chunks;
+    }
+
+    public function remoteAddress(): string
+    {
+        return $this->remoteAddress;
     }
 
     public function read(): ?string

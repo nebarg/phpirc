@@ -27,7 +27,7 @@ final readonly class ClientConnectionFactory
     public function create(ClientSocket $socket): ClientConnection
     {
         return new ClientConnection(
-            client: new Client(),
+            client: new Client($socket->remoteAddress()),
             socket: $socket,
             codec: new MessageCodec(
                 buffer: new LineBuffer($this->validator),

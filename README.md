@@ -17,6 +17,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
+- [x] Basic `WHO` queries for exact nicknames and channel members
 - [x] Viewing, setting and clearing channel topics with `TOPIC`
 - [x] `PRIVMSG` and `NOTICE` delivery to users and channels, including multiple targets
 - [x] Unknown-command and not-registered responses
@@ -77,6 +78,10 @@ composer qa
 ## Roadmap
 
 - [ ] Bounded outbound delivery and slow-client handling
+- [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
+- [ ] Connection statistics and `LUSERS` registration replies
+- [ ] Configurable message of the day
+- [ ] User modes and `MODE` queries/changes
 - [ ] Channel and membership modes
 - [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Transport\Amp;
 
 use Amp\ByteStream\StreamException;
+use Amp\Socket\InternetAddress;
 use Amp\Socket\Socket as AmpSocket;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
@@ -14,6 +15,15 @@ final readonly class AmpClientSocket implements ClientSocket
     public function __construct(
         private AmpSocket $socket,
     ) {}
+
+    public function remoteAddress(): string
+    {
+        $address = $this->socket->getRemoteAddress();
+
+        return $address instanceof InternetAddress
+            ? $address->getAddress()
+            : $address->toString();
+    }
 
     public function read(): ?string
     {

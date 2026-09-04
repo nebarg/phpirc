@@ -56,6 +56,20 @@ final class ClientConnectionFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_assigns_the_socket_remote_address_to_the_client_hostname(): void
+    {
+        $handler = new RecordingMessageHandler();
+        $factory = $this->factory($handler);
+
+        $factory->create(new FakeClientSocket(
+            chunks: ["PING :one\r\n"],
+            remoteAddress: '203.0.113.10',
+        ))->run();
+
+        $this->assertSame('203.0.113.10', $handler->contexts[0]->client->hostname);
+    }
+
+    #[Test]
     public function it_does_not_share_buffered_input_between_connections(): void
     {
         $handler = new RecordingMessageHandler();
