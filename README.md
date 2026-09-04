@@ -12,7 +12,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
 - [x] Nickname validation, collision detection and nickname changes
 - [x] Registration welcome messages and `005` feature advertisement
-- [x] `PING` and `PONG`
+- [x] Client and server `PING`/`PONG`, including stale-connection timeouts
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
@@ -59,6 +59,8 @@ The defaults can be overridden in `.env`:
 IRC_SERVER_NAME=irc.local
 IRC_NETWORK_NAME=PHPIRC
 IRC_SERVER_VERSION=phpirc-0.1.0
+IRC_PING_INTERVAL=120
+IRC_PONG_TIMEOUT=30
 LISTEN_ADDRESS=127.0.0.1
 LISTEN_PORT=6667
 ```
@@ -71,7 +73,6 @@ composer qa
 
 ## Roadmap
 
-- [ ] Server keepalive with `PING`/`PONG`, ping timeouts and stale-connection cleanup
 - [ ] Per-client flood protection, rate limits and slow-client handling
 - [ ] Channel and membership modes
 - [ ] Channel operator commands such as `KICK`

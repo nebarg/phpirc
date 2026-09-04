@@ -91,7 +91,9 @@ final class ClientDepartureTest extends TestCase
                 throw new RuntimeException('Sending failed.');
             }
 
-            public function close(): void {}
+            public function close(string $reason = 'Connection closed'): void {}
+
+            public function pongReceived(string $token): void {}
         });
         $clients->claimNickname($jane, 'Jane');
         $channels->join('#php', $john);

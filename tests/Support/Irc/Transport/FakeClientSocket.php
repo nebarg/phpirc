@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support\Irc\Transport;
 
+use Closure;
 use PhpIrc\Irc\Transport\ClientSocket;
 
 final class FakeClientSocket implements ClientSocket
@@ -20,15 +21,24 @@ final class FakeClientSocket implements ClientSocket
 
     public int $closeCalls = 0;
 
-    /** @param list<string> $chunks */
-    public function __construct(array $chunks = [])
-    {
+    /**
+     * @param list<string> $chunks
+     * @param null|Closure(int): void $beforeRead
+     */
+    public function __construct(
+        array $chunks = [],
+        private readonly ?Closure $beforeRead = null,
+    ) {
         $this->chunks = $chunks;
     }
 
     public function read(): ?string
     {
         $this->readCalls++;
+
+        if ($this->beforeRead !== null) {
+            ($this->beforeRead)($this->readCalls);
+        }
 
         return $this->chunks[$this->nextChunk++] ?? null;
     }

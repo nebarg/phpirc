@@ -55,7 +55,7 @@ final readonly class NamesHandler implements CommandHandler
 
             array_map(
                 $context->connection->send(...),
-                $this->responses->createResponses($target, $channel)
+                $this->responses->createResponses($target, $channel),
             );
         }
     }

@@ -8,6 +8,8 @@ use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\Message;
@@ -18,6 +20,7 @@ use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Revolt\EventLoop;
@@ -25,6 +28,7 @@ use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
 
 final class IrcServerTest extends TestCase
@@ -139,6 +143,14 @@ final class IrcServerTest extends TestCase
                         clients: $clients,
                         channels: $channels,
                         broadcaster: new ChannelBroadcaster($clients, $channels),
+                    ),
+                ),
+                keepalives: new ConnectionKeepaliveFactory(
+                    timers: new ManualTimerScheduler(),
+                    config: new ServerConfig(
+                        serverName: new ServerName('irc.test'),
+                        networkName: 'Test Network',
+                        listeners: [],
                     ),
                 ),
             ),

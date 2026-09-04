@@ -39,7 +39,7 @@ final class ClientConnectionLifecycleTest extends TestCase
         $clients->claimNickname($client, 'John');
         $channels->join('#php', $client);
 
-        $lifecycle->disconnected($client);
+        $lifecycle->disconnected($client, 'Connection closed');
 
         $this->assertNull($clients->findByNickname('John'));
         $this->assertNull($clients->connectionFor($client));
@@ -61,12 +61,12 @@ final class ClientConnectionLifecycleTest extends TestCase
         $channels->join('#php', $john);
         $channels->join('#php', $jane);
 
-        $lifecycle->disconnected($john);
+        $lifecycle->disconnected($john, 'Read error');
 
         $this->assertCount(1, $janeConnection->messages);
         $this->assertSame('John', $janeConnection->messages[0]->source);
         $this->assertSame('QUIT', $janeConnection->messages[0]->command);
-        $this->assertSame(['Connection closed'], $janeConnection->messages[0]->parameters);
+        $this->assertSame(['Read error'], $janeConnection->messages[0]->parameters);
     }
 
     /** @return array{ClientConnectionLifecycle, ClientRegistry, ChannelRegistry} */

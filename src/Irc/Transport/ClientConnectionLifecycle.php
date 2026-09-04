@@ -20,8 +20,8 @@ final readonly class ClientConnectionLifecycle
         $this->clients->register($client, $connection);
     }
 
-    public function disconnected(Client $client): void
+    public function disconnected(Client $client, string $reason): void
     {
-        $this->departure->depart($client, 'Connection closed');
+        $this->departure->depart($client, $reason);
     }
 }

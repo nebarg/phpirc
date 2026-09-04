@@ -8,5 +8,7 @@ interface Connection
 {
     public function send(Message $message): void;
 
-    public function close(): void;
+    public function close(string $reason = 'Connection closed'): void;
+
+    public function pongReceived(string $token): void;
 }

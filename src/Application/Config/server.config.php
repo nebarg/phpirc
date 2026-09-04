@@ -1,5 +1,6 @@
 <?php
 
+use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ListenerConfig;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -16,4 +17,8 @@ return new ServerConfig(
         ),
     ],
     softwareVersion: (string) env('IRC_SERVER_VERSION', default: 'phpirc-0.1.0'),
+    keepalive: new KeepaliveConfig(
+        pingIntervalSeconds: (int) env('IRC_PING_INTERVAL', default: 120),
+        pongTimeoutSeconds: (int) env('IRC_PONG_TIMEOUT', default: 30),
+    ),
 );

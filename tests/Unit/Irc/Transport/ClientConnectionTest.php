@@ -10,8 +10,12 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Command\PongHandler;
 use PhpIrc\Irc\Command\CommandContext;
+use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
+use PhpIrc\Irc\Config\KeepaliveConfig;
+use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
@@ -21,6 +25,7 @@ use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
 use PHPUnit\Framework\Attributes\Test;
@@ -28,6 +33,7 @@ use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
 
 final class ClientConnectionTest extends TestCase
@@ -85,6 +91,58 @@ final class ClientConnectionTest extends TestCase
         );
         $this->assertSame($handler->contexts[0], $handler->contexts[1]);
         $this->assertSame($handler->contexts[0], $handler->contexts[2]);
+    }
+
+    #[Test]
+    public function it_records_each_received_message_as_connection_activity(): void
+    {
+        $timers = new ManualTimerScheduler();
+        $keepalive = $this->keepalive($timers);
+
+        $this->connection(
+            socket: new FakeClientSocket(["PING :one\r\nPING :two\r\n"]),
+            handler: new RecordingMessageHandler(),
+            keepalive: $keepalive,
+        )->run();
+
+        $this->assertSame([120.0, 120.0, 120.0], $timers->scheduledDelays);
+        $this->assertCount(3, $timers->cancelledTimers);
+        $this->assertSame(0, $timers->pendingCount());
+    }
+
+    #[Test]
+    public function it_cancels_the_timeout_when_a_matching_pong_is_dispatched(): void
+    {
+        $timers = new ManualTimerScheduler();
+        $keepalive = $this->keepalive($timers);
+        $unhandledMessages = new RecordingMessageHandler();
+        $socket = new FakeClientSocket(
+            chunks: ["PONG :irc.test-1\r\n"],
+            beforeRead: static function (int $readCall) use ($timers): void {
+                if ($readCall === 1) {
+                    $timers->runNext();
+                }
+            },
+        );
+
+        $this->connection(
+            socket: $socket,
+            handler: new CommandDispatcher(
+                handlers: [new PongHandler()],
+                unknownCommand: $unhandledMessages,
+                notRegistered: $unhandledMessages,
+            ),
+            keepalive: $keepalive,
+        )->run();
+
+        $this->assertSame(
+            [":irc.test PING irc.test-1\r\n"],
+            $socket->writes,
+        );
+        $this->assertSame([120.0, 30.0, 120.0], $timers->scheduledDelays);
+        $this->assertCount(2, $timers->cancelledTimers);
+        $this->assertSame(0, $timers->pendingCount());
+        $this->assertSame([], $unhandledMessages->messages);
     }
 
     #[Test]
@@ -241,6 +299,38 @@ final class ClientConnectionTest extends TestCase
     }
 
     #[Test]
+    public function it_uses_the_connections_close_reason_when_departing(): void
+    {
+        $client = new Client();
+        $jane = new Client();
+        $clients = new ClientRegistry(new AsciiCaseMapper());
+        $channels = new ChannelRegistry(new AsciiCaseMapper());
+        $janeConnection = new RecordingConnection();
+        $clients->register($jane, $janeConnection);
+        $clients->claimNickname($jane, 'Jane');
+        $client->setNickname('John');
+        $channels->join('#php', $client);
+        $channels->join('#php', $jane);
+        $handler = new class implements MessageHandler {
+            public function handle(CommandContext $context, Message $message): void
+            {
+                $context->connection->close('Ping timeout');
+            }
+        };
+
+        $this->connection(
+            socket: new FakeClientSocket(["PING :token\r\n"]),
+            handler: $handler,
+            client: $client,
+            clients: $clients,
+            channels: $channels,
+        )->run();
+
+        $this->assertCount(1, $janeConnection->messages);
+        $this->assertSame(['Ping timeout'], $janeConnection->messages[0]->parameters);
+    }
+
+    #[Test]
     public function it_releases_the_clients_nickname_when_the_connection_ends(): void
     {
         $client = new Client();
@@ -318,6 +408,7 @@ final class ClientConnectionTest extends TestCase
         ?Client $client = null,
         ?ClientRegistry $clients = null,
         ?ChannelRegistry $channels = null,
+        ?ConnectionKeepalive $keepalive = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
         $clientRegistry = $clients ?? new ClientRegistry($caseMapper);
@@ -340,6 +431,16 @@ final class ClientConnectionTest extends TestCase
                     broadcaster: new ChannelBroadcaster($clientRegistry, $channelRegistry),
                 ),
             ),
+            keepalive: $keepalive ?? $this->keepalive(new ManualTimerScheduler()),
+        );
+    }
+
+    private function keepalive(ManualTimerScheduler $timers): ConnectionKeepalive
+    {
+        return new ConnectionKeepalive(
+            timers: $timers,
+            config: new KeepaliveConfig(),
+            serverName: new ServerName('irc.test'),
         );
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
-use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
@@ -13,7 +12,6 @@ use PhpIrc\Irc\Protocol\Message;
 final readonly class QuitHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
-        private ClientDeparture $departure,
         private ServerName $serverName,
     ) {}
 
@@ -32,7 +30,6 @@ final readonly class QuitHandler implements PreRegistrationCommandHandler
             source: $this->serverName->value,
         ));
 
-        $this->departure->depart($context->client, $reason);
-        $context->connection->close();
+        $context->connection->close($reason);
     }
 }

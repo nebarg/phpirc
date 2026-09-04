@@ -18,6 +18,7 @@ final readonly class ServerConfig
         public string $networkName,
         public array $listeners,
         public string $softwareVersion = 'phpirc-0.1.0',
+        public KeepaliveConfig $keepalive = new KeepaliveConfig(),
         ?DateTimeImmutable $startedAt = null,
     ) {
         $this->startedAt = $startedAt ?? new DateTimeImmutable();

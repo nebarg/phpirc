@@ -11,11 +11,13 @@ final readonly class MessageEncoder
      */
     public function encode(Message $message): string
     {
-        return $this->encodeTags($message->tags)
+        return (
+            $this->encodeTags($message->tags)
             . $this->encodeSource($message->source)
             . $this->encodeCommand($message->command)
             . $this->encodeParameters($message->parameters)
-            . "\r\n";
+            . "\r\n"
+        );
     }
 
     /** @param list<MessageTag> $tags */
