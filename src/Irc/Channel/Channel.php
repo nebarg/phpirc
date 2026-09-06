@@ -15,9 +15,14 @@ final class Channel
 
     public private(set) ?Topic $topic = null;
 
+    public readonly DateTimeImmutable $createdAt;
+
     public function __construct(
         public readonly string $name,
-    ) {}
+        ?DateTimeImmutable $createdAt = null,
+    ) {
+        $this->createdAt = $createdAt ?? new DateTimeImmutable();
+    }
 
     public function join(Client $client): Membership
     {

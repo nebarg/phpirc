@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Channel;
 
+use DateTimeImmutable;
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
@@ -16,6 +17,14 @@ final class ChannelTest extends TestCase
     public function it_preserves_its_name(): void
     {
         $this->assertSame('#PHP', new Channel('#PHP')->name);
+    }
+
+    #[Test]
+    public function it_preserves_its_creation_time(): void
+    {
+        $createdAt = new DateTimeImmutable('2026-09-06T10:15:30+00:00');
+
+        $this->assertSame($createdAt, new Channel('#php', $createdAt)->createdAt);
     }
 
     #[Test]

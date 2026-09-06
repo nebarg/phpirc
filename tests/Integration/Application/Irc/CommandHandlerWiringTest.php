@@ -25,6 +25,7 @@ use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\NoticeHandler;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
+use PhpIrc\Irc\Mode\Command\ModeHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -56,6 +57,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(TopicHandler::class, $handlers);
         $this->assertContains(PrivmsgHandler::class, $handlers);
         $this->assertContains(NoticeHandler::class, $handlers);
+        $this->assertContains(ModeHandler::class, $handlers);
         $this->assertNotContains(RecordingCommandHandler::class, $handlers);
         $this->assertSame($handlers, array_values(array_unique($handlers)));
     }
@@ -238,6 +240,67 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":{$serverName} 315 John john :End of WHO list\r\n",
             ],
             $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_user_mode_query(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nMODE john\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":{$serverName} 221 John +\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_raw_channel_mode_queries_and_changes(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nMODE #php\r\nMODE #php +v-o John John\r\nNAMES #php\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $writes = $socket->writes;
+        $creationTimeReply = count($this->registrationWrites($config)) + 4;
+        $this->assertMatchesRegularExpression(
+            "/^:{$serverName} 329 John #php \\d+\\r\\n$/",
+            $writes[$creationTimeReply],
+        );
+        $writes[$creationTimeReply] = ":{$serverName} 329 John #php <timestamp>\r\n";
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+                ":{$serverName} 324 John #php +\r\n",
+                ":{$serverName} 329 John #php <timestamp>\r\n",
+                ":John MODE #php +v-o John John\r\n",
+                ":{$serverName} 353 John = #php +John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+            ],
+            $writes,
         );
     }
 
@@ -425,8 +488,8 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 001 John :Welcome to the {$config->networkName} Network, John\r\n",
             ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
-            ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - -\r\n",
-            ":{$serverName} 005 John CASEMAPPING=ascii CHANTYPES=# CHANNELLEN=64 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(o)@ :are supported by this server\r\n",
+            ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - ov\r\n",
+            ":{$serverName} 005 John CASEMAPPING=ascii CHANMODES=,,, CHANTYPES=# CHANNELLEN=64 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ :are supported by this server\r\n",
             ":{$serverName} 422 John :MOTD File is missing\r\n",
         ];
     }

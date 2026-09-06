@@ -19,10 +19,13 @@ final class ResponseCodeTest extends TestCase
         yield 'created' => [ResponseCode::Created, null];
         yield 'my info' => [ResponseCode::MyInfo, null];
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
+        yield 'user mode' => [ResponseCode::UserModeIs, null];
         yield 'end of WHO' => [ResponseCode::EndOfWho, 'End of WHO list'];
         yield 'list start' => [ResponseCode::ListStart, 'Users  Name'];
         yield 'list entry' => [ResponseCode::ListEntry, null];
         yield 'list end' => [ResponseCode::ListEnd, 'End of /LIST'];
+        yield 'channel mode' => [ResponseCode::ChannelModeIs, null];
+        yield 'channel creation time' => [ResponseCode::ChannelCreationTime, null];
         yield 'no topic' => [ResponseCode::NoTopic, 'No topic is set'];
         yield 'topic' => [ResponseCode::Topic, null];
         yield 'topic setter and time' => [ResponseCode::TopicWhoTime, null];
@@ -40,10 +43,18 @@ final class ResponseCodeTest extends TestCase
         yield 'no nickname given' => [ResponseCode::NoNicknameGiven, 'No nickname given'];
         yield 'erroneous nickname' => [ResponseCode::ErroneousNickname, 'Erroneous nickname'];
         yield 'nickname in use' => [ResponseCode::NicknameInUse, 'Nickname is already in use'];
+        yield 'user not in channel' => [ResponseCode::UserNotInChannel, "They aren't on that channel"];
         yield 'not on channel' => [ResponseCode::NotOnChannel, "You're not on that channel"];
         yield 'not registered' => [ResponseCode::NotRegistered, 'You have not registered'];
         yield 'need more parameters' => [ResponseCode::NeedMoreParameters, 'Not enough parameters'];
         yield 'already registered' => [ResponseCode::AlreadyRegistered, 'You may not reregister'];
+        yield 'unknown channel mode' => [ResponseCode::UnknownMode, 'is unknown mode char to me'];
+        yield 'channel operator privileges needed' => [
+            ResponseCode::ChannelOperatorPrivilegesNeeded,
+            "You're not channel operator",
+        ];
+        yield 'unknown user mode' => [ResponseCode::UnknownUserModeFlag, 'Unknown MODE flag'];
+        yield 'users do not match' => [ResponseCode::UsersDontMatch, 'Cannot change mode for other users'];
     }
 
     #[Test]

@@ -11,10 +11,13 @@ enum ResponseCode: string
     case Created = '003';
     case MyInfo = '004';
     case ISupport = '005';
+    case UserModeIs = '221';
     case EndOfWho = '315';
     case ListStart = '321';
     case ListEntry = '322';
     case ListEnd = '323';
+    case ChannelModeIs = '324';
+    case ChannelCreationTime = '329';
     case NoTopic = '331';
     case Topic = '332';
     case TopicWhoTime = '333';
@@ -32,10 +35,15 @@ enum ResponseCode: string
     case NoNicknameGiven = '431';
     case ErroneousNickname = '432';
     case NicknameInUse = '433';
+    case UserNotInChannel = '441';
     case NotOnChannel = '442';
     case NotRegistered = '451';
     case NeedMoreParameters = '461';
     case AlreadyRegistered = '462';
+    case UnknownMode = '472';
+    case ChannelOperatorPrivilegesNeeded = '482';
+    case UnknownUserModeFlag = '501';
+    case UsersDontMatch = '502';
 
     public function defaultText(): ?string
     {
@@ -44,6 +52,8 @@ enum ResponseCode: string
             self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime, self::WhoReply => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::UserModeIs, self::ChannelModeIs, self::ChannelCreationTime => null,
             self::ISupport => 'are supported by this server',
             self::EndOfWho => 'End of WHO list',
             self::ListStart => 'Users  Name',
@@ -61,10 +71,15 @@ enum ResponseCode: string
             self::NoNicknameGiven => 'No nickname given',
             self::ErroneousNickname => 'Erroneous nickname',
             self::NicknameInUse => 'Nickname is already in use',
+            self::UserNotInChannel => 'They aren\'t on that channel',
             self::NotOnChannel => 'You\'re not on that channel',
             self::NotRegistered => 'You have not registered',
             self::NeedMoreParameters => 'Not enough parameters',
             self::AlreadyRegistered => 'You may not reregister',
+            self::UnknownMode => 'is unknown mode char to me',
+            self::ChannelOperatorPrivilegesNeeded => 'You\'re not channel operator',
+            self::UnknownUserModeFlag => 'Unknown MODE flag',
+            self::UsersDontMatch => 'Cannot change mode for other users',
         };
     }
 }
