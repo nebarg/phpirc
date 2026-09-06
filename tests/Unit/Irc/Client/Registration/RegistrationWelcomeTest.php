@@ -11,6 +11,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -50,7 +51,17 @@ final class RegistrationWelcomeTest extends TestCase
         );
     }
 
-    private function welcome(): RegistrationWelcome
+    #[Test]
+    public function it_advertises_the_supported_channel_types(): void
+    {
+        $connection = new RecordingConnection();
+
+        $this->welcome(new ChannelTypes('#&'))->send($connection, 'John');
+
+        $this->assertContains('CHANTYPES=#&', $connection->messages[4]->parameters);
+    }
+
+    private function welcome(?ChannelTypes $channelTypes = null): RegistrationWelcome
     {
         $serverName = new ServerName('irc.test');
 
@@ -64,6 +75,7 @@ final class RegistrationWelcomeTest extends TestCase
             ),
             new NumericResponseFactory($serverName),
             new AsciiCaseMapper(),
+            $channelTypes ?? new ChannelTypes(),
         );
     }
 

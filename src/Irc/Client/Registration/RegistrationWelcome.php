@@ -11,6 +11,7 @@ use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Transport\Connection;
 
 final readonly class RegistrationWelcome
@@ -19,6 +20,7 @@ final readonly class RegistrationWelcome
         private ServerConfig $config,
         private NumericResponseFactory $responses,
         private CaseMapper $caseMapper,
+        private ChannelTypes $channelTypes,
     ) {}
 
     public function send(Connection $connection, string $nickname): void
@@ -67,7 +69,7 @@ final readonly class RegistrationWelcome
                 parameters: [
                     'CASEMAPPING=' . $this->caseMapper->name(),
                     'CHANMODES=,,,',
-                    'CHANTYPES=#',
+                    'CHANTYPES=' . $this->channelTypes->prefixes,
                     'CHANNELLEN=' . ChannelNameValidator::MAX_LENGTH,
                     'NICKLEN=' . NicknameValidator::MAX_LENGTH,
                     "NETWORK={$this->config->networkName}",

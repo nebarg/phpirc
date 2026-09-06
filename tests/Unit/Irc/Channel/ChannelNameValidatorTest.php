@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel;
 
 use PhpIrc\Irc\Channel\ChannelNameValidator;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -37,13 +38,23 @@ final class ChannelNameValidatorTest extends TestCase
     #[DataProvider('validNames')]
     public function it_accepts_valid_channel_names(string $name): void
     {
-        $this->assertTrue(new ChannelNameValidator()->isValid($name));
+        $this->assertTrue(new ChannelNameValidator(new ChannelTypes())->isValid($name));
     }
 
     #[Test]
     #[DataProvider('invalidNames')]
     public function it_rejects_invalid_channel_names(string $name): void
     {
-        $this->assertFalse(new ChannelNameValidator()->isValid($name));
+        $this->assertFalse(new ChannelNameValidator(new ChannelTypes())->isValid($name));
+    }
+
+    #[Test]
+    public function it_uses_the_supported_channel_types(): void
+    {
+        $validator = new ChannelNameValidator(new ChannelTypes('#&'));
+
+        $this->assertTrue($validator->isValid('#global'));
+        $this->assertTrue($validator->isValid('&local'));
+        $this->assertFalse($validator->isValid('+unsupported'));
     }
 }

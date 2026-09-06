@@ -9,6 +9,8 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Target\TargetClassifier;
+use PhpIrc\Irc\Protocol\Target\TargetType;
 
 final readonly class MessageDelivery
 {
@@ -16,6 +18,7 @@ final readonly class MessageDelivery
         private ClientRegistry $clients,
         private ChannelRegistry $channels,
         private ChannelBroadcaster $broadcaster,
+        private TargetClassifier $targets,
     ) {}
 
     /** @return list<string> */
@@ -28,11 +31,12 @@ final readonly class MessageDelivery
         $unresolvedTargets = [];
 
         foreach (explode(',', $targets) as $target) {
-            if ($this->deliverToChannel($sender, $command, $target, $text)) {
-                continue;
-            }
+            $delivered = match ($this->targets->classify($target)) {
+                TargetType::Channel => $this->deliverToChannel($sender, $command, $target, $text),
+                TargetType::Nickname => $this->deliverToClient($sender, $command, $target, $text),
+            };
 
-            if ($this->deliverToClient($sender, $command, $target, $text)) {
+            if ($delivered) {
                 continue;
             }
 

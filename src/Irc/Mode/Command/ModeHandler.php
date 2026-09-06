@@ -11,6 +11,8 @@ use PhpIrc\Irc\Mode\UserModeHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Target\TargetClassifier;
+use PhpIrc\Irc\Protocol\Target\TargetType;
 
 final readonly class ModeHandler implements CommandHandler
 {
@@ -18,6 +20,7 @@ final readonly class ModeHandler implements CommandHandler
         private ChannelModeHandler $channelModes,
         private UserModeHandler $userModes,
         private NumericResponseFactory $responses,
+        private TargetClassifier $targets,
     ) {}
 
     public function command(): string
@@ -39,7 +42,7 @@ final readonly class ModeHandler implements CommandHandler
             return;
         }
 
-        if (str_starts_with($message->parameter(0), '#')) {
+        if ($this->targets->classify($message->parameter(0)) === TargetType::Channel) {
             $this->channelModes->handle($context, $message);
             return;
         }

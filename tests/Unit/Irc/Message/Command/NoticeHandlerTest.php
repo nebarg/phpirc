@@ -13,6 +13,8 @@ use PhpIrc\Irc\Message\Command\NoticeHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -118,6 +120,7 @@ final class NoticeHandlerTest extends TestCase
                 clients: $clients,
                 channels: $channels,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
+                targets: new TargetClassifier(new ChannelTypes()),
             )),
             $clients,
             $channels,

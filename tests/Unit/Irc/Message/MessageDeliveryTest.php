@@ -10,6 +10,8 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -89,6 +91,24 @@ final class MessageDeliveryTest extends TestCase
     }
 
     #[Test]
+    public function it_does_not_probe_the_nickname_registry_for_a_channel_target(): void
+    {
+        [$delivery, $clients] = $this->delivery();
+        [$john] = $this->connectedClient('John', $clients);
+        [, $invalidNicknameConnection] = $this->connectedClient('#missing', $clients);
+
+        $unresolved = $delivery->deliver(
+            sender: $john,
+            command: 'PRIVMSG',
+            targets: '#missing',
+            text: 'Hello target',
+        );
+
+        $this->assertSame(['#missing'], $unresolved);
+        $this->assertSame([], $invalidNicknameConnection->messages);
+    }
+
+    #[Test]
     public function it_preserves_irc_formatting_and_ctcp_bytes(): void
     {
         [$delivery, $clients] = $this->delivery();
@@ -123,6 +143,7 @@ final class MessageDeliveryTest extends TestCase
                 clients: $clients,
                 channels: $channels,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
+                targets: new TargetClassifier(new ChannelTypes()),
             ),
             $clients,
             $channels,

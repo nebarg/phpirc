@@ -17,6 +17,8 @@ use PhpIrc\Irc\Mode\UserModeHandler;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -91,8 +93,26 @@ final class ModeHandlerTest extends TestCase
         );
     }
 
-    /** @return array{ModeHandler, ClientRegistry} */
-    private function handler(): array
+    #[Test]
+    public function it_routes_additional_supported_channel_types(): void
+    {
+        [$handler, $clients] = $this->handler(new ChannelTypes('#&'));
+        [$client, $connection] = $this->register($clients, 'John');
+
+        $handler->handle(
+            new CommandContext($connection, $client),
+            new Message(command: 'MODE', parameters: ['&missing']),
+        );
+
+        $this->assertResponse(
+            connection: $connection,
+            command: '403',
+            parameters: ['John', '&missing', 'No such channel'],
+        );
+    }
+
+    /** @return array{ModeHandler, ClientRegistry, ChannelRegistry} */
+    private function handler(?ChannelTypes $channelTypes = null): array
     {
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
@@ -110,8 +130,10 @@ final class ModeHandlerTest extends TestCase
                 ),
                 userModes: new UserModeHandler($clients, $responses),
                 responses: $responses,
+                targets: new TargetClassifier($channelTypes ?? new ChannelTypes()),
             ),
             $clients,
+            $channels,
         ];
     }
 

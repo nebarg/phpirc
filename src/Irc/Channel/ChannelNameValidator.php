@@ -4,12 +4,26 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Channel;
 
+use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+
 final readonly class ChannelNameValidator
 {
     public const int MAX_LENGTH = 64;
 
+    public function __construct(
+        private ChannelTypes $channelTypes,
+    ) {}
+
     public function isValid(string $name): bool
     {
-        return strlen($name) <= self::MAX_LENGTH && preg_match('~\A#[^ ,\x07]+\z~', $name) === 1;
+        if (strlen($name) < 2 || strlen($name) > self::MAX_LENGTH) {
+            return false;
+        }
+
+        if (! $this->channelTypes->isChannelTarget($name)) {
+            return false;
+        }
+
+        return strpbrk($name, " ,\x07") === false;
     }
 }
