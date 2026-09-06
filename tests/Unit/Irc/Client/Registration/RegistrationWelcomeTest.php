@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client\Registration;
 
 use DateTimeImmutable;
+use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\LusersResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -45,6 +48,8 @@ final class RegistrationWelcomeTest extends TestCase
                         'are supported by this server',
                     ],
                 ),
+                $this->response('251', ['John', 'There are 0 users and 0 invisible on 1 servers']),
+                $this->response('255', ['John', 'I have 0 clients and 0 servers']),
                 $this->response('422', ['John', 'MOTD File is missing']),
             ],
             $connection->messages,
@@ -64,6 +69,10 @@ final class RegistrationWelcomeTest extends TestCase
     private function welcome(?ChannelTypes $channelTypes = null): RegistrationWelcome
     {
         $serverName = new ServerName('irc.test');
+        $caseMapper = new AsciiCaseMapper();
+        $responses = new NumericResponseFactory($serverName);
+        $clients = new ClientRegistry($caseMapper);
+        $channels = new ChannelRegistry($caseMapper);
 
         return new RegistrationWelcome(
             new ServerConfig(
@@ -73,9 +82,10 @@ final class RegistrationWelcomeTest extends TestCase
                 softwareVersion: 'phpirc-test',
                 startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
             ),
-            new NumericResponseFactory($serverName),
-            new AsciiCaseMapper(),
+            $responses,
+            $caseMapper,
             $channelTypes ?? new ChannelTypes(),
+            new LusersResponseFactory($clients, $channels, $responses),
         );
     }
 

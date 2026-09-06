@@ -39,10 +39,10 @@ final class ClientRegistryWiringTest extends IntegrationTestCase
 
         $config = $this->container->get(ServerConfig::class);
 
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
         $this->assertSame($config->serverName->value, $connection->messages[0]->source);
         $this->assertSame(
-            ['001', '002', '003', '004', '005', '422'],
+            ['001', '002', '003', '004', '005', '251', '255', '422'],
             array_map(
                 static fn ($message): string => $message->command,
                 $connection->messages,

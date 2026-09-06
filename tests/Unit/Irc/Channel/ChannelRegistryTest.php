@@ -70,6 +70,17 @@ final class ChannelRegistryTest extends TestCase
     }
 
     #[Test]
+    public function it_counts_existing_channels(): void
+    {
+        $registry = $this->registry();
+        $registry->join('#one', new Client());
+        $registry->join('#ONE', new Client());
+        $registry->join('#two', new Client());
+
+        $this->assertSame(2, $registry->count());
+    }
+
+    #[Test]
     public function it_treats_rfc1459_specific_equivalents_as_distinct(): void
     {
         $registry = $this->registry();

@@ -79,6 +79,11 @@ final class ChannelRegistry
         return array_values($this->channels);
     }
 
+    public function count(): int
+    {
+        return count($this->channels);
+    }
+
     private function channelId(string $name): string
     {
         return $this->caseMapper->normalise($name);

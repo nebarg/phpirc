@@ -87,6 +87,19 @@ final class ClientRegistry
         return $connectedClient?->client;
     }
 
+    public function registeredCount(): int
+    {
+        return count(array_filter(
+            $this->clientsById,
+            static fn (ConnectedClient $connectedClient): bool => $connectedClient->client->registration->isComplete(),
+        ));
+    }
+
+    public function unregisteredCount(): int
+    {
+        return count($this->clientsById) - $this->registeredCount();
+    }
+
     private function releaseNickname(Client $client): void
     {
         if ($client->nickname === null) {

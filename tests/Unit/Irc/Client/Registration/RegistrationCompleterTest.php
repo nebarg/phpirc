@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client\Registration;
 
 use DateTimeImmutable;
+use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\LusersResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
@@ -46,7 +49,7 @@ final class RegistrationCompleterTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
         $this->assertSame([], $connection->messages[0]->tags);
         $this->assertSame('irc.test', $connection->messages[0]->source);
         $this->assertSame('001', $connection->messages[0]->command);
@@ -67,7 +70,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
         $completer->completeIfReady($context);
 
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
     }
 
     #[Test]
@@ -88,7 +91,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
     }
 
     private function readyClient(): Client
@@ -104,8 +107,8 @@ final class RegistrationCompleterTest extends TestCase
     private function completer(): RegistrationCompleter
     {
         $serverName = new ServerName('irc.test');
-
         $responses = new NumericResponseFactory($serverName);
+        $caseMapper = new AsciiCaseMapper();
 
         return new RegistrationCompleter(
             new RegistrationWelcome(
@@ -117,8 +120,13 @@ final class RegistrationCompleterTest extends TestCase
                     startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
                 ),
                 $responses,
-                new AsciiCaseMapper(),
+                $caseMapper,
                 new ChannelTypes(),
+                new LusersResponseFactory(
+                    new ClientRegistry($caseMapper),
+                    new ChannelRegistry($caseMapper),
+                    $responses,
+                ),
             ),
         );
     }

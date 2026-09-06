@@ -6,6 +6,7 @@ namespace PhpIrc\Irc\Client\Registration;
 
 use DateTimeInterface;
 use PhpIrc\Irc\Channel\ChannelNameValidator;
+use PhpIrc\Irc\Client\LusersResponseFactory;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
@@ -21,6 +22,7 @@ final readonly class RegistrationWelcome
         private NumericResponseFactory $responses,
         private CaseMapper $caseMapper,
         private ChannelTypes $channelTypes,
+        private LusersResponseFactory $lusersResponses,
     ) {}
 
     public function send(Connection $connection, string $nickname): void
@@ -76,6 +78,11 @@ final readonly class RegistrationWelcome
                     'PREFIX=(ov)@+',
                 ],
             ),
+        );
+
+        array_map(
+            $connection->send(...),
+            $this->lusersResponses->createResponses($nickname),
         );
 
         $connection->send(

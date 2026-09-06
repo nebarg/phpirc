@@ -18,6 +18,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
 - [x] Basic `WHO` queries for exact nicknames and channel members
+- [x] Current user, connection and channel counts with `LUSERS`
 - [x] User and channel `MODE` queries
 - [x] Channel operator and voice changes with `+o`, `-o`, `+v` and `-v`
 - [x] Viewing, setting and clearing channel topics with `TOPIC`
@@ -81,7 +82,7 @@ composer qa
 
 - [ ] Bounded outbound delivery and slow-client handling
 - [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
-- [ ] Connection statistics and `LUSERS` registration replies
+- [ ] Peak and lifetime connection statistics
 - [ ] Configurable message of the day
 - [ ] User mode changes
 - [ ] Behavioural channel modes such as `+n`, `+t` and `+m`

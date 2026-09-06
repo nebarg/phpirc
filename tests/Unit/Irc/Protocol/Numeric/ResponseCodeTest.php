@@ -20,6 +20,10 @@ final class ResponseCodeTest extends TestCase
         yield 'my info' => [ResponseCode::MyInfo, null];
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
         yield 'user mode' => [ResponseCode::UserModeIs, null];
+        yield 'LUSERS client' => [ResponseCode::LuserClient, null];
+        yield 'LUSERS unknown connections' => [ResponseCode::LuserUnknown, 'unknown connection(s)'];
+        yield 'LUSERS channels' => [ResponseCode::LuserChannels, 'channels formed'];
+        yield 'LUSERS local clients' => [ResponseCode::LuserMe, null];
         yield 'end of WHO' => [ResponseCode::EndOfWho, 'End of WHO list'];
         yield 'list start' => [ResponseCode::ListStart, 'Users  Name'];
         yield 'list entry' => [ResponseCode::ListEntry, null];

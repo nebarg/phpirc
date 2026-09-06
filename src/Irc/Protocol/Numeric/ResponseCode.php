@@ -12,6 +12,10 @@ enum ResponseCode: string
     case MyInfo = '004';
     case ISupport = '005';
     case UserModeIs = '221';
+    case LuserClient = '251';
+    case LuserUnknown = '253';
+    case LuserChannels = '254';
+    case LuserMe = '255';
     case EndOfWho = '315';
     case ListStart = '321';
     case ListEntry = '322';
@@ -54,7 +58,11 @@ enum ResponseCode: string
             self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime, self::WhoReply => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::UserModeIs, self::ChannelModeIs, self::ChannelCreationTime => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::LuserClient, self::LuserMe => null,
             self::ISupport => 'are supported by this server',
+            self::LuserUnknown => 'unknown connection(s)',
+            self::LuserChannels => 'channels formed',
             self::EndOfWho => 'End of WHO list',
             self::ListStart => 'Users  Name',
             self::ListEnd => 'End of /LIST',

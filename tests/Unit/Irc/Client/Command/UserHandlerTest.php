@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Client\Command;
 
+use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\UserHandler;
+use PhpIrc\Irc\Client\LusersResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
@@ -103,7 +106,7 @@ final class UserHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
             ['John', 'Welcome to the TestNet Network, John'],
@@ -182,6 +185,7 @@ final class UserHandlerTest extends TestCase
     {
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
+        $caseMapper = new AsciiCaseMapper();
 
         return new UserHandler(
             responses: $responses,
@@ -193,8 +197,13 @@ final class UserHandlerTest extends TestCase
                         listeners: [],
                     ),
                     $responses,
-                    new AsciiCaseMapper(),
+                    $caseMapper,
                     new ChannelTypes(),
+                    new LusersResponseFactory(
+                        new ClientRegistry($caseMapper),
+                        new ChannelRegistry($caseMapper),
+                        $responses,
+                    ),
                 ),
             ),
         );

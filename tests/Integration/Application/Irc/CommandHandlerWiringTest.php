@@ -12,6 +12,7 @@ use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Channel\Command\TopicHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
+use PhpIrc\Irc\Client\Command\LusersHandler;
 use PhpIrc\Irc\Client\Command\NickHandler;
 use PhpIrc\Irc\Client\Command\PingHandler;
 use PhpIrc\Irc\Client\Command\PongHandler;
@@ -49,6 +50,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(NickHandler::class, $handlers);
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
+        $this->assertContains(LusersHandler::class, $handlers);
         $this->assertContains(WhoHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
         $this->assertContains(ListHandler::class, $handlers);
@@ -238,6 +240,34 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ...$this->registrationWrites($config),
                 ":{$serverName} 352 John * john 127.0.0.1 {$serverName} John H :0 John Doe\r\n",
                 ":{$serverName} 315 John john :End of WHO list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_lusers_query(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nLUSERS\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+                ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
+                ":{$serverName} 254 John 1 :channels formed\r\n",
+                ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
             ],
             $socket->writes,
         );
@@ -490,6 +520,8 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
             ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - ov\r\n",
             ":{$serverName} 005 John CASEMAPPING=ascii CHANMODES=,,, CHANTYPES=# CHANNELLEN=64 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ :are supported by this server\r\n",
+            ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
+            ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
             ":{$serverName} 422 John :MOTD File is missing\r\n",
         ];
     }

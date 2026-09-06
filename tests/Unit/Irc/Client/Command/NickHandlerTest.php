@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\NickHandler;
+use PhpIrc\Irc\Client\LusersResponseFactory;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
@@ -142,7 +143,7 @@ final class NickHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(6, $connection->messages);
+        $this->assertCount(8, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
             ['John', 'Welcome to the TestNet Network, John'],
@@ -251,6 +252,7 @@ final class NickHandlerTest extends TestCase
                     $responses,
                     new AsciiCaseMapper(),
                     new ChannelTypes(),
+                    new LusersResponseFactory($clients, $channels, $responses),
                 ),
             ),
             broadcaster: new ChannelBroadcaster($clients, $channels),
