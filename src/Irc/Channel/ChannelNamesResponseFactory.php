@@ -26,7 +26,7 @@ final readonly class ChannelNamesResponseFactory
                 continue;
             }
 
-            $names[] = ($membership->isOperator ? '@' : '') . $nickname;
+            $names[] = $membership->highestPrefix() . $nickname;
         }
 
         return [

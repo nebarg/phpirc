@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client\Command;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\WhoHandler;
@@ -102,8 +103,11 @@ final class WhoHandlerTest extends TestCase
         $jane = $this->client('Jane');
         $this->register($clients, $john);
         $this->register($clients, $jane);
-        $channels->join('#PHP', $john);
+        $channel = $channels->join('#PHP', $john);
         $channels->join('#php', $jane);
+        $janeMembership = $channel->membershipFor($jane);
+        $this->assertNotNull($janeMembership);
+        $janeMembership->grant(MembershipMode::Voice);
         $connection = new RecordingConnection();
 
         $handler->handle(
@@ -120,7 +124,7 @@ final class WhoHandlerTest extends TestCase
         $this->assertResponse(
             connection: $connection,
             command: '352',
-            parameters: ['Jane', '#PHP', 'jane', '203.0.113.10', 'irc.test', 'Jane', 'H', '0 Jane Doe'],
+            parameters: ['Jane', '#PHP', 'jane', '203.0.113.10', 'irc.test', 'Jane', 'H+', '0 Jane Doe'],
             index: 1,
         );
         $this->assertResponse(

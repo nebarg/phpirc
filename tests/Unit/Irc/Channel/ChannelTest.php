@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel;
 
 use PhpIrc\Irc\Channel\Channel;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -24,7 +25,7 @@ final class ChannelTest extends TestCase
 
         $membership = $channel->join(new Client());
 
-        $this->assertTrue($membership->isOperator);
+        $this->assertTrue($membership->has(MembershipMode::Operator));
     }
 
     #[Test]
@@ -35,7 +36,7 @@ final class ChannelTest extends TestCase
 
         $membership = $channel->join(new Client());
 
-        $this->assertFalse($membership->isOperator);
+        $this->assertFalse($membership->has(MembershipMode::Operator));
     }
 
     #[Test]

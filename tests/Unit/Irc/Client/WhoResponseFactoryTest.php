@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client;
 
 use PhpIrc\Irc\Channel\Channel;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\WhoResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
@@ -45,6 +46,28 @@ final class WhoResponseFactoryTest extends TestCase
 
         $this->assertSame(
             ['Jane', '#php', 'john', '203.0.113.10', 'irc.test', 'John', 'H@', '0 John Doe'],
+            $message->parameters,
+        );
+    }
+
+    #[Test]
+    public function it_includes_the_voice_flag_for_a_voiced_channel_member(): void
+    {
+        $operator = $this->client('John');
+        $client = $this->client('Jane');
+        $channel = new Channel('#php');
+        $channel->join($operator);
+        $membership = $channel->join($client);
+        $membership->grant(MembershipMode::Voice);
+
+        $message = $this->factory()->createChannelMemberReply(
+            target: 'John',
+            channel: $channel,
+            membership: $membership,
+        );
+
+        $this->assertSame(
+            ['John', '#php', 'jane', '203.0.113.10', 'irc.test', 'Jane', 'H+', '0 Jane Doe'],
             $message->parameters,
         );
     }

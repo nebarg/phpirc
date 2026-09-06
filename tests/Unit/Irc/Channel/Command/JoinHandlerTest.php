@@ -10,6 +10,7 @@ use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -93,7 +94,7 @@ final class JoinHandlerTest extends TestCase
         $channel = $channels->find('#php');
         $this->assertNotNull($channel);
         $this->assertSame($client, $channel->members()[0]->client);
-        $this->assertTrue($channel->members()[0]->isOperator);
+        $this->assertTrue($channel->members()[0]->has(MembershipMode::Operator));
         $this->assertCount(3, $connection->messages);
         $this->assertSame('John', $connection->messages[0]->source);
         $this->assertSame('JOIN', $connection->messages[0]->command);

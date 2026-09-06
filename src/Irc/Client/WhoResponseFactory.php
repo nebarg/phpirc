@@ -24,7 +24,7 @@ final readonly class WhoResponseFactory
             target: $target,
             client: $client,
             channelName: '*',
-            isOperator: false,
+            membershipPrefix: '',
         );
     }
 
@@ -37,7 +37,7 @@ final readonly class WhoResponseFactory
             target: $target,
             client: $membership->client,
             channelName: $channel->name,
-            isOperator: $membership->isOperator,
+            membershipPrefix: $membership->highestPrefix(),
         );
     }
 
@@ -45,7 +45,7 @@ final readonly class WhoResponseFactory
         string $target,
         Client $client,
         string $channelName,
-        bool $isOperator,
+        string $membershipPrefix,
     ): Message {
         return $this->responses->create(
             code: ResponseCode::WhoReply,
@@ -56,7 +56,7 @@ final readonly class WhoResponseFactory
                 $client->hostname,
                 $this->serverName->value,
                 $client->nickname ?? '*',
-                'H' . ($isOperator ? '@' : ''),
+                'H' . $membershipPrefix,
             ],
             text: '0 ' . ($client->realName ?? ''),
         );

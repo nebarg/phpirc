@@ -6,6 +6,7 @@ namespace Tests\Unit\Irc\Channel;
 
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -23,7 +24,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         $jane->setNickname('Jane');
         $channel = new Channel('#php');
         $channel->join($john);
-        $channel->join($jane);
+        $channel->join($jane)->grant(MembershipMode::Voice);
 
         $messages = $this->factory()->createResponses('Jane', $channel);
 
@@ -31,7 +32,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         $this->assertSame('irc.test', $messages[0]->source);
         $this->assertSame('353', $messages[0]->command);
         $this->assertSame(
-            ['Jane', '=', '#php', '@John Jane'],
+            ['Jane', '=', '#php', '@John +Jane'],
             $messages[0]->parameters,
         );
         $this->assertSame('irc.test', $messages[1]->source);

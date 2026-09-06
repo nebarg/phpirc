@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel;
 
 use DateTimeImmutable;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 
 final class Channel
@@ -26,10 +27,13 @@ final class Channel
             return $this->members[$clientId];
         }
 
-        return $this->members[$clientId] = new Membership(
-            client: $client,
-            isOperator: $this->isEmpty(),
-        );
+        $membership = new Membership($client);
+
+        if ($this->isEmpty()) {
+            $membership->grant(MembershipMode::Operator);
+        }
+
+        return $this->members[$clientId] = $membership;
     }
 
     public function leave(Client $client): bool
