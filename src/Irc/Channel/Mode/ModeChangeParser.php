@@ -6,10 +6,10 @@ namespace PhpIrc\Irc\Channel\Mode;
 
 use PhpIrc\Irc\Mode\ModeAction;
 
-final readonly class MembershipModeChangeParser
+final readonly class ModeChangeParser
 {
     /** @param list<string> $arguments */
-    public function parse(string $modeString, array $arguments): MembershipModeParseResult
+    public function parse(string $modeString, array $arguments): ModeParseResult
     {
         $changes = [];
         $unknownModes = [];
@@ -25,10 +25,20 @@ final readonly class MembershipModeChangeParser
                 continue;
             }
 
-            $mode = MembershipMode::tryFrom($character);
+            $channelMode = ChannelMode::tryFrom($character);
+            $membershipMode = MembershipMode::tryFrom($character);
 
-            if ($mode === null || $action === null) {
+            if ($channelMode === null && $membershipMode === null || $action === null) {
                 $unknownModes[] = $character;
+                continue;
+            }
+
+            if ($channelMode !== null) {
+                $changes[] = new ChannelModeChange(
+                    action: $action,
+                    mode: $channelMode,
+                );
+
                 continue;
             }
 
@@ -46,11 +56,11 @@ final readonly class MembershipModeChangeParser
 
             $changes[] = new MembershipModeChange(
                 action: $action,
-                mode: $mode,
+                mode: $membershipMode,
                 nickname: $nickname,
             );
         }
 
-        return new MembershipModeParseResult($changes, $unknownModes);
+        return new ModeParseResult($changes, $unknownModes);
     }
 }

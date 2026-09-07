@@ -7,6 +7,8 @@ namespace PhpIrc\Irc\Channel\Command;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
@@ -66,10 +68,24 @@ final readonly class TopicHandler implements CommandHandler
 
         $topic = $message->parameter(1);
 
-        if (! $channel->hasMember($context->client)) {
+        $membership = $channel->membershipFor($context->client);
+
+        if ($membership === null) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NotOnChannel,
+                    target: $context->responseTarget(),
+                    parameters: [$channel->name],
+                ),
+            );
+
+            return;
+        }
+
+        if ($channel->hasMode(ChannelMode::ProtectedTopic) && ! $membership->has(MembershipMode::Operator)) {
+            $context->connection->send(
+                $this->responses->create(
+                    code: ResponseCode::ChannelOperatorPrivilegesNeeded,
                     target: $context->responseTarget(),
                     parameters: [$channel->name],
                 ),

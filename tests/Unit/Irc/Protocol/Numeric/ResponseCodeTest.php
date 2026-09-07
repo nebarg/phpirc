@@ -38,6 +38,7 @@ final class ResponseCodeTest extends TestCase
         yield 'end of names' => [ResponseCode::EndOfNames, 'End of /NAMES list'];
         yield 'no such nick' => [ResponseCode::NoSuchNick, 'No such nick/channel'];
         yield 'no such channel' => [ResponseCode::NoSuchChannel, 'No such channel'];
+        yield 'cannot send to channel' => [ResponseCode::CannotSendToChannel, 'Cannot send to channel'];
         yield 'invalid CAP command' => [ResponseCode::InvalidCapCommand, 'Invalid CAP command'];
         yield 'no origin' => [ResponseCode::NoOrigin, 'No origin specified'];
         yield 'no recipient' => [ResponseCode::NoRecipient, 'No recipient given (PRIVMSG)'];

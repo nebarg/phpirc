@@ -70,6 +70,23 @@ final class NoticeHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_silently_ignores_a_notice_rejected_by_channel_modes(): void
+    {
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $channels->join('#php', $jane);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'NOTICE', parameters: ['#PHP', 'Hello']),
+        );
+
+        $this->assertSame([], $johnConnection->messages);
+        $this->assertSame([], $janeConnection->messages);
+    }
+
+    #[Test]
     public function it_silently_ignores_a_notice_before_registration(): void
     {
         [$handler, $clients] = $this->handler();

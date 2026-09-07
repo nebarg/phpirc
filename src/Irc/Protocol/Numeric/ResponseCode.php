@@ -30,6 +30,7 @@ enum ResponseCode: string
     case EndOfNames = '366';
     case NoSuchNick = '401';
     case NoSuchChannel = '403';
+    case CannotSendToChannel = '404';
     case NoOrigin = '409';
     case InvalidCapCommand = '410';
     case NoRecipient = '411';
@@ -70,6 +71,7 @@ enum ResponseCode: string
             self::EndOfNames => 'End of /NAMES list',
             self::NoSuchNick => 'No such nick/channel',
             self::NoSuchChannel => 'No such channel',
+            self::CannotSendToChannel => 'Cannot send to channel',
             self::NoOrigin => 'No origin specified',
             self::InvalidCapCommand => 'Invalid CAP command',
             self::NoRecipient => 'No recipient given (PRIVMSG)',

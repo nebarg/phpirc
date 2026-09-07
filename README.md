@@ -21,6 +21,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Current user, connection and channel counts with `LUSERS`
 - [x] User and channel `MODE` queries
 - [x] Channel operator and voice changes with `+o`, `-o`, `+v` and `-v`
+- [x] Moderated, protected-topic and no-external-message channel modes with `+m`, `+t` and `+n`
 - [x] Viewing, setting and clearing channel topics with `TOPIC`
 - [x] `PRIVMSG` and `NOTICE` delivery to users and channels, including multiple targets
 - [x] Unknown-command and not-registered responses
@@ -85,7 +86,6 @@ composer qa
 - [ ] Peak and lifetime connection statistics
 - [ ] Configurable message of the day
 - [ ] User mode changes
-- [ ] Behavioural channel modes such as `+n`, `+t` and `+m`
 - [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS
 - [ ] Broader IRCv3 capability support

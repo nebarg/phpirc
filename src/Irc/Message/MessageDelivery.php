@@ -21,29 +21,29 @@ final readonly class MessageDelivery
         private TargetClassifier $targets,
     ) {}
 
-    /** @return list<string> */
+    /** @return list<MessageDeliveryFailure> */
     public function deliver(
         Client $sender,
         string $command,
         string $targets,
         string $text,
     ): array {
-        $unresolvedTargets = [];
+        $failures = [];
 
         foreach (explode(',', $targets) as $target) {
-            $delivered = match ($this->targets->classify($target)) {
+            $failure = match ($this->targets->classify($target)) {
                 TargetType::Channel => $this->deliverToChannel($sender, $command, $target, $text),
                 TargetType::Nickname => $this->deliverToClient($sender, $command, $target, $text),
             };
 
-            if ($delivered) {
+            if ($failure === null) {
                 continue;
             }
 
-            $unresolvedTargets[] = $target;
+            $failures[] = $failure;
         }
 
-        return $unresolvedTargets;
+        return $failures;
     }
 
     private function deliverToChannel(
@@ -51,11 +51,15 @@ final readonly class MessageDelivery
         string $command,
         string $target,
         string $text,
-    ): bool {
+    ): ?MessageDeliveryFailure {
         $channel = $this->channels->find($target);
 
         if ($channel === null) {
-            return false;
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
+        }
+
+        if (! $channel->canSendMessage($sender)) {
+            return new MessageDeliveryFailure($channel->name, MessageDeliveryFailureReason::CannotSendToChannel);
         }
 
         $this->broadcaster->broadcastExcept(
@@ -68,7 +72,7 @@ final readonly class MessageDelivery
             $sender,
         );
 
-        return true;
+        return null;
     }
 
     private function deliverToClient(
@@ -76,17 +80,17 @@ final readonly class MessageDelivery
         string $command,
         string $target,
         string $text,
-    ): bool {
+    ): ?MessageDeliveryFailure {
         $recipient = $this->clients->findByNickname($target);
 
         if ($recipient === null) {
-            return false;
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
         }
 
         $connection = $this->clients->connectionFor($recipient);
 
         if ($connection === null) {
-            return false;
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
         }
 
         $connection->send(new Message(
@@ -95,6 +99,6 @@ final readonly class MessageDelivery
             source: $sender->nickname,
         ));
 
-        return true;
+        return null;
     }
 }

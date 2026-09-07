@@ -6,6 +6,7 @@ namespace Tests\Unit\Irc\Channel;
 
 use DateTimeImmutable;
 use PhpIrc\Irc\Channel\Channel;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PHPUnit\Framework\Attributes\Test;
@@ -101,6 +102,64 @@ final class ChannelTest extends TestCase
         $channel->leave($first);
 
         $this->assertSame(1, $channel->memberCount());
+    }
+
+    #[Test]
+    public function it_starts_with_no_external_messages_and_protected_topic_modes(): void
+    {
+        $channel = new Channel('#php');
+
+        $this->assertSame(
+            [ChannelMode::NoExternalMessages, ChannelMode::ProtectedTopic],
+            $channel->modes(),
+        );
+        $this->assertTrue($channel->hasMode(ChannelMode::NoExternalMessages));
+        $this->assertTrue($channel->hasMode(ChannelMode::ProtectedTopic));
+        $this->assertFalse($channel->hasMode(ChannelMode::Moderated));
+    }
+
+    #[Test]
+    public function enabling_and_disabling_modes_is_idempotent(): void
+    {
+        $channel = new Channel('#php');
+
+        $this->assertTrue($channel->enableMode(ChannelMode::Moderated));
+        $this->assertFalse($channel->enableMode(ChannelMode::Moderated));
+        $this->assertTrue($channel->hasMode(ChannelMode::Moderated));
+        $this->assertTrue($channel->disableMode(ChannelMode::Moderated));
+        $this->assertFalse($channel->disableMode(ChannelMode::Moderated));
+        $this->assertFalse($channel->hasMode(ChannelMode::Moderated));
+    }
+
+    #[Test]
+    public function no_external_messages_mode_controls_whether_outsiders_can_send(): void
+    {
+        $channel = new Channel('#php');
+        $outsider = new Client();
+
+        $this->assertFalse($channel->canSendMessage($outsider));
+
+        $channel->disableMode(ChannelMode::NoExternalMessages);
+
+        $this->assertTrue($channel->canSendMessage($outsider));
+    }
+
+    #[Test]
+    public function moderated_mode_only_allows_operators_and_voiced_members_to_send(): void
+    {
+        $channel = new Channel('#php');
+        $operator = new Client();
+        $member = new Client();
+        $channel->join($operator);
+        $membership = $channel->join($member);
+        $channel->enableMode(ChannelMode::Moderated);
+
+        $this->assertTrue($channel->canSendMessage($operator));
+        $this->assertFalse($channel->canSendMessage($member));
+
+        $membership->grant(MembershipMode::Voice);
+
+        $this->assertTrue($channel->canSendMessage($member));
     }
 
     #[Test]

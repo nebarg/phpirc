@@ -8,6 +8,7 @@ use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\TopicHandler;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -148,6 +149,54 @@ final class TopicHandlerTest extends TestCase
             '442',
             ['John', '#php', "You're not on that channel"],
         );
+    }
+
+    #[Test]
+    public function it_rejects_a_topic_change_from_a_non_operator_when_the_topic_is_protected(): void
+    {
+        [$handler, $channels, $clients] = $this->handler();
+        [$jane, $janeConnection] = $this->connectedClient('Jane');
+        [$john, $johnConnection] = $this->connectedClient('John');
+        $channel = $channels->join('#php', $jane);
+        $channels->join('#php', $john);
+        $clients->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'TOPIC', parameters: ['#php', 'Protected topic']),
+        );
+
+        $this->assertNull($channel->topic);
+        $this->assertSame([], $janeConnection->messages);
+        $this->assertResponse(
+            $johnConnection,
+            '482',
+            ['John', '#php', "You're not channel operator"],
+        );
+    }
+
+    #[Test]
+    public function a_member_can_change_an_unprotected_topic(): void
+    {
+        [$handler, $channels, $clients] = $this->handler();
+        [$jane, $janeConnection] = $this->connectedClient('Jane');
+        [$john, $johnConnection] = $this->connectedClient('John');
+        $channel = $channels->join('#php', $jane);
+        $channels->join('#php', $john);
+        $channel->disableMode(ChannelMode::ProtectedTopic);
+        $clients->register($jane, $janeConnection);
+        $clients->register($john, $johnConnection);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'TOPIC', parameters: ['#php', 'Open topic']),
+        );
+
+        $this->assertSame('Open topic', $channel->topic?->text);
+        $this->assertCount(1, $johnConnection->messages);
+        $this->assertSame($johnConnection->messages, $janeConnection->messages);
+        $this->assertTopic($johnConnection, ['#php', 'Open topic']);
     }
 
     #[Test]

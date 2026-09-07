@@ -8,9 +8,11 @@ use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Membership;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
+use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
-use PhpIrc\Irc\Channel\Mode\MembershipModeChangeParser;
+use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;
@@ -23,7 +25,7 @@ final readonly class ChannelModeHandler
         private ChannelRegistry $channels,
         private ClientRegistry $clients,
         private ChannelBroadcaster $broadcaster,
-        private MembershipModeChangeParser $parser,
+        private ModeChangeParser $parser,
         private NumericResponseFactory $responses,
     ) {}
 
@@ -92,26 +94,13 @@ final readonly class ChannelModeHandler
         $appliedChanges = [];
 
         foreach ($result->changes as $change) {
-            $targetMembership = $this->findTargetMembership($context, $channel, $change->nickname);
+            $appliedChange = $this->applyChange($context, $channel, $change);
 
-            if ($targetMembership === null) {
+            if ($appliedChange === null) {
                 continue;
             }
 
-            $changed = match ($change->action) {
-                ModeAction::Add => $targetMembership->grant($change->mode),
-                ModeAction::Remove => $targetMembership->revoke($change->mode),
-            };
-
-            if (! $changed) {
-                continue;
-            }
-
-            $appliedChanges[] = new MembershipModeChange(
-                action: $change->action,
-                mode: $change->mode,
-                nickname: $targetMembership->client->nickname ?? $change->nickname,
-            );
+            $appliedChanges[] = $appliedChange;
         }
 
         if ($appliedChanges === []) {
@@ -122,14 +111,7 @@ final readonly class ChannelModeHandler
             $channel,
             new Message(
                 command: 'MODE',
-                parameters: [
-                    $channel->name,
-                    $this->createModeString($appliedChanges),
-                    ...array_map(
-                        static fn (MembershipModeChange $change): string => $change->nickname,
-                        $appliedChanges,
-                    ),
-                ],
+                parameters: $this->createModeParameters($channel, $appliedChanges),
                 source: $context->client->nickname,
             ),
         );
@@ -141,7 +123,14 @@ final readonly class ChannelModeHandler
             $this->responses->create(
                 code: ResponseCode::ChannelModeIs,
                 target: $context->responseTarget(),
-                parameters: [$channel->name, '+'],
+                parameters: [
+                    $channel->name,
+                    '+'
+                        . implode('', array_map(
+                            static fn (ChannelMode $mode): string => $mode->value,
+                            $channel->modes(),
+                        )),
+                ],
             ),
         );
 
@@ -151,6 +140,42 @@ final readonly class ChannelModeHandler
                 target: $context->responseTarget(),
                 parameters: [$channel->name, (string) $channel->createdAt->getTimestamp()],
             ),
+        );
+    }
+
+    private function applyChange(
+        CommandContext $context,
+        Channel $channel,
+        ChannelModeChange|MembershipModeChange $change,
+    ): ChannelModeChange|MembershipModeChange|null {
+        if ($change instanceof ChannelModeChange) {
+            $changed = match ($change->action) {
+                ModeAction::Add => $channel->enableMode($change->mode),
+                ModeAction::Remove => $channel->disableMode($change->mode),
+            };
+
+            return $changed ? $change : null;
+        }
+
+        $targetMembership = $this->findTargetMembership($context, $channel, $change->nickname);
+
+        if ($targetMembership === null) {
+            return null;
+        }
+
+        $changed = match ($change->action) {
+            ModeAction::Add => $targetMembership->grant($change->mode),
+            ModeAction::Remove => $targetMembership->revoke($change->mode),
+        };
+
+        if (! $changed) {
+            return null;
+        }
+
+        return new MembershipModeChange(
+            action: $change->action,
+            mode: $change->mode,
+            nickname: $targetMembership->client->nickname ?? $change->nickname,
         );
     }
 
@@ -188,7 +213,26 @@ final readonly class ChannelModeHandler
         return $membership;
     }
 
-    /** @param non-empty-list<MembershipModeChange> $changes */
+    /**
+     * @param non-empty-list<ChannelModeChange|MembershipModeChange> $changes
+     * @return non-empty-list<string>
+     */
+    private function createModeParameters(Channel $channel, array $changes): array
+    {
+        $parameters = [$channel->name, $this->createModeString($changes)];
+
+        foreach ($changes as $change) {
+            if (! $change instanceof MembershipModeChange) {
+                continue;
+            }
+
+            $parameters[] = $change->nickname;
+        }
+
+        return $parameters;
+    }
+
+    /** @param non-empty-list<ChannelModeChange|MembershipModeChange> $changes */
     private function createModeString(array $changes): string
     {
         $modeString = '';

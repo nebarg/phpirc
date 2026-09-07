@@ -6,7 +6,7 @@ namespace Tests\Unit\Irc\Mode\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
-use PhpIrc\Irc\Channel\Mode\MembershipModeChangeParser;
+use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -125,7 +125,7 @@ final class ModeHandlerTest extends TestCase
                     channels: $channels,
                     clients: $clients,
                     broadcaster: new ChannelBroadcaster($clients, $channels),
-                    parser: new MembershipModeChangeParser(),
+                    parser: new ModeChangeParser(),
                     responses: $responses,
                 ),
                 userModes: new UserModeHandler($clients, $responses),

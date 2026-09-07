@@ -59,7 +59,7 @@ final readonly class RegistrationWelcome
                     $this->config->serverName->value,
                     $this->config->softwareVersion,
                     '-',
-                    'ov',
+                    'mntov',
                 ],
             ),
         );
@@ -70,7 +70,7 @@ final readonly class RegistrationWelcome
                 target: $nickname,
                 parameters: [
                     'CASEMAPPING=' . $this->caseMapper->name(),
-                    'CHANMODES=,,,',
+                    'CHANMODES=,,,mnt',
                     'CHANTYPES=' . $this->channelTypes->prefixes,
                     'CHANNELLEN=' . ChannelNameValidator::MAX_LENGTH,
                     'NICKLEN=' . NicknameValidator::MAX_LENGTH,

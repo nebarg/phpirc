@@ -7,6 +7,7 @@ namespace PhpIrc\Irc\Message\Command;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
+use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
@@ -49,19 +50,22 @@ final readonly class PrivmsgHandler implements CommandHandler
             return;
         }
 
-        $unresolvedTargets = $this->delivery->deliver(
+        $failures = $this->delivery->deliver(
             sender: $context->client,
             command: $this->command(),
             targets: $targets,
             text: $message->parameter(1),
         );
 
-        foreach ($unresolvedTargets as $target) {
+        foreach ($failures as $failure) {
             $context->connection->send(
                 $this->responses->create(
-                    code: ResponseCode::NoSuchNick,
+                    code: match ($failure->reason) {
+                        MessageDeliveryFailureReason::TargetNotFound => ResponseCode::NoSuchNick,
+                        MessageDeliveryFailureReason::CannotSendToChannel => ResponseCode::CannotSendToChannel,
+                    },
                     target: $context->responseTarget(),
-                    parameters: [$target === '' ? '*' : $target],
+                    parameters: [$failure->target === '' ? '*' : $failure->target],
                 ),
             );
         }

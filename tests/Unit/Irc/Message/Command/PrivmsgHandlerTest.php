@@ -170,7 +170,7 @@ final class PrivmsgHandlerTest extends TestCase
     }
 
     #[Test]
-    public function an_outsider_can_send_to_an_existing_channel(): void
+    public function it_reports_when_channel_modes_prevent_delivery(): void
     {
         [$handler, $clients, $channels] = $this->handler();
         [$john, $johnConnection] = $this->connectedClient('John', $clients);
@@ -184,17 +184,13 @@ final class PrivmsgHandlerTest extends TestCase
             new Message(command: 'PRIVMSG', parameters: ['#PHP', 'Hello from outside']),
         );
 
-        $this->assertMessage(
-            $johnConnection,
-            source: 'Outside',
-            parameters: ['#php', 'Hello from outside'],
+        $this->assertSame([], $johnConnection->messages);
+        $this->assertSame([], $janeConnection->messages);
+        $this->assertResponse(
+            $outsiderConnection,
+            '404',
+            ['Outside', '#php', 'Cannot send to channel'],
         );
-        $this->assertMessage(
-            $janeConnection,
-            source: 'Outside',
-            parameters: ['#php', 'Hello from outside'],
-        );
-        $this->assertSame([], $outsiderConnection->messages);
     }
 
     #[Test]

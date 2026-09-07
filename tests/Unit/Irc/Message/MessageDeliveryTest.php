@@ -6,9 +6,12 @@ namespace Tests\Unit\Irc\Message;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
+use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Message\MessageDelivery;
+use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
@@ -25,14 +28,14 @@ final class MessageDeliveryTest extends TestCase
         [$john] = $this->connectedClient('John', $clients);
         [, $janeConnection] = $this->connectedClient('Jane', $clients);
 
-        $unresolved = $delivery->deliver(
+        $failures = $delivery->deliver(
             sender: $john,
             command: 'NOTICE',
             targets: 'jAnE',
             text: 'Hello Jane',
         );
 
-        $this->assertSame([], $unresolved);
+        $this->assertSame([], $failures);
         $this->assertDeliveredMessage(
             $janeConnection,
             command: 'NOTICE',
@@ -50,14 +53,14 @@ final class MessageDeliveryTest extends TestCase
         $channels->join('#PHP', $john);
         $channels->join('#php', $jane);
 
-        $unresolved = $delivery->deliver(
+        $failures = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#php',
             text: 'Hello channel',
         );
 
-        $this->assertSame([], $unresolved);
+        $this->assertSame([], $failures);
         $this->assertSame([], $johnConnection->messages);
         $this->assertDeliveredMessage(
             $janeConnection,
@@ -68,20 +71,24 @@ final class MessageDeliveryTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_unresolved_targets_after_delivering_valid_targets(): void
+    public function it_returns_missing_targets_after_delivering_valid_targets(): void
     {
         [$delivery, $clients] = $this->delivery();
         [$john] = $this->connectedClient('John', $clients);
         [, $janeConnection] = $this->connectedClient('Jane', $clients);
 
-        $unresolved = $delivery->deliver(
+        $failures = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: 'Missing,Jane,',
             text: 'Hello targets',
         );
 
-        $this->assertSame(['Missing', ''], $unresolved);
+        $this->assertCount(2, $failures);
+        $this->assertSame('Missing', $failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[0]->reason);
+        $this->assertSame('', $failures[1]->target);
+        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[1]->reason);
         $this->assertDeliveredMessage(
             $janeConnection,
             command: 'PRIVMSG',
@@ -97,15 +104,83 @@ final class MessageDeliveryTest extends TestCase
         [$john] = $this->connectedClient('John', $clients);
         [, $invalidNicknameConnection] = $this->connectedClient('#missing', $clients);
 
-        $unresolved = $delivery->deliver(
+        $failures = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#missing',
             text: 'Hello target',
         );
 
-        $this->assertSame(['#missing'], $unresolved);
+        $this->assertCount(1, $failures);
+        $this->assertSame('#missing', $failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[0]->reason);
         $this->assertSame([], $invalidNicknameConnection->messages);
+    }
+
+    #[Test]
+    public function it_rejects_an_outsider_when_no_external_messages_mode_is_enabled(): void
+    {
+        [$delivery, $clients, $channels] = $this->delivery();
+        [$john] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $channels->join('#PHP', $jane);
+
+        $failures = $delivery->deliver(
+            sender: $john,
+            command: 'PRIVMSG',
+            targets: '#php',
+            text: 'Hello channel',
+        );
+
+        $this->assertCount(1, $failures);
+        $this->assertSame('#PHP', $failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
+        $this->assertSame([], $janeConnection->messages);
+    }
+
+    #[Test]
+    public function it_allows_an_outsider_when_no_external_messages_mode_is_disabled(): void
+    {
+        [$delivery, $clients, $channels] = $this->delivery();
+        [$john] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $channel = $channels->join('#php', $jane);
+        $channel->disableMode(ChannelMode::NoExternalMessages);
+
+        $failures = $delivery->deliver(
+            sender: $john,
+            command: 'PRIVMSG',
+            targets: '#PHP',
+            text: 'Hello channel',
+        );
+
+        $this->assertSame([], $failures);
+        $this->assertDeliveredMessage($janeConnection, 'PRIVMSG', '#php', 'Hello channel');
+    }
+
+    #[Test]
+    public function moderated_channels_only_accept_messages_from_privileged_members(): void
+    {
+        [$delivery, $clients, $channels] = $this->delivery();
+        [$operator] = $this->connectedClient('John', $clients);
+        [$member] = $this->connectedClient('Jane', $clients);
+        [$voiced] = $this->connectedClient('Fred', $clients);
+        [$recipient, $recipientConnection] = $this->connectedClient('Mary', $clients);
+        $channel = $channels->join('#php', $operator);
+        $channels->join('#php', $member);
+        $voicedMembership = $channels->join('#php', $voiced)->membershipFor($voiced);
+        $channels->join('#php', $recipient);
+        $this->assertNotNull($voicedMembership);
+        $voicedMembership->grant(MembershipMode::Voice);
+        $channel->enableMode(ChannelMode::Moderated);
+
+        $failures = $delivery->deliver($member, 'PRIVMSG', '#php', 'Blocked');
+        $successful = $delivery->deliver($voiced, 'PRIVMSG', '#php', 'Allowed');
+
+        $this->assertCount(1, $failures);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
+        $this->assertSame([], $successful);
+        $this->assertDeliveredMessage($recipientConnection, 'PRIVMSG', '#php', 'Allowed', source: 'Fred');
     }
 
     #[Test]
@@ -166,10 +241,11 @@ final class MessageDeliveryTest extends TestCase
         string $command,
         string $target,
         string $text,
+        string $source = 'John',
     ): void {
         $this->assertCount(1, $connection->messages);
         $this->assertSame([], $connection->messages[0]->tags);
-        $this->assertSame('John', $connection->messages[0]->source);
+        $this->assertSame($source, $connection->messages[0]->source);
         $this->assertSame($command, $connection->messages[0]->command);
         $this->assertSame([$target, $text], $connection->messages[0]->parameters);
     }

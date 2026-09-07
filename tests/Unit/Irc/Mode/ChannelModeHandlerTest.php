@@ -6,8 +6,9 @@ namespace Tests\Unit\Irc\Mode;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
-use PhpIrc\Irc\Channel\Mode\MembershipModeChangeParser;
+use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -30,6 +31,14 @@ final class ChannelModeHandlerTest extends TestCase
         yield 'remove operator' => [MembershipMode::Operator, '-o', true];
         yield 'grant voice' => [MembershipMode::Voice, '+v', false];
         yield 'remove voice' => [MembershipMode::Voice, '-v', true];
+    }
+
+    /** @return iterable<string, array{ChannelMode, string, bool}> */
+    public static function channelModeChanges(): iterable
+    {
+        yield 'enable moderated' => [ChannelMode::Moderated, '+m', true];
+        yield 'disable no external messages' => [ChannelMode::NoExternalMessages, '-n', false];
+        yield 'disable protected topic' => [ChannelMode::ProtectedTopic, '-t', false];
     }
 
     #[Test]
@@ -59,7 +68,7 @@ final class ChannelModeHandlerTest extends TestCase
         );
 
         $this->assertCount(2, $connection->messages);
-        $this->assertResponse($connection, '324', ['John', '#PHP', '+']);
+        $this->assertResponse($connection, '324', ['John', '#PHP', '+nt']);
         $this->assertResponse(
             connection: $connection,
             command: '329',
@@ -146,6 +155,60 @@ final class ChannelModeHandlerTest extends TestCase
         $this->assertSame('John', $johnConnection->messages[0]->source);
         $this->assertSame('MODE', $johnConnection->messages[0]->command);
         $this->assertSame([$channel->name, $modeString, 'Jane'], $johnConnection->messages[0]->parameters);
+    }
+
+    #[Test]
+    #[DataProvider('channelModeChanges')]
+    public function an_operator_can_change_channel_modes(
+        ChannelMode $mode,
+        string $modeString,
+        bool $enabledAfter,
+    ): void {
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->register($clients, 'John');
+        [$jane, $janeConnection] = $this->register($clients, 'Jane');
+        $channel = $channels->join('#php', $john);
+        $channels->join('#php', $jane);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'MODE', parameters: ['#PHP', $modeString]),
+        );
+
+        $this->assertSame($enabledAfter, $channel->hasMode($mode));
+        $this->assertCount(1, $johnConnection->messages);
+        $this->assertSame($johnConnection->messages, $janeConnection->messages);
+        $this->assertSame('John', $johnConnection->messages[0]->source);
+        $this->assertSame('MODE', $johnConnection->messages[0]->command);
+        $this->assertSame(['#php', $modeString], $johnConnection->messages[0]->parameters);
+    }
+
+    #[Test]
+    public function it_applies_and_broadcasts_mixed_channel_and_membership_mode_changes(): void
+    {
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->register($clients, 'John');
+        [$jane] = $this->register($clients, 'Jane');
+        [$fred] = $this->register($clients, 'Fred');
+        $channel = $channels->join('#php', $john);
+        $janeMembership = $channels->join('#php', $jane)->membershipFor($jane);
+        $fredMembership = $channels->join('#php', $fred)->membershipFor($fred);
+        $this->assertNotNull($janeMembership);
+        $this->assertNotNull($fredMembership);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'MODE', parameters: ['#php', '+mov-n', 'Jane', 'Fred']),
+        );
+
+        $this->assertTrue($channel->hasMode(ChannelMode::Moderated));
+        $this->assertFalse($channel->hasMode(ChannelMode::NoExternalMessages));
+        $this->assertTrue($janeMembership->has(MembershipMode::Operator));
+        $this->assertTrue($fredMembership->has(MembershipMode::Voice));
+        $this->assertSame(
+            ['#php', '+mov-n', 'Jane', 'Fred'],
+            $johnConnection->messages[0]->parameters,
+        );
     }
 
     #[Test]
@@ -263,6 +326,24 @@ final class ChannelModeHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_does_not_broadcast_channel_modes_that_do_not_change_state(): void
+    {
+        [$handler, $clients, $channels] = $this->handler();
+        [$john, $johnConnection] = $this->register($clients, 'John');
+        [$jane, $janeConnection] = $this->register($clients, 'Jane');
+        $channels->join('#php', $john);
+        $channels->join('#php', $jane);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'MODE', parameters: ['#php', '+nt-m']),
+        );
+
+        $this->assertSame([], $johnConnection->messages);
+        $this->assertSame([], $janeConnection->messages);
+    }
+
+    #[Test]
     public function it_ignores_a_membership_mode_without_a_nickname_argument(): void
     {
         [$handler, $clients, $channels] = $this->handler();
@@ -289,7 +370,7 @@ final class ChannelModeHandlerTest extends TestCase
                 channels: $channels,
                 clients: $clients,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
-                parser: new MembershipModeChangeParser(),
+                parser: new ModeChangeParser(),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
             $clients,
