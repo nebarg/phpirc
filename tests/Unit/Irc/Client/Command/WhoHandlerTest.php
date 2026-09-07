@@ -12,6 +12,7 @@ use PhpIrc\Irc\Client\Command\WhoHandler;
 use PhpIrc\Irc\Client\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
@@ -199,7 +200,7 @@ final class WhoHandlerTest extends TestCase
                 clients: $clients,
                 channels: $channels,
                 whoResponses: new WhoResponseFactory($serverName, $responses),
-                errors: new NumericErrorResponseFactory($responses),
+                errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
             ),
             $clients,
             $channels,

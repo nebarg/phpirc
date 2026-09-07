@@ -23,6 +23,7 @@ final class ClientConnection implements Connection
         private readonly MessageHandler $handler,
         private readonly ClientConnectionLifecycle $lifecycle,
         private readonly ConnectionKeepalive $keepalive,
+        private readonly OutboundMessageGuard $outboundMessages,
     ) {}
 
     public function run(): void
@@ -61,6 +62,10 @@ final class ClientConnection implements Connection
 
     public function send(Message $message): void
     {
+        if (! $this->outboundMessages->allows($message)) {
+            return;
+        }
+
         $this->socket->write(
             $this->codec->encode($message),
         );

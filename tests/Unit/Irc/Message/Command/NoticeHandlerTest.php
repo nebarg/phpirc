@@ -12,8 +12,12 @@ use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Message\Command\NoticeHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -140,6 +144,10 @@ final class NoticeHandlerTest extends TestCase
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 targets: new TargetClassifier(new ChannelTypes()),
                 channelAccess: new ChannelAccessPolicy(),
+                messageText: new MessageTextLimiter(
+                    new MessageSize(new MessageEncoder()),
+                    new ByteStringTruncator(),
+                ),
             )),
             $clients,
             $channels,

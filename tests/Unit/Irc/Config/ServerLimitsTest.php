@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Config;
 
 use PhpIrc\Irc\Config\ServerLimits;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -13,7 +14,7 @@ final class ServerLimitsTest extends TestCase
     #[Test]
     public function it_truncates_server_state_to_its_byte_limits(): void
     {
-        $limits = new ServerLimits();
+        $limits = $this->limits();
 
         $this->assertSame(
             str_repeat('t', ServerLimits::MAX_TOPIC_BYTES),
@@ -38,7 +39,7 @@ final class ServerLimitsTest extends TestCase
     {
         $topic = str_repeat('t', ServerLimits::MAX_TOPIC_BYTES - 1) . '£';
 
-        $truncated = new ServerLimits()->truncateTopic($topic);
+        $truncated = $this->limits()->truncateTopic($topic);
 
         $this->assertSame(str_repeat('t', ServerLimits::MAX_TOPIC_BYTES - 1), $truncated);
         $this->assertTrue(mb_check_encoding($truncated, 'UTF-8'));
@@ -47,11 +48,16 @@ final class ServerLimitsTest extends TestCase
     #[Test]
     public function it_leaves_values_within_the_limit_unchanged(): void
     {
-        $limits = new ServerLimits();
+        $limits = $this->limits();
 
         $this->assertSame('A topic', $limits->truncateTopic('A topic'));
         $this->assertSame('john', $limits->truncateUsername('john'));
         $this->assertSame('203.0.113.10', $limits->truncateHostname('203.0.113.10'));
         $this->assertSame('John Doe', $limits->truncateRealName('John Doe'));
+    }
+
+    private function limits(): ServerLimits
+    {
+        return new ServerLimits(new ByteStringTruncator());
     }
 }

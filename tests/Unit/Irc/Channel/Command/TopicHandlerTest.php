@@ -16,6 +16,7 @@ use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
@@ -272,7 +273,7 @@ final class TopicHandlerTest extends TestCase
         $channels = new ChannelRegistry($caseMapper);
         $clients = new ClientRegistry($caseMapper);
         $responses = new NumericResponseFactory(new ServerName('irc.test'));
-        $errors = new NumericErrorResponseFactory($responses);
+        $errors = new NumericErrorResponseFactory($responses, new ByteStringTruncator());
 
         return [
             new TopicHandler(
@@ -282,7 +283,7 @@ final class TopicHandlerTest extends TestCase
                 errors: $errors,
                 channelAccess: new ChannelAccessPolicy(),
                 permissionResponses: new ChannelPermissionResponseFactory($errors),
-                limits: new ServerLimits(),
+                limits: new ServerLimits(new ByteStringTruncator()),
             ),
             $channels,
             $clients,

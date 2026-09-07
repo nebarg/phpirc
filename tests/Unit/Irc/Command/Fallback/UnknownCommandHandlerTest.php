@@ -8,6 +8,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\Fallback\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -24,6 +25,7 @@ final class UnknownCommandHandlerTest extends TestCase
 
         $responseFactory = new NumericErrorResponseFactory(
             new NumericResponseFactory(new ServerName('irc.test')),
+            new ByteStringTruncator(),
         );
 
         new UnknownCommandHandler($responseFactory)->handle(

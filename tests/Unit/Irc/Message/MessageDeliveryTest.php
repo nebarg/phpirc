@@ -11,9 +11,14 @@ use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PHPUnit\Framework\Attributes\Test;
@@ -207,6 +212,54 @@ final class MessageDeliveryTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_limits_notices_delivered_to_clients_to_the_message_size_limit(): void
+    {
+        [$delivery, $clients] = $this->delivery();
+        [$sender] = $this->connectedClient(str_repeat('s', ServerLimits::MAX_NICKNAME_BYTES), $clients);
+        [, $recipientConnection] = $this->connectedClient(
+            str_repeat('r', ServerLimits::MAX_NICKNAME_BYTES),
+            $clients,
+        );
+        $text = str_repeat('Long notice message ', 30);
+
+        $failures = $delivery->deliver(
+            sender: $sender,
+            command: 'NOTICE',
+            targets: str_repeat('r', ServerLimits::MAX_NICKNAME_BYTES),
+            text: $text,
+        );
+
+        $this->assertSame([], $failures);
+        $this->assertCount(1, $recipientConnection->messages);
+        $this->assertSame(MessageSize::MAX_BYTES, $this->messageSize()->inBytes($recipientConnection->messages[0]));
+        $this->assertLessThan(strlen($text), strlen($recipientConnection->messages[0]->parameter(1)));
+    }
+
+    #[Test]
+    public function it_limits_privmsgs_delivered_to_channels_to_the_message_size_limit(): void
+    {
+        [$delivery, $clients, $channels] = $this->delivery();
+        [$sender] = $this->connectedClient(str_repeat('s', ServerLimits::MAX_NICKNAME_BYTES), $clients);
+        [$recipient, $recipientConnection] = $this->connectedClient('Jane', $clients);
+        $channelName = '#' . str_repeat('c', ServerLimits::MAX_CHANNEL_NAME_BYTES - 1);
+        $channels->join($channelName, $sender);
+        $channels->join($channelName, $recipient);
+        $text = str_repeat('Long channel message ', 30);
+
+        $failures = $delivery->deliver(
+            sender: $sender,
+            command: 'PRIVMSG',
+            targets: $channelName,
+            text: $text,
+        );
+
+        $this->assertSame([], $failures);
+        $this->assertCount(1, $recipientConnection->messages);
+        $this->assertSame(MessageSize::MAX_BYTES, $this->messageSize()->inBytes($recipientConnection->messages[0]));
+        $this->assertLessThan(strlen($text), strlen($recipientConnection->messages[0]->parameter(1)));
+    }
+
     /** @return array{MessageDelivery, ClientRegistry, ChannelRegistry} */
     private function delivery(): array
     {
@@ -221,6 +274,7 @@ final class MessageDeliveryTest extends TestCase
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 targets: new TargetClassifier(new ChannelTypes()),
                 channelAccess: new ChannelAccessPolicy(),
+                messageText: new MessageTextLimiter($this->messageSize(), new ByteStringTruncator()),
             ),
             $clients,
             $channels,
@@ -250,5 +304,10 @@ final class MessageDeliveryTest extends TestCase
         $this->assertSame($source, $connection->messages[0]->source);
         $this->assertSame($command, $connection->messages[0]->command);
         $this->assertSame([$target, $text], $connection->messages[0]->parameters);
+    }
+
+    private function messageSize(): MessageSize
+    {
+        return new MessageSize(new MessageEncoder());
     }
 }

@@ -11,6 +11,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
@@ -210,6 +211,7 @@ final class PartHandlerTest extends TestCase
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 errors: new NumericErrorResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
+                    new ByteStringTruncator(),
                 ),
             ),
             $channels,

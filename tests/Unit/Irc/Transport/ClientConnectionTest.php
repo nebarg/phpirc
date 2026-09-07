@@ -23,13 +23,17 @@ use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
+use PhpIrc\Irc\Transport\OutboundMessageGuard;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
@@ -278,21 +282,69 @@ final class ClientConnectionTest extends TestCase
     }
 
     #[Test]
-    public function it_stops_sending_many_when_a_message_cannot_be_encoded(): void
+    public function it_drops_an_invalid_message_and_continues_sending(): void
     {
         $socket = new FakeClientSocket();
-        $connection = $this->connection($socket, new RecordingMessageHandler());
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                'Refused to send an invalid IRC message.',
+                $this->callback(static fn (array $context): bool => $context['command'] === 'INVALID-COMMAND' && $context['exception'] instanceof InvalidMessageException),
+            );
+        $connection = $this->connection(
+            socket: $socket,
+            handler: new RecordingMessageHandler(),
+            outboundMessages: new OutboundMessageGuard(
+                new MessageSize(new MessageEncoder()),
+                $logger,
+            ),
+        );
 
-        try {
-            $connection->sendMany([
-                new Message(command: 'PING', parameters: ['one']),
-                new Message(command: 'INVALID-COMMAND'),
-                new Message(command: 'PONG', parameters: ['two']),
-            ]);
-            $this->fail('Expected an invalid message exception.');
-        } catch (InvalidMessageException) {
-            $this->assertSame(["PING one\r\n"], $socket->writes);
-        }
+        $connection->sendMany([
+            new Message(command: 'PING', parameters: ['one']),
+            new Message(command: 'INVALID-COMMAND'),
+            new Message(command: 'PONG', parameters: ['two']),
+        ]);
+
+        $this->assertSame(["PING one\r\n", "PONG two\r\n"], $socket->writes);
+    }
+
+    #[Test]
+    public function it_drops_an_oversized_message_without_writing_it(): void
+    {
+        $socket = new FakeClientSocket();
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                'Refused to send an oversized IRC message.',
+                $this->callback(
+                    static fn (array $context): bool => (
+                        $context['command'] === 'NOTICE'
+                        && is_int($context['bytes'])
+                        && $context['bytes'] > MessageSize::MAX_BYTES
+                        && $context['limit'] === MessageSize::MAX_BYTES
+                    ),
+                ),
+            );
+        $connection = $this->connection(
+            socket: $socket,
+            handler: new RecordingMessageHandler(),
+            outboundMessages: new OutboundMessageGuard(
+                new MessageSize(new MessageEncoder()),
+                $logger,
+            ),
+        );
+
+        $connection->send(new Message(
+            command: 'NOTICE',
+            parameters: ['John', str_repeat('x', 499)],
+        ));
+
+        $this->assertSame([], $socket->writes);
     }
 
     #[Test]
@@ -445,6 +497,7 @@ final class ClientConnectionTest extends TestCase
         ?ClientRegistry $clients = null,
         ?ChannelRegistry $channels = null,
         ?ConnectionKeepalive $keepalive = null,
+        ?OutboundMessageGuard $outboundMessages = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
         $clientRegistry = $clients ?? new ClientRegistry($caseMapper);
@@ -468,6 +521,10 @@ final class ClientConnectionTest extends TestCase
                 ),
             ),
             keepalive: $keepalive ?? $this->keepalive(new ManualTimerScheduler()),
+            outboundMessages: $outboundMessages ?? new OutboundMessageGuard(
+                new MessageSize(new MessageEncoder()),
+                new NullLogger(),
+            ),
         );
     }
 

@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -88,6 +89,7 @@ final class ChannelPermissionResponseFactoryTest extends TestCase
         return new ChannelPermissionResponseFactory(
             new NumericErrorResponseFactory(
                 new NumericResponseFactory(new ServerName('irc.test')),
+                new ByteStringTruncator(),
             ),
         );
     }

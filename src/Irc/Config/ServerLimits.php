@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Config;
 
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
+
 final readonly class ServerLimits
 {
     public const int MAX_SERVER_NAME_BYTES = 63;
@@ -20,36 +22,29 @@ final readonly class ServerLimits
 
     public const int MAX_REAL_NAME_BYTES = 128;
 
+    public const int MAX_COMMAND_BYTES = 32;
+
+    public function __construct(
+        private ByteStringTruncator $strings,
+    ) {}
+
     public function truncateTopic(string $topic): string
     {
-        return $this->truncate($topic, self::MAX_TOPIC_BYTES);
+        return $this->strings->truncate($topic, self::MAX_TOPIC_BYTES);
     }
 
     public function truncateUsername(string $username): string
     {
-        return $this->truncate($username, self::MAX_USERNAME_BYTES);
+        return $this->strings->truncate($username, self::MAX_USERNAME_BYTES);
     }
 
     public function truncateHostname(string $hostname): string
     {
-        return $this->truncate($hostname, self::MAX_HOSTNAME_BYTES);
+        return $this->strings->truncate($hostname, self::MAX_HOSTNAME_BYTES);
     }
 
     public function truncateRealName(string $realName): string
     {
-        return $this->truncate($realName, self::MAX_REAL_NAME_BYTES);
-    }
-
-    private function truncate(string $value, int $maximumBytes): string
-    {
-        if (strlen($value) <= $maximumBytes) {
-            return $value;
-        }
-
-        if (! mb_check_encoding($value, 'UTF-8')) {
-            return substr($value, 0, $maximumBytes);
-        }
-
-        return mb_strcut($value, 0, $maximumBytes, 'UTF-8');
+        return $this->strings->truncate($realName, self::MAX_REAL_NAME_BYTES);
     }
 }

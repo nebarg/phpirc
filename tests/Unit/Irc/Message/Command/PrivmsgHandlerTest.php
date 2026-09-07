@@ -14,8 +14,12 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
 use PhpIrc\Irc\Message\PrivmsgResponseFactory;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
@@ -268,10 +272,15 @@ final class PrivmsgHandlerTest extends TestCase
                     broadcaster: new ChannelBroadcaster($clients, $channels),
                     targets: new TargetClassifier(new ChannelTypes()),
                     channelAccess: new ChannelAccessPolicy(),
+                    messageText: new MessageTextLimiter(
+                        new MessageSize(new MessageEncoder()),
+                        new ByteStringTruncator(),
+                    ),
                 ),
                 privmsgResponses: new PrivmsgResponseFactory(
                     new NumericErrorResponseFactory(
                         new NumericResponseFactory(new ServerName('irc.test')),
+                        new ByteStringTruncator(),
                     ),
                 ),
             ),

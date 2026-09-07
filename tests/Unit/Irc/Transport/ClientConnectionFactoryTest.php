@@ -12,15 +12,19 @@ use PhpIrc\Irc\Config\FloodProtectionConfig;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
+use PhpIrc\Irc\Transport\OutboundMessageGuard;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\NullLogger;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\Time\ManualMonotonicClock;
@@ -159,7 +163,11 @@ final class ClientConnectionFactoryTest extends TestCase
                 clock: new ManualMonotonicClock(),
                 config: $config,
             ),
-            limits: new ServerLimits(),
+            limits: new ServerLimits(new ByteStringTruncator()),
+            outboundMessages: new OutboundMessageGuard(
+                new MessageSize(new MessageEncoder()),
+                new NullLogger(),
+            ),
         );
     }
 }

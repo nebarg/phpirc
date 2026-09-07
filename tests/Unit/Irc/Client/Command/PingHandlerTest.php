@@ -8,6 +8,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\PingHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -89,7 +90,7 @@ final class PingHandlerTest extends TestCase
 
         return new PingHandler(
             $serverName,
-            new NumericErrorResponseFactory(new NumericResponseFactory($serverName)),
+            new NumericErrorResponseFactory(new NumericResponseFactory($serverName), new ByteStringTruncator()),
         );
     }
 

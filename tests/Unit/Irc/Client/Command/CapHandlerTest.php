@@ -15,6 +15,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
@@ -167,7 +168,7 @@ final class CapHandlerTest extends TestCase
     {
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
-        $errors = new NumericErrorResponseFactory($responses);
+        $errors = new NumericErrorResponseFactory($responses, new ByteStringTruncator());
         $caseMapper = new AsciiCaseMapper();
 
         return new CapHandler(

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Protocol\Numeric;
 
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -116,7 +120,7 @@ final class NumericErrorResponseFactoryTest extends TestCase
             '432',
             [
                 'John',
-                'bad nick',
+                'bad?nick',
                 'Erroneous nickname',
             ],
         );
@@ -176,6 +180,30 @@ final class NumericErrorResponseFactoryTest extends TestCase
         $this->assertResponse($factory->notRegistered('John'), '451', ['John', 'You have not registered']);
     }
 
+    #[Test]
+    public function it_sanitises_and_bounds_values_echoed_in_error_responses(): void
+    {
+        $factory = $this->factory();
+        $messages = [
+            $factory->noSuchChannel('John', '#' . str_repeat('c', 100)),
+            $factory->noSuchNickname('John', str_repeat('n', 100)),
+            $factory->unknownCommand('John', ":BAD COMMAND\r\n"),
+            $factory->unknownMode('John', 'xy'),
+            $factory->unknownMode('John', 'é'),
+        ];
+
+        $this->assertSame(ServerLimits::MAX_CHANNEL_NAME_BYTES, strlen($messages[0]->parameters[1]));
+        $this->assertSame(ServerLimits::MAX_NICKNAME_BYTES, strlen($messages[1]->parameters[1]));
+        $this->assertSame('?BAD?COMMAND??', $messages[2]->parameters[1]);
+        $this->assertSame('x', $messages[3]->parameters[1]);
+        $this->assertSame('*', $messages[4]->parameters[1]);
+
+        $messageSize = new MessageSize(new MessageEncoder());
+        foreach ($messages as $message) {
+            $this->assertTrue($messageSize->fits($message));
+        }
+    }
+
     /** @param list<string> $parameters */
     private function assertResponse(Message $message, string $command, array $parameters): void
     {
@@ -189,6 +217,7 @@ final class NumericErrorResponseFactoryTest extends TestCase
     {
         return new NumericErrorResponseFactory(
             new NumericResponseFactory(new ServerName('irc.test')),
+            new ByteStringTruncator(),
         );
     }
 }

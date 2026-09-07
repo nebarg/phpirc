@@ -17,6 +17,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\ChannelModeHandler;
 use PhpIrc\Irc\Mode\Command\ModeHandler;
 use PhpIrc\Irc\Mode\UserModeHandler;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
@@ -122,7 +123,7 @@ final class ModeHandlerTest extends TestCase
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
         $responses = new NumericResponseFactory(new ServerName('irc.test'));
-        $errors = new NumericErrorResponseFactory($responses);
+        $errors = new NumericErrorResponseFactory($responses, new ByteStringTruncator());
 
         return [
             new ModeHandler(

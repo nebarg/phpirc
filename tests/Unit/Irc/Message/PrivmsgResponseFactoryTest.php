@@ -8,6 +8,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\MessageDeliveryFailure;
 use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
 use PhpIrc\Irc\Message\PrivmsgResponseFactory;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -58,6 +59,7 @@ final class PrivmsgResponseFactoryTest extends TestCase
         return new PrivmsgResponseFactory(
             new NumericErrorResponseFactory(
                 new NumericResponseFactory(new ServerName('irc.test')),
+                new ByteStringTruncator(),
             ),
         );
     }

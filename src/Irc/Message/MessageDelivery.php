@@ -11,6 +11,7 @@ use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PhpIrc\Irc\Protocol\Target\TargetType;
 
@@ -22,6 +23,7 @@ final readonly class MessageDelivery
         private ChannelBroadcaster $broadcaster,
         private TargetClassifier $targets,
         private ChannelAccessPolicy $channelAccess,
+        private MessageTextLimiter $messageText,
     ) {}
 
     /** @return list<MessageDeliveryFailure> */
@@ -67,11 +69,7 @@ final readonly class MessageDelivery
 
         $this->broadcaster->broadcastExcept(
             $channel,
-            new Message(
-                command: $command,
-                parameters: [$channel->name, $text],
-                source: $sender->nickname,
-            ),
+            $this->createMessage($sender, $command, $channel->name, $text),
             $sender,
         );
 
@@ -96,12 +94,19 @@ final readonly class MessageDelivery
             return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname);
         }
 
-        $connection->send(new Message(
-            command: $command,
-            parameters: [$recipient->nickname ?? $target, $text],
-            source: $sender->nickname,
-        ));
+        $connection->send(
+            $this->createMessage($sender, $command, $recipient->nickname ?? $target, $text),
+        );
 
         return null;
+    }
+
+    private function createMessage(Client $sender, string $command, string $target, string $text): Message
+    {
+        return $this->messageText->limit(new Message(
+            command: $command,
+            parameters: [$target, $text],
+            source: $sender->nickname,
+        ));
     }
 }

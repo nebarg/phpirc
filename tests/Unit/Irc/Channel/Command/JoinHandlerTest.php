@@ -15,6 +15,7 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
@@ -262,7 +263,7 @@ final class JoinHandlerTest extends TestCase
                     new MessageSize(new MessageEncoder()),
                 ),
                 topicResponses: new ChannelTopicResponseFactory($responses),
-                errors: new NumericErrorResponseFactory($responses),
+                errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
             ),
             $channels,
             $clients,

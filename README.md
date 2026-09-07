@@ -7,7 +7,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 ## What works
 
 - [x] IRC message parsing and encoding, including message tags
-- [x] TCP listener, line buffering, message-size validation and connection cleanup
+- [x] TCP listener, line buffering, inbound message-size validation and connection cleanup
 - [x] Automatic command-handler discovery and dispatch
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
 - [x] Nickname validation, collision detection and nickname changes
@@ -24,6 +24,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Moderated, protected-topic and no-external-message channel modes with `+m`, `+t` and `+n`
 - [x] Viewing, setting and clearing channel topics with `TOPIC`
 - [x] `PRIVMSG` and `NOTICE` delivery to users and channels, including multiple targets
+- [x] Outbound message-size enforcement for server replies and relayed chat
 - [x] Unknown-command and not-registered responses
 - [x] ASCII IRC casemapping for nicknames and channels
 - [x] In-memory client, channel and membership state
@@ -81,7 +82,8 @@ composer qa
 
 ## Roadmap
 
-- [ ] Bounded outbound delivery and slow-client handling
+- [ ] Bounded outbound queues and slow-client handling
+- [ ] Configurable post-registration channel auto-join
 - [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
 - [ ] Peak and lifetime connection statistics
 - [ ] Configurable message of the day

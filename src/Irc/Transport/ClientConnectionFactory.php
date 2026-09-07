@@ -24,6 +24,7 @@ final readonly class ClientConnectionFactory
         private ConnectionKeepaliveFactory $keepalives,
         private FloodProtectionFactory $floodProtection,
         private ServerLimits $limits,
+        private OutboundMessageGuard $outboundMessages,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
@@ -39,6 +40,7 @@ final readonly class ClientConnectionFactory
             handler: $this->floodProtection->protect($this->handler),
             lifecycle: $this->lifecycle,
             keepalive: $this->keepalives->create(),
+            outboundMessages: $this->outboundMessages,
         );
     }
 }

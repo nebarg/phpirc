@@ -6,6 +6,7 @@ namespace Tests\Unit\Irc\Client;
 
 use PhpIrc\Irc\Client\CapabilityResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
@@ -59,7 +60,7 @@ final class CapabilityResponseFactoryTest extends TestCase
 
         return new CapabilityResponseFactory(
             $serverName,
-            new NumericErrorResponseFactory(new NumericResponseFactory($serverName)),
+            new NumericErrorResponseFactory(new NumericResponseFactory($serverName), new ByteStringTruncator()),
         );
     }
 }
