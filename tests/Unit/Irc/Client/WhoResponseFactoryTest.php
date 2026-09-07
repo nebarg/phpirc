@@ -8,7 +8,10 @@ use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\WhoResponseFactory;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -82,9 +85,29 @@ final class WhoResponseFactoryTest extends TestCase
         $this->assertSame(['Jane', '#php', 'End of WHO list'], $message->parameters);
     }
 
-    private function factory(): WhoResponseFactory
+    #[Test]
+    public function it_keeps_channel_member_replies_within_the_message_size_limit(): void
     {
-        $serverName = new ServerName('irc.test');
+        $serverName = new ServerName('irc.' . str_repeat('s', 59));
+        $client = new Client(str_repeat('h', ServerLimits::MAX_HOSTNAME_BYTES));
+        $client->setNickname(str_repeat('n', ServerLimits::MAX_NICKNAME_BYTES));
+        $client->setUsername(str_repeat('u', ServerLimits::MAX_USERNAME_BYTES));
+        $client->setRealName(str_repeat('r', ServerLimits::MAX_REAL_NAME_BYTES));
+        $channel = new Channel('#' . str_repeat('c', ServerLimits::MAX_CHANNEL_NAME_BYTES - 1));
+        $membership = $channel->join($client);
+
+        $message = $this->factory($serverName)->createChannelMemberReply(
+            target: str_repeat('n', ServerLimits::MAX_NICKNAME_BYTES),
+            channel: $channel,
+            membership: $membership,
+        );
+
+        $this->assertTrue(new MessageSize(new MessageEncoder())->fits($message));
+    }
+
+    private function factory(?ServerName $serverName = null): WhoResponseFactory
+    {
+        $serverName ??= new ServerName('irc.test');
 
         return new WhoResponseFactory(
             serverName: $serverName,

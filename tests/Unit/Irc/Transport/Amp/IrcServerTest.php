@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -160,6 +161,7 @@ final class IrcServerTest extends TestCase
                     clock: new ManualMonotonicClock(),
                     config: $config,
                 ),
+                limits: new ServerLimits(),
             ),
             logger: $logger,
         );

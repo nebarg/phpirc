@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Client\Registration;
 
 use DateTimeInterface;
-use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Client\LusersResponseFactory;
-use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
@@ -72,10 +71,13 @@ final readonly class RegistrationWelcome
                     'CASEMAPPING=' . $this->caseMapper->name(),
                     'CHANMODES=,,,mnt',
                     'CHANTYPES=' . $this->channelTypes->prefixes,
-                    'CHANNELLEN=' . ChannelNameValidator::MAX_LENGTH,
-                    'NICKLEN=' . NicknameValidator::MAX_LENGTH,
+                    'CHANNELLEN=' . ServerLimits::MAX_CHANNEL_NAME_BYTES,
+                    'HOSTLEN=' . ServerLimits::MAX_HOSTNAME_BYTES,
+                    'NICKLEN=' . ServerLimits::MAX_NICKNAME_BYTES,
                     "NETWORK={$this->config->networkName}",
                     'PREFIX=(ov)@+',
+                    'TOPICLEN=' . ServerLimits::MAX_TOPIC_BYTES,
+                    'USERLEN=' . ServerLimits::MAX_USERNAME_BYTES,
                 ],
             ),
         );

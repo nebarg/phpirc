@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Channel;
 
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 
 final readonly class ChannelNameValidator
 {
-    public const int MAX_LENGTH = 64;
+    public const int MAX_LENGTH = ServerLimits::MAX_CHANNEL_NAME_BYTES;
 
     public function __construct(
         private ChannelTypes $channelTypes,

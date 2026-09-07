@@ -13,6 +13,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
@@ -77,6 +78,27 @@ final class UserHandlerTest extends TestCase
 
         $this->assertSame('john', $client->username);
         $this->assertSame('John Doe', $client->realName);
+        $this->assertSame([], $connection->messages);
+    }
+
+    #[Test]
+    public function it_silently_truncates_the_username_and_real_name_to_the_server_limits(): void
+    {
+        $connection = new RecordingConnection();
+        $client = new Client();
+
+        $this->handler()->handle(
+            new CommandContext($connection, $client),
+            $this->message([
+                str_repeat('u', ServerLimits::MAX_USERNAME_BYTES + 1),
+                '0',
+                '*',
+                str_repeat('r', ServerLimits::MAX_REAL_NAME_BYTES + 1),
+            ]),
+        );
+
+        $this->assertSame(str_repeat('u', ServerLimits::MAX_USERNAME_BYTES), $client->username);
+        $this->assertSame(str_repeat('r', ServerLimits::MAX_REAL_NAME_BYTES), $client->realName);
         $this->assertSame([], $connection->messages);
     }
 
@@ -207,6 +229,7 @@ final class UserHandlerTest extends TestCase
                     ),
                 ),
             ),
+            limits: new ServerLimits(),
         );
     }
 

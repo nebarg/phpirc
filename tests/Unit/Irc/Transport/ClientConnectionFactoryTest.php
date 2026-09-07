@@ -10,6 +10,7 @@ use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Config\FloodProtectionConfig;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -67,6 +68,23 @@ final class ClientConnectionFactoryTest extends TestCase
         ))->run();
 
         $this->assertSame('203.0.113.10', $handler->contexts[0]->client->hostname);
+    }
+
+    #[Test]
+    public function it_truncates_the_socket_remote_address_to_the_hostname_limit(): void
+    {
+        $handler = new RecordingMessageHandler();
+        $factory = $this->factory($handler);
+
+        $factory->create(new FakeClientSocket(
+            chunks: ["PING :one\r\n"],
+            remoteAddress: str_repeat('h', ServerLimits::MAX_HOSTNAME_BYTES + 1),
+        ))->run();
+
+        $this->assertSame(
+            str_repeat('h', ServerLimits::MAX_HOSTNAME_BYTES),
+            $handler->contexts[0]->client->hostname,
+        );
     }
 
     #[Test]
@@ -141,6 +159,7 @@ final class ClientConnectionFactoryTest extends TestCase
                 clock: new ManualMonotonicClock(),
                 config: $config,
             ),
+            limits: new ServerLimits(),
         );
     }
 }

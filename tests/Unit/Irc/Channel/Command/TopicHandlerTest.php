@@ -14,6 +14,7 @@ use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
@@ -227,6 +228,25 @@ final class TopicHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_truncates_a_topic_to_the_server_limit_before_storing_and_broadcasting_it(): void
+    {
+        [$handler, $channels, $clients] = $this->handler();
+        [$client, $connection] = $this->connectedClient('John');
+        $channel = $channels->join('#php', $client);
+        $clients->register($client, $connection);
+        $topic = str_repeat('t', ServerLimits::MAX_TOPIC_BYTES + 1);
+
+        $handler->handle(
+            new CommandContext($connection, $client),
+            new Message(command: 'TOPIC', parameters: ['#php', $topic]),
+        );
+
+        $expectedTopic = str_repeat('t', ServerLimits::MAX_TOPIC_BYTES);
+        $this->assertSame($expectedTopic, $channel->topic?->text);
+        $this->assertTopic($connection, ['#php', $expectedTopic]);
+    }
+
+    #[Test]
     public function it_clears_and_broadcasts_an_empty_topic(): void
     {
         [$handler, $channels, $clients] = $this->handler();
@@ -262,6 +282,7 @@ final class TopicHandlerTest extends TestCase
                 errors: $errors,
                 channelAccess: new ChannelAccessPolicy(),
                 permissionResponses: new ChannelPermissionResponseFactory($errors),
+                limits: new ServerLimits(),
             ),
             $channels,
             $clients,

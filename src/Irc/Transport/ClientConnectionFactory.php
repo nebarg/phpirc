@@ -6,6 +6,7 @@ namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\MessageHandler;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -22,12 +23,13 @@ final readonly class ClientConnectionFactory
         private ClientConnectionLifecycle $lifecycle,
         private ConnectionKeepaliveFactory $keepalives,
         private FloodProtectionFactory $floodProtection,
+        private ServerLimits $limits,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
     {
         return new ClientConnection(
-            client: new Client($socket->remoteAddress()),
+            client: new Client($this->limits->truncateHostname($socket->remoteAddress())),
             socket: $socket,
             codec: new MessageCodec(
                 buffer: new LineBuffer($this->validator),

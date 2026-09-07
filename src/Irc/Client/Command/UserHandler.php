@@ -7,6 +7,7 @@ namespace PhpIrc\Irc\Client\Command;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
@@ -17,6 +18,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
     public function __construct(
         private NumericErrorResponseFactory $errors,
         private RegistrationCompleter $registration,
+        private ServerLimits $limits,
     ) {}
 
     public function command(): string
@@ -42,8 +44,12 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
             return;
         }
 
-        $context->client->setUsername($message->parameter(0));
-        $context->client->setRealName($message->parameter(3));
+        $context->client->setUsername(
+            $this->limits->truncateUsername($message->parameter(0)),
+        );
+        $context->client->setRealName(
+            $this->limits->truncateRealName($message->parameter(3)),
+        );
 
         $this->registration->completeIfReady($context);
     }

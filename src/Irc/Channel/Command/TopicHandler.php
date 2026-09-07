@@ -11,6 +11,7 @@ use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
@@ -23,6 +24,7 @@ final readonly class TopicHandler implements CommandHandler
         private NumericErrorResponseFactory $errors,
         private ChannelAccessPolicy $channelAccess,
         private ChannelPermissionResponseFactory $permissionResponses,
+        private ServerLimits $limits,
     ) {}
 
     public function command(): string
@@ -58,7 +60,7 @@ final readonly class TopicHandler implements CommandHandler
             return;
         }
 
-        $topic = $message->parameter(1);
+        $topic = $this->limits->truncateTopic($message->parameter(1));
 
         $permission = $this->channelAccess->checkTopicChange($channel, $context->client);
 
