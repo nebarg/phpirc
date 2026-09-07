@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Irc\Client;
+
+use PhpIrc\Irc\Client\CapabilityResponseFactory;
+use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
+use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+final class CapabilityResponseFactoryTest extends TestCase
+{
+    #[Test]
+    public function it_creates_a_capability_reply(): void
+    {
+        $response = $this->factory()->createReply('John', 'NAK', 'multi-prefix');
+
+        $this->assertSame('irc.test', $response->source);
+        $this->assertSame('CAP', $response->command);
+        $this->assertSame(['John', 'NAK', 'multi-prefix'], $response->parameters);
+    }
+
+    #[Test]
+    public function it_creates_an_invalid_subcommand_response(): void
+    {
+        $response = $this->factory()->createInvalidSubcommandResponse('John', 'NOPE');
+
+        $this->assertSame('irc.test', $response->source);
+        $this->assertSame('410', $response->command);
+        $this->assertSame(['John', 'NOPE', 'Invalid CAP command'], $response->parameters);
+    }
+
+    private function factory(): CapabilityResponseFactory
+    {
+        $serverName = new ServerName('irc.test');
+
+        return new CapabilityResponseFactory(
+            $serverName,
+            new NumericErrorResponseFactory(new NumericResponseFactory($serverName)),
+        );
+    }
+}

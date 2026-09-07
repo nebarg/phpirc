@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
-use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class TopicHandler implements CommandHandler
 {
@@ -21,8 +20,9 @@ final readonly class TopicHandler implements CommandHandler
         private ChannelRegistry $channels,
         private ChannelBroadcaster $broadcaster,
         private ChannelTopicResponseFactory $topicResponses,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
         private ChannelAccessPolicy $channelAccess,
+        private ChannelPermissionResponseFactory $permissionResponses,
     ) {}
 
     public function command(): string
@@ -34,11 +34,7 @@ final readonly class TopicHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NeedMoreParameters,
-                    target: $context->responseTarget(),
-                    parameters: [$this->command()],
-                ),
+                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
             );
 
             return;
@@ -48,11 +44,7 @@ final readonly class TopicHandler implements CommandHandler
 
         if ($channel === null) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoSuchChannel,
-                    target: $context->responseTarget(),
-                    parameters: [$message->parameter(0)],
-                ),
+                $this->errors->noSuchChannel($context->responseTarget(), $message->parameter(0)),
             );
 
             return;
@@ -71,15 +63,12 @@ final readonly class TopicHandler implements CommandHandler
 
         $permission = $this->channelAccess->checkTopicChange($channel, $context->client);
 
-        if ($permission !== ChannelPermission::Allowed) {
+        if ($permission->isDenied()) {
             $context->connection->send(
-                $this->responses->create(
-                    code: match ($permission) {
-                        ChannelPermission::NotMember => ResponseCode::NotOnChannel,
-                        ChannelPermission::InsufficientPrivileges => ResponseCode::ChannelOperatorPrivilegesNeeded,
-                    },
-                    target: $context->responseTarget(),
-                    parameters: [$channel->name],
+                $this->permissionResponses->createTopicChangeDeniedResponse(
+                    $permission,
+                    $context->responseTarget(),
+                    $channel,
                 ),
             );
 

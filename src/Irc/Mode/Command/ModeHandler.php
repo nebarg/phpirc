@@ -9,8 +9,7 @@ use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Mode\ChannelModeHandler;
 use PhpIrc\Irc\Mode\UserModeHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
 use PhpIrc\Irc\Protocol\Target\TargetType;
 
@@ -19,7 +18,7 @@ final readonly class ModeHandler implements CommandHandler
     public function __construct(
         private ChannelModeHandler $channelModes,
         private UserModeHandler $userModes,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
         private TargetClassifier $targets,
     ) {}
 
@@ -32,11 +31,7 @@ final readonly class ModeHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NeedMoreParameters,
-                    target: $context->responseTarget(),
-                    parameters: [$this->command()],
-                ),
+                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
             );
 
             return;

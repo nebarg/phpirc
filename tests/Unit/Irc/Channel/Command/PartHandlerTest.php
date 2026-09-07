@@ -13,6 +13,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -207,7 +208,9 @@ final class PartHandlerTest extends TestCase
             new PartHandler(
                 channels: $channels,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
-                responses: new NumericResponseFactory(new ServerName('irc.test')),
+                errors: new NumericErrorResponseFactory(
+                    new NumericResponseFactory(new ServerName('irc.test')),
+                ),
             ),
             $channels,
             $clients,

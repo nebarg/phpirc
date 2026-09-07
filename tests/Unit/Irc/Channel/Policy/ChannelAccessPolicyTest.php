@@ -23,6 +23,14 @@ final class ChannelAccessPolicyTest extends TestCase
     }
 
     #[Test]
+    public function only_allowed_permissions_are_not_denied(): void
+    {
+        $this->assertFalse(ChannelPermission::Allowed->isDenied());
+        $this->assertTrue(ChannelPermission::NotMember->isDenied());
+        $this->assertTrue(ChannelPermission::InsufficientPrivileges->isDenied());
+    }
+
+    #[Test]
     public function channel_members_can_send_when_the_channel_is_not_moderated(): void
     {
         [$channel, , $member] = $this->channelWithOperatorAndMember();

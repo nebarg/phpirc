@@ -6,6 +6,6 @@ namespace PhpIrc\Irc\Message;
 
 enum MessageDeliveryFailureReason
 {
-    case TargetNotFound;
+    case NoSuchNickname;
     case CannotSendToChannel;
 }

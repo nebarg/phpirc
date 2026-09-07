@@ -11,6 +11,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\UserModeHandler;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -134,11 +135,13 @@ final class UserModeHandlerTest extends TestCase
     private function handler(): array
     {
         $clients = new ClientRegistry(new AsciiCaseMapper());
+        $responses = new NumericResponseFactory(new ServerName('irc.test'));
 
         return [
             new UserModeHandler(
                 clients: $clients,
-                responses: new NumericResponseFactory(new ServerName('irc.test')),
+                numericResponses: $responses,
+                errors: new NumericErrorResponseFactory($responses),
             ),
             $clients,
         ];

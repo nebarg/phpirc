@@ -11,15 +11,14 @@ use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class NickHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
         private ClientRegistry $clients,
         private NicknameValidator $nicknames,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
         private RegistrationCompleter $registration,
         private ChannelBroadcaster $broadcaster,
     ) {}
@@ -33,10 +32,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoNicknameGiven,
-                    target: $context->responseTarget(),
-                ),
+                $this->errors->noNicknameGiven($context->responseTarget()),
             );
 
             return;
@@ -46,11 +42,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
 
         if (! $this->nicknames->isValid($nickname)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::ErroneousNickname,
-                    target: $context->responseTarget(),
-                    parameters: [$nickname],
-                ),
+                $this->errors->erroneousNickname($context->responseTarget(), $nickname),
             );
 
             return;
@@ -61,11 +53,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
 
         if (! $this->clients->claimNickname($context->client, $nickname)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NicknameInUse,
-                    target: $context->responseTarget(),
-                    parameters: [$nickname],
-                ),
+                $this->errors->nicknameInUse($context->responseTarget(), $nickname),
             );
 
             return;

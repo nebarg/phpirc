@@ -7,6 +7,7 @@ namespace PhpIrc\Irc\Mode;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
@@ -14,7 +15,8 @@ final readonly class UserModeHandler
 {
     public function __construct(
         private ClientRegistry $clients,
-        private NumericResponseFactory $responses,
+        private NumericResponseFactory $numericResponses,
+        private NumericErrorResponseFactory $errors,
     ) {}
 
     public function handle(CommandContext $context, Message $message): void
@@ -24,11 +26,7 @@ final readonly class UserModeHandler
 
         if ($client === null || ! $client->registration->isComplete()) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoSuchNick,
-                    target: $context->responseTarget(),
-                    parameters: [$nickname],
-                ),
+                $this->errors->noSuchNickname($context->responseTarget(), $nickname),
             );
 
             return;
@@ -36,10 +34,7 @@ final readonly class UserModeHandler
 
         if ($client !== $context->client) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::UsersDontMatch,
-                    target: $context->responseTarget(),
-                ),
+                $this->errors->usersDontMatch($context->responseTarget()),
             );
 
             return;
@@ -47,7 +42,7 @@ final readonly class UserModeHandler
 
         if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
-                $this->responses->create(
+                $this->numericResponses->create(
                     code: ResponseCode::UserModeIs,
                     target: $context->responseTarget(),
                     parameters: ['+'],
@@ -59,10 +54,7 @@ final readonly class UserModeHandler
 
         if (trim($message->parameter(1), '+-') !== '') {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::UnknownUserModeFlag,
-                    target: $context->responseTarget(),
-                ),
+                $this->errors->unknownUserModeFlag($context->responseTarget()),
             );
         }
     }

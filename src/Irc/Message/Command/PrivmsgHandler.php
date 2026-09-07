@@ -7,16 +7,14 @@ namespace PhpIrc\Irc\Message\Command;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
-use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
+use PhpIrc\Irc\Message\PrivmsgResponseFactory;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
 final readonly class PrivmsgHandler implements CommandHandler
 {
     public function __construct(
         private MessageDelivery $delivery,
-        private NumericResponseFactory $responses,
+        private PrivmsgResponseFactory $responses,
     ) {}
 
     public function command(): string
@@ -28,10 +26,7 @@ final readonly class PrivmsgHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoRecipient,
-                    target: $context->responseTarget(),
-                ),
+                $this->responses->createMissingRecipientResponse($context->responseTarget()),
             );
 
             return;
@@ -41,10 +36,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
         if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoTextToSend,
-                    target: $context->responseTarget(),
-                ),
+                $this->responses->createMissingTextResponse($context->responseTarget()),
             );
 
             return;
@@ -59,14 +51,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
         foreach ($failures as $failure) {
             $context->connection->send(
-                $this->responses->create(
-                    code: match ($failure->reason) {
-                        MessageDeliveryFailureReason::TargetNotFound => ResponseCode::NoSuchNick,
-                        MessageDeliveryFailureReason::CannotSendToChannel => ResponseCode::CannotSendToChannel,
-                    },
-                    target: $context->responseTarget(),
-                    parameters: [$failure->target === '' ? '*' : $failure->target],
-                ),
+                $this->responses->createDeliveryFailureResponse($context->responseTarget(), $failure),
             );
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\TopicHandler;
@@ -16,6 +17,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -250,14 +252,16 @@ final class TopicHandlerTest extends TestCase
         $channels = new ChannelRegistry($caseMapper);
         $clients = new ClientRegistry($caseMapper);
         $responses = new NumericResponseFactory(new ServerName('irc.test'));
+        $errors = new NumericErrorResponseFactory($responses);
 
         return [
             new TopicHandler(
                 channels: $channels,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 topicResponses: new ChannelTopicResponseFactory($responses),
-                responses: $responses,
+                errors: $errors,
                 channelAccess: new ChannelAccessPolicy(),
+                permissionResponses: new ChannelPermissionResponseFactory($errors),
             ),
             $channels,
             $clients,

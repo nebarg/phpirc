@@ -13,8 +13,10 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
+use PhpIrc\Irc\Message\PrivmsgResponseFactory;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
@@ -105,6 +107,25 @@ final class PrivmsgHandlerTest extends TestCase
             $johnConnection,
             '401',
             ['John', 'Missing', 'No such nick/channel'],
+        );
+    }
+
+    #[Test]
+    public function it_reports_when_a_target_channel_does_not_exist(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'PRIVMSG', parameters: ['#missing', 'Hello']),
+        );
+
+        $this->assertCount(1, $johnConnection->messages);
+        $this->assertResponse(
+            $johnConnection,
+            '404',
+            ['John', '#missing', 'Cannot send to channel'],
         );
     }
 
@@ -248,7 +269,11 @@ final class PrivmsgHandlerTest extends TestCase
                     targets: new TargetClassifier(new ChannelTypes()),
                     channelAccess: new ChannelAccessPolicy(),
                 ),
-                responses: new NumericResponseFactory(new ServerName('irc.test')),
+                responses: new PrivmsgResponseFactory(
+                    new NumericErrorResponseFactory(
+                        new NumericResponseFactory(new ServerName('irc.test')),
+                    ),
+                ),
             ),
             $clients,
             $channels,

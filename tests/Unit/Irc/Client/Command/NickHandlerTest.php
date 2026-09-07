@@ -18,6 +18,7 @@ use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -241,7 +242,7 @@ final class NickHandlerTest extends TestCase
         return new NickHandler(
             clients: $clients,
             nicknames: new NicknameValidator(),
-            responses: $responses,
+            errors: new NumericErrorResponseFactory($responses),
             registration: new RegistrationCompleter(
                 new RegistrationWelcome(
                     new ServerConfig(

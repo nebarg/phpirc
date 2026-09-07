@@ -9,6 +9,7 @@ use PhpIrc\Irc\Client\Command\PingHandler;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -86,7 +87,10 @@ final class PingHandlerTest extends TestCase
     {
         $serverName = new ServerName('irc.test');
 
-        return new PingHandler($serverName, new NumericResponseFactory($serverName));
+        return new PingHandler(
+            $serverName,
+            new NumericErrorResponseFactory(new NumericResponseFactory($serverName)),
+        );
     }
 
     private function context(RecordingConnection $connection): CommandContext

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Mode;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\ChannelModeResponseFactory;
+use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
@@ -17,6 +19,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\ChannelModeHandler;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -106,7 +109,7 @@ final class ChannelModeHandlerTest extends TestCase
             new Message(command: 'MODE', parameters: ['#php', '+o', 'John']),
         );
 
-        $this->assertResponse($connection, '442', ['John', '#php', "You're not on that channel"]);
+        $this->assertResponse($connection, '482', ['John', '#php', "You're not channel operator"]);
     }
 
     #[Test]
@@ -365,6 +368,8 @@ final class ChannelModeHandlerTest extends TestCase
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $responses = new NumericResponseFactory(new ServerName('irc.test'));
+        $errors = new NumericErrorResponseFactory($responses);
 
         return [
             new ChannelModeHandler(
@@ -372,8 +377,10 @@ final class ChannelModeHandlerTest extends TestCase
                 clients: $clients,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 parser: new ModeChangeParser(),
-                responses: new NumericResponseFactory(new ServerName('irc.test')),
+                errors: $errors,
+                modeResponses: new ChannelModeResponseFactory($responses),
                 channelAccess: new ChannelAccessPolicy(),
+                permissionResponses: new ChannelPermissionResponseFactory($errors),
             ),
             $clients,
             $channels,

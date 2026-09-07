@@ -87,9 +87,9 @@ final class MessageDeliveryTest extends TestCase
 
         $this->assertCount(2, $failures);
         $this->assertSame('Missing', $failures[0]->target);
-        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[0]->reason);
+        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $failures[0]->reason);
         $this->assertSame('', $failures[1]->target);
-        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[1]->reason);
+        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $failures[1]->reason);
         $this->assertDeliveredMessage(
             $janeConnection,
             command: 'PRIVMSG',
@@ -114,7 +114,7 @@ final class MessageDeliveryTest extends TestCase
 
         $this->assertCount(1, $failures);
         $this->assertSame('#missing', $failures[0]->target);
-        $this->assertSame(MessageDeliveryFailureReason::TargetNotFound, $failures[0]->reason);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
         $this->assertSame([], $invalidNicknameConnection->messages);
     }
 

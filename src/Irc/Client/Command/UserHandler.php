@@ -8,15 +8,14 @@ use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class UserHandler implements PreRegistrationCommandHandler
 {
     private const int MIN_PARAMETERS_ALLOWED = 4;
 
     public function __construct(
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
         private RegistrationCompleter $registration,
     ) {}
 
@@ -29,10 +28,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
     {
         if ($context->client->registration->isComplete() || $context->client->username !== null) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::AlreadyRegistered,
-                    target: $context->responseTarget(),
-                ),
+                $this->errors->alreadyRegistered($context->responseTarget()),
             );
 
             return;
@@ -40,11 +36,7 @@ final readonly class UserHandler implements PreRegistrationCommandHandler
 
         if (count($message->parameters) < self::MIN_PARAMETERS_ALLOWED || $message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NeedMoreParameters,
-                    target: $context->responseTarget(),
-                    parameters: [$this->command()],
-                ),
+                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
             );
 
             return;

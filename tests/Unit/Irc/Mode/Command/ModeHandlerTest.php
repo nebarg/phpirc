@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Mode\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\ChannelModeResponseFactory;
+use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
@@ -17,6 +19,7 @@ use PhpIrc\Irc\Mode\Command\ModeHandler;
 use PhpIrc\Irc\Mode\UserModeHandler;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PhpIrc\Irc\Protocol\Target\TargetClassifier;
@@ -119,6 +122,7 @@ final class ModeHandlerTest extends TestCase
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
         $responses = new NumericResponseFactory(new ServerName('irc.test'));
+        $errors = new NumericErrorResponseFactory($responses);
 
         return [
             new ModeHandler(
@@ -127,11 +131,13 @@ final class ModeHandlerTest extends TestCase
                     clients: $clients,
                     broadcaster: new ChannelBroadcaster($clients, $channels),
                     parser: new ModeChangeParser(),
-                    responses: $responses,
+                    errors: $errors,
+                    modeResponses: new ChannelModeResponseFactory($responses),
                     channelAccess: new ChannelAccessPolicy(),
+                    permissionResponses: new ChannelPermissionResponseFactory($errors),
                 ),
-                userModes: new UserModeHandler($clients, $responses),
-                responses: $responses,
+                userModes: new UserModeHandler($clients, $responses, $errors),
+                errors: $errors,
                 targets: new TargetClassifier($channelTypes ?? new ChannelTypes()),
             ),
             $clients,

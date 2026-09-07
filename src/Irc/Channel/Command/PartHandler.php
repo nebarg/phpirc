@@ -9,15 +9,14 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class PartHandler implements CommandHandler
 {
     public function __construct(
         private ChannelRegistry $channels,
         private ChannelBroadcaster $broadcaster,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
     ) {}
 
     public function command(): string
@@ -29,11 +28,7 @@ final readonly class PartHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NeedMoreParameters,
-                    target: $context->responseTarget(),
-                    parameters: [$this->command()],
-                ),
+                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
             );
 
             return;
@@ -47,11 +42,7 @@ final readonly class PartHandler implements CommandHandler
 
             if ($channel === null) {
                 $context->connection->send(
-                    $this->responses->create(
-                        code: ResponseCode::NoSuchChannel,
-                        target: $context->responseTarget(),
-                        parameters: [$channelName === '' ? '*' : $channelName],
-                    ),
+                    $this->errors->noSuchChannel($context->responseTarget(), $channelName),
                 );
 
                 continue;
@@ -59,11 +50,7 @@ final readonly class PartHandler implements CommandHandler
 
             if (! $channel->hasMember($context->client)) {
                 $context->connection->send(
-                    $this->responses->create(
-                        code: ResponseCode::NotOnChannel,
-                        target: $context->responseTarget(),
-                        parameters: [$channel->name],
-                    ),
+                    $this->errors->notOnChannel($context->responseTarget(), $channel->name),
                 );
 
                 continue;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client\Command;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\CapabilityResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\CapHandler;
@@ -16,6 +17,7 @@ use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -165,11 +167,11 @@ final class CapHandlerTest extends TestCase
     {
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
+        $errors = new NumericErrorResponseFactory($responses);
         $caseMapper = new AsciiCaseMapper();
 
         return new CapHandler(
-            serverName: $serverName,
-            responses: $responses,
+            responses: new CapabilityResponseFactory($serverName, $errors),
             registration: new RegistrationCompleter(
                 new RegistrationWelcome(
                     new ServerConfig(

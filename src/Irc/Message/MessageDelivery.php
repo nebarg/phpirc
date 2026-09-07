@@ -58,7 +58,7 @@ final readonly class MessageDelivery
         $channel = $this->channels->find($target);
 
         if ($channel === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::CannotSendToChannel);
         }
 
         if ($this->channelAccess->checkMessageDelivery($channel, $sender) !== ChannelPermission::Allowed) {
@@ -87,13 +87,13 @@ final readonly class MessageDelivery
         $recipient = $this->clients->findByNickname($target);
 
         if ($recipient === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname);
         }
 
         $connection = $this->clients->connectionFor($recipient);
 
         if ($connection === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
+            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname);
         }
 
         $connection->send(new Message(

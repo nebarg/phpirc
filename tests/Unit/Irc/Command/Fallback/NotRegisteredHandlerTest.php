@@ -9,6 +9,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\Fallback\NotRegisteredHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -47,7 +48,9 @@ final class NotRegisteredHandlerTest extends TestCase
     private function handler(): NotRegisteredHandler
     {
         return new NotRegisteredHandler(
-            new NumericResponseFactory(new ServerName('irc.test')),
+            new NumericErrorResponseFactory(
+                new NumericResponseFactory(new ServerName('irc.test')),
+            ),
         );
     }
 

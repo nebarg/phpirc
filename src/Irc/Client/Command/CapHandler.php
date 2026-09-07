@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
+use PhpIrc\Irc\Client\CapabilityResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
-use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
 final readonly class CapHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
-        private ServerName $serverName,
-        private NumericResponseFactory $responses,
+        private CapabilityResponseFactory $responses,
         private RegistrationCompleter $registration,
     ) {}
 
@@ -89,11 +86,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         string $subcommand,
     ): void {
         $context->connection->send(
-            $this->responses->create(
-                code: ResponseCode::InvalidCapCommand,
-                target: $context->responseTarget(),
-                parameters: [$subcommand === '' ? '*' : $subcommand],
-            ),
+            $this->responses->createInvalidSubcommandResponse($context->responseTarget(), $subcommand),
         );
     }
 
@@ -103,15 +96,7 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         string $capabilities,
     ): void {
         $context->connection->send(
-            new Message(
-                command: $this->command(),
-                parameters: [
-                    $context->responseTarget(),
-                    $subcommand,
-                    $capabilities,
-                ],
-                source: $this->serverName->value,
-            ),
+            $this->responses->createReply($context->responseTarget(), $subcommand, $capabilities),
         );
     }
 }

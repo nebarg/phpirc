@@ -10,8 +10,7 @@ use PhpIrc\Irc\Client\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class WhoHandler implements CommandHandler
 {
@@ -19,7 +18,7 @@ final readonly class WhoHandler implements CommandHandler
         private ClientRegistry $clients,
         private ChannelRegistry $channels,
         private WhoResponseFactory $whoResponses,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
     ) {}
 
     public function command(): string
@@ -31,11 +30,7 @@ final readonly class WhoHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NeedMoreParameters,
-                    target: $context->responseTarget(),
-                    parameters: [$this->command()],
-                ),
+                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
             );
 
             return;

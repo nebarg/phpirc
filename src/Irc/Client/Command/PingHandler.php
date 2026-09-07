@@ -8,14 +8,13 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class PingHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
         private ServerName $serverName,
-        private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
     ) {}
 
     public function command(): string
@@ -27,10 +26,7 @@ final readonly class PingHandler implements PreRegistrationCommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::NoOrigin,
-                    target: $context->responseTarget(),
-                ),
+                $this->errors->noOrigin($context->responseTarget()),
             );
 
             return;

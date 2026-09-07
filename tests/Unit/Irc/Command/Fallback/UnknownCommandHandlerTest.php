@@ -9,6 +9,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\Fallback\UnknownCommandHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -21,7 +22,9 @@ final class UnknownCommandHandlerTest extends TestCase
     {
         $connection = new RecordingConnection();
 
-        $responseFactory = new NumericResponseFactory(new ServerName('irc.test'));
+        $responseFactory = new NumericErrorResponseFactory(
+            new NumericResponseFactory(new ServerName('irc.test')),
+        );
 
         new UnknownCommandHandler($responseFactory)->handle(
             new CommandContext($connection, new Client()),
