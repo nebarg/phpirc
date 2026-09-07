@@ -39,8 +39,8 @@ final class ClientDepartureTest extends TestCase
         $this->assertQuit($janeConnection, 'Quit: Gone for lunch');
         $this->assertQuit($otherConnection, 'Quit: Gone for lunch');
         $this->assertSame([], $outsiderConnection->messages);
-        $this->assertFalse($first->has($john));
-        $this->assertFalse($second->has($john));
+        $this->assertFalse($first->hasMember($john));
+        $this->assertFalse($second->hasMember($john));
         $this->assertSame($first, $channels->find('#one'));
         $this->assertSame($second, $channels->find('#two'));
         $this->assertNull($clients->findByNickname('John'));
@@ -59,7 +59,7 @@ final class ClientDepartureTest extends TestCase
 
         $departure->depart($john, 'Connection closed');
 
-        $this->assertTrue($channels->find('#php')?->has($disconnected));
+        $this->assertTrue($channels->find('#php')?->hasMember($disconnected));
         $this->assertNull($clients->connectionFor($john));
     }
 
@@ -106,7 +106,7 @@ final class ClientDepartureTest extends TestCase
             $this->assertSame('Sending failed.', $exception->getMessage());
             $this->assertNull($clients->connectionFor($john));
             $this->assertNull($clients->findByNickname('John'));
-            $this->assertFalse($channels->find('#php')?->has($john));
+            $this->assertFalse($channels->find('#php')?->hasMember($john));
         }
     }
 

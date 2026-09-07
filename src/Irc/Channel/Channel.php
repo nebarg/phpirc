@@ -34,7 +34,7 @@ final class Channel
 
         $membership = new Membership($client);
 
-        if ($this->isEmpty()) {
+        if (! $this->hasMembers()) {
             $membership->grant(MembershipMode::Operator);
         }
 
@@ -59,7 +59,7 @@ final class Channel
         return $this->members[$this->clientId($client)] ?? null;
     }
 
-    public function has(Client $client): bool
+    public function hasMember(Client $client): bool
     {
         return isset($this->members[$this->clientId($client)]);
     }
@@ -70,9 +70,9 @@ final class Channel
         return array_values($this->members);
     }
 
-    public function isEmpty(): bool
+    public function hasMembers(): bool
     {
-        return $this->members === [];
+        return $this->members !== [];
     }
 
     public function memberCount(): int

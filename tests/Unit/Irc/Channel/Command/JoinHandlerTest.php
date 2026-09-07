@@ -229,9 +229,9 @@ final class JoinHandlerTest extends TestCase
             new Message(command: 'JOIN', parameters: ['#one,invalid,#two']),
         );
 
-        $this->assertTrue($channels->find('#one')?->has($client));
+        $this->assertTrue($channels->find('#one')?->hasMember($client));
         $this->assertNull($channels->find('invalid'));
-        $this->assertTrue($channels->find('#two')?->has($client));
+        $this->assertTrue($channels->find('#two')?->hasMember($client));
         $this->assertCount(7, $connection->messages);
         $this->assertResponse(
             $connection,

@@ -36,8 +36,8 @@ final class ChannelRegistryTest extends TestCase
         $sameChannel = $registry->join('#PHP', $second);
 
         $this->assertSame($channel, $sameChannel);
-        $this->assertTrue($channel->has($first));
-        $this->assertTrue($channel->has($second));
+        $this->assertTrue($channel->hasMember($first));
+        $this->assertTrue($channel->hasMember($second));
         $this->assertCount(2, $channel->members());
     }
 
@@ -105,8 +105,8 @@ final class ChannelRegistryTest extends TestCase
         $left = $registry->leave($channel, $first);
 
         $this->assertTrue($left);
-        $this->assertFalse($channel->has($first));
-        $this->assertTrue($channel->has($second));
+        $this->assertFalse($channel->hasMember($first));
+        $this->assertTrue($channel->hasMember($second));
         $this->assertSame($channel, $registry->find('#php'));
     }
 
@@ -133,7 +133,7 @@ final class ChannelRegistryTest extends TestCase
         $left = $registry->leave(new Channel('#PHP'), $client);
 
         $this->assertFalse($left);
-        $this->assertTrue($registered->has($client));
+        $this->assertTrue($registered->hasMember($client));
         $this->assertSame($registered, $registry->find('#php'));
     }
 
@@ -164,9 +164,9 @@ final class ChannelRegistryTest extends TestCase
         $registry->leaveAll($client);
 
         $this->assertNull($registry->find('#one'));
-        $this->assertFalse($emptyAfterLeaving->has($client));
-        $this->assertFalse($stillOccupied->has($client));
-        $this->assertTrue($stillOccupied->has($other));
+        $this->assertFalse($emptyAfterLeaving->hasMember($client));
+        $this->assertFalse($stillOccupied->hasMember($client));
+        $this->assertTrue($stillOccupied->hasMember($other));
         $this->assertSame($stillOccupied, $registry->find('#two'));
     }
 

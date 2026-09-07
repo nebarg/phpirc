@@ -66,7 +66,7 @@ final readonly class TopicHandler implements CommandHandler
 
         $topic = $message->parameter(1);
 
-        if (! $channel->has($context->client)) {
+        if (! $channel->hasMember($context->client)) {
             $context->connection->send(
                 $this->responses->create(
                     code: ResponseCode::NotOnChannel,

@@ -27,7 +27,7 @@ final class ChannelRegistry
         $channels = [];
 
         foreach ($this->channels as $channel) {
-            if (! $channel->has($client)) {
+            if (! $channel->hasMember($client)) {
                 continue;
             }
 
@@ -59,7 +59,7 @@ final class ChannelRegistry
 
         $left = $channel->leave($client);
 
-        if ($channel->isEmpty()) {
+        if (! $channel->hasMembers()) {
             unset($this->channels[$channelId]);
         }
 

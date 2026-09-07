@@ -165,8 +165,8 @@ final class PrivmsgHandlerTest extends TestCase
             source: 'John',
             parameters: ['#PHP', 'Hello channel'],
         );
-        $this->assertTrue($channel->has($john));
-        $this->assertTrue($channel->has($jane));
+        $this->assertTrue($channel->hasMember($john));
+        $this->assertTrue($channel->hasMember($jane));
     }
 
     #[Test]

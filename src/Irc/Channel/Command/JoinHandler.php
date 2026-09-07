@@ -62,7 +62,7 @@ final readonly class JoinHandler implements CommandHandler
 
             $channel = $this->channels->find($channelName);
 
-            if ($channel?->has($context->client)) {
+            if ($channel?->hasMember($context->client)) {
                 continue;
             }
 

@@ -57,7 +57,7 @@ final readonly class PartHandler implements CommandHandler
                 continue;
             }
 
-            if (! $channel->has($context->client)) {
+            if (! $channel->hasMember($context->client)) {
                 $context->connection->send(
                     $this->responses->create(
                         code: ResponseCode::NotOnChannel,

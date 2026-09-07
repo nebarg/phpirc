@@ -97,7 +97,7 @@ final class PartHandlerTest extends TestCase
             ['Jane', '#php', "You're not on that channel"],
         );
         $this->assertSame([], $johnConnection->messages);
-        $this->assertTrue($channel->has($john));
+        $this->assertTrue($channel->hasMember($john));
         $this->assertSame($channel, $channels->find('#php'));
     }
 
@@ -120,8 +120,8 @@ final class PartHandlerTest extends TestCase
         $this->assertPart($johnConnection, ['#PHP']);
         $this->assertPart($janeConnection, ['#PHP']);
         $this->assertSame($johnConnection->messages[0], $janeConnection->messages[0]);
-        $this->assertFalse($channel->has($john));
-        $this->assertTrue($channel->has($jane));
+        $this->assertFalse($channel->hasMember($john));
+        $this->assertTrue($channel->hasMember($jane));
         $this->assertSame($channel, $channels->find('#php'));
     }
 
@@ -189,9 +189,9 @@ final class PartHandlerTest extends TestCase
         );
         $this->assertPart($johnConnection, ['#two', 'Done'], index: 2);
         $this->assertPart($janeConnection, ['#one', 'Done']);
-        $this->assertFalse($first->has($john));
-        $this->assertTrue($first->has($jane));
-        $this->assertFalse($second->has($john));
+        $this->assertFalse($first->hasMember($john));
+        $this->assertTrue($first->hasMember($jane));
+        $this->assertFalse($second->hasMember($john));
         $this->assertSame($first, $channels->find('#one'));
         $this->assertNull($channels->find('#two'));
     }

@@ -69,9 +69,9 @@ final class ChannelTest extends TestCase
         $stranger = new Client();
         $membership = $channel->join($member);
 
-        $this->assertTrue($channel->has($member));
+        $this->assertTrue($channel->hasMember($member));
         $this->assertSame($membership, $channel->membershipFor($member));
-        $this->assertFalse($channel->has($stranger));
+        $this->assertFalse($channel->hasMember($stranger));
         $this->assertNull($channel->membershipFor($stranger));
     }
 
@@ -139,8 +139,8 @@ final class ChannelTest extends TestCase
         $channel->join($client);
 
         $this->assertTrue($channel->leave($client));
-        $this->assertFalse($channel->has($client));
-        $this->assertTrue($channel->isEmpty());
+        $this->assertFalse($channel->hasMember($client));
+        $this->assertFalse($channel->hasMembers());
     }
 
     #[Test]
@@ -149,6 +149,6 @@ final class ChannelTest extends TestCase
         $channel = new Channel('#php');
 
         $this->assertFalse($channel->leave(new Client()));
-        $this->assertTrue($channel->isEmpty());
+        $this->assertFalse($channel->hasMembers());
     }
 }
