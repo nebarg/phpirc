@@ -135,17 +135,6 @@ final class Channel
         return array_values($this->modes);
     }
 
-    public function canSendMessage(Client $client): bool
-    {
-        $membership = $this->membershipFor($client);
-
-        if ($this->hasMode(ChannelMode::Moderated)) {
-            return $membership !== null && ($membership->has(MembershipMode::Operator) || $membership->has(MembershipMode::Voice));
-        }
-
-        return $membership !== null || ! $this->hasMode(ChannelMode::NoExternalMessages);
-    }
-
     private function clientId(Client $client): int
     {
         return spl_object_id($client);

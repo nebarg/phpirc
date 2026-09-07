@@ -132,37 +132,6 @@ final class ChannelTest extends TestCase
     }
 
     #[Test]
-    public function no_external_messages_mode_controls_whether_outsiders_can_send(): void
-    {
-        $channel = new Channel('#php');
-        $outsider = new Client();
-
-        $this->assertFalse($channel->canSendMessage($outsider));
-
-        $channel->disableMode(ChannelMode::NoExternalMessages);
-
-        $this->assertTrue($channel->canSendMessage($outsider));
-    }
-
-    #[Test]
-    public function moderated_mode_only_allows_operators_and_voiced_members_to_send(): void
-    {
-        $channel = new Channel('#php');
-        $operator = new Client();
-        $member = new Client();
-        $channel->join($operator);
-        $membership = $channel->join($member);
-        $channel->enableMode(ChannelMode::Moderated);
-
-        $this->assertTrue($channel->canSendMessage($operator));
-        $this->assertFalse($channel->canSendMessage($member));
-
-        $membership->grant(MembershipMode::Voice);
-
-        $this->assertTrue($channel->canSendMessage($member));
-    }
-
-    #[Test]
     public function it_starts_without_a_topic(): void
     {
         $this->assertNull(new Channel('#php')->topic);

@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\TopicHandler;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -256,6 +257,7 @@ final class TopicHandlerTest extends TestCase
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 topicResponses: new ChannelTopicResponseFactory($responses),
                 responses: $responses,
+                channelAccess: new ChannelAccessPolicy(),
             ),
             $channels,
             $clients,

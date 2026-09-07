@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -372,6 +373,7 @@ final class ChannelModeHandlerTest extends TestCase
                 broadcaster: new ChannelBroadcaster($clients, $channels),
                 parser: new ModeChangeParser(),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
+                channelAccess: new ChannelAccessPolicy(),
             ),
             $clients,
             $channels,

@@ -10,9 +10,10 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Membership;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
-use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;
@@ -27,6 +28,7 @@ final readonly class ChannelModeHandler
         private ChannelBroadcaster $broadcaster,
         private ModeChangeParser $parser,
         private NumericResponseFactory $responses,
+        private ChannelAccessPolicy $channelAccess,
     ) {}
 
     public function handle(CommandContext $context, Message $message): void
@@ -50,24 +52,15 @@ final readonly class ChannelModeHandler
             return;
         }
 
-        $requesterMembership = $channel->membershipFor($context->client);
+        $permission = $this->channelAccess->checkModeChange($channel, $context->client);
 
-        if ($requesterMembership === null) {
+        if ($permission !== ChannelPermission::Allowed) {
             $context->connection->send(
                 $this->responses->create(
-                    code: ResponseCode::NotOnChannel,
-                    target: $context->responseTarget(),
-                    parameters: [$channel->name],
-                ),
-            );
-
-            return;
-        }
-
-        if (! $requesterMembership->has(MembershipMode::Operator)) {
-            $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::ChannelOperatorPrivilegesNeeded,
+                    code: match ($permission) {
+                        ChannelPermission::NotMember => ResponseCode::NotOnChannel,
+                        ChannelPermission::InsufficientPrivileges => ResponseCode::ChannelOperatorPrivilegesNeeded,
+                    },
                     target: $context->responseTarget(),
                     parameters: [$channel->name],
                 ),

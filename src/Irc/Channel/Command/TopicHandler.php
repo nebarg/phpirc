@@ -7,8 +7,8 @@ namespace PhpIrc\Irc\Channel\Command;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
-use PhpIrc\Irc\Channel\Mode\ChannelMode;
-use PhpIrc\Irc\Channel\Mode\MembershipMode;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
@@ -22,6 +22,7 @@ final readonly class TopicHandler implements CommandHandler
         private ChannelBroadcaster $broadcaster,
         private ChannelTopicResponseFactory $topicResponses,
         private NumericResponseFactory $responses,
+        private ChannelAccessPolicy $channelAccess,
     ) {}
 
     public function command(): string
@@ -68,24 +69,15 @@ final readonly class TopicHandler implements CommandHandler
 
         $topic = $message->parameter(1);
 
-        $membership = $channel->membershipFor($context->client);
+        $permission = $this->channelAccess->checkTopicChange($channel, $context->client);
 
-        if ($membership === null) {
+        if ($permission !== ChannelPermission::Allowed) {
             $context->connection->send(
                 $this->responses->create(
-                    code: ResponseCode::NotOnChannel,
-                    target: $context->responseTarget(),
-                    parameters: [$channel->name],
-                ),
-            );
-
-            return;
-        }
-
-        if ($channel->hasMode(ChannelMode::ProtectedTopic) && ! $membership->has(MembershipMode::Operator)) {
-            $context->connection->send(
-                $this->responses->create(
-                    code: ResponseCode::ChannelOperatorPrivilegesNeeded,
+                    code: match ($permission) {
+                        ChannelPermission::NotMember => ResponseCode::NotOnChannel,
+                        ChannelPermission::InsufficientPrivileges => ResponseCode::ChannelOperatorPrivilegesNeeded,
+                    },
                     target: $context->responseTarget(),
                     parameters: [$channel->name],
                 ),

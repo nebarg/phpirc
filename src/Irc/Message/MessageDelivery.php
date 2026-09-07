@@ -6,6 +6,8 @@ namespace PhpIrc\Irc\Message;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\Message;
@@ -19,6 +21,7 @@ final readonly class MessageDelivery
         private ChannelRegistry $channels,
         private ChannelBroadcaster $broadcaster,
         private TargetClassifier $targets,
+        private ChannelAccessPolicy $channelAccess,
     ) {}
 
     /** @return list<MessageDeliveryFailure> */
@@ -58,7 +61,7 @@ final readonly class MessageDelivery
             return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::TargetNotFound);
         }
 
-        if (! $channel->canSendMessage($sender)) {
+        if ($this->channelAccess->checkMessageDelivery($channel, $sender) !== ChannelPermission::Allowed) {
             return new MessageDeliveryFailure($channel->name, MessageDeliveryFailureReason::CannotSendToChannel);
         }
 

@@ -6,6 +6,7 @@ namespace Tests\Unit\Irc\Message\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -245,6 +246,7 @@ final class PrivmsgHandlerTest extends TestCase
                     channels: $channels,
                     broadcaster: new ChannelBroadcaster($clients, $channels),
                     targets: new TargetClassifier(new ChannelTypes()),
+                    channelAccess: new ChannelAccessPolicy(),
                 ),
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
             ),
