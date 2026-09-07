@@ -17,6 +17,8 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
@@ -255,7 +257,10 @@ final class JoinHandlerTest extends TestCase
                 channels: $channels,
                 channelNames: new ChannelNameValidator(new ChannelTypes()),
                 broadcaster: new ChannelBroadcaster($clients, $channels),
-                namesResponses: new ChannelNamesResponseFactory($responses),
+                namesResponses: new ChannelNamesResponseFactory(
+                    $responses,
+                    new MessageSize(new MessageEncoder()),
+                ),
                 topicResponses: new ChannelTopicResponseFactory($responses),
                 errors: new NumericErrorResponseFactory($responses),
             ),

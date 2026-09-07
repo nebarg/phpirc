@@ -8,7 +8,7 @@ final class ClientMessageSizeValidator
 {
     public const int MAX_TAG_BYTES = 4094;
 
-    public const int MAX_MAIN_BYTES = 510;
+    public const int MAX_MAIN_BYTES = MessageSize::MAX_BYTES_WITHOUT_TERMINATOR;
 
     /**
      * @throws InputTooLongException

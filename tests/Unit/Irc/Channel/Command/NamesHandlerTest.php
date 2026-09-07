@@ -12,6 +12,8 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
+use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -149,6 +151,7 @@ final class NamesHandlerTest extends TestCase
                 channels: $channels,
                 namesResponses: new ChannelNamesResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
+                    new MessageSize(new MessageEncoder()),
                 ),
             ),
             $channels,
