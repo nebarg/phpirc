@@ -18,7 +18,7 @@ final readonly class ChannelListResponseFactory
      * @param list<Channel> $channels
      * @return list<Message>
      */
-    public function createResponses(string $target, array $channels): array
+    public function createListResponses(string $target, array $channels): array
     {
         $list = [];
 

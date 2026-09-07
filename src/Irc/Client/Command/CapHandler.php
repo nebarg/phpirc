@@ -13,7 +13,7 @@ use PhpIrc\Irc\Protocol\Message;
 final readonly class CapHandler implements PreRegistrationCommandHandler
 {
     public function __construct(
-        private CapabilityResponseFactory $responses,
+        private CapabilityResponseFactory $capabilityResponses,
         private RegistrationCompleter $registration,
     ) {}
 
@@ -51,12 +51,22 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
     private function listSupportedCapabilities(CommandContext $context): void
     {
         $context->client->registration->suspendForCapabilityNegotiation();
-        $this->sendCapabilityReply($context, 'LS', '');
+        $context->connection->send(
+            $this->capabilityResponses->createSupportedCapabilitiesResponse(
+                $context->responseTarget(),
+                '',
+            ),
+        );
     }
 
     private function listEnabledCapabilities(CommandContext $context): void
     {
-        $this->sendCapabilityReply($context, 'LIST', '');
+        $context->connection->send(
+            $this->capabilityResponses->createEnabledCapabilitiesResponse(
+                $context->responseTarget(),
+                '',
+            ),
+        );
     }
 
     private function rejectRequestedCapabilities(
@@ -64,10 +74,11 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         Message $message,
     ): void {
         $context->client->registration->suspendForCapabilityNegotiation();
-        $this->sendCapabilityReply(
-            $context,
-            'NAK',
-            $message->parameter(1),
+        $context->connection->send(
+            $this->capabilityResponses->createRejectedCapabilitiesResponse(
+                $context->responseTarget(),
+                $message->parameter(1),
+            ),
         );
     }
 
@@ -86,17 +97,10 @@ final readonly class CapHandler implements PreRegistrationCommandHandler
         string $subcommand,
     ): void {
         $context->connection->send(
-            $this->responses->createInvalidSubcommandResponse($context->responseTarget(), $subcommand),
-        );
-    }
-
-    private function sendCapabilityReply(
-        CommandContext $context,
-        string $subcommand,
-        string $capabilities,
-    ): void {
-        $context->connection->send(
-            $this->responses->createReply($context->responseTarget(), $subcommand, $capabilities),
+            $this->capabilityResponses->createInvalidSubcommandResponse(
+                $context->responseTarget(),
+                $subcommand,
+            ),
         );
     }
 }

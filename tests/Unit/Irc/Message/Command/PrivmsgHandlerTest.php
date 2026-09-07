@@ -269,7 +269,7 @@ final class PrivmsgHandlerTest extends TestCase
                     targets: new TargetClassifier(new ChannelTypes()),
                     channelAccess: new ChannelAccessPolicy(),
                 ),
-                responses: new PrivmsgResponseFactory(
+                privmsgResponses: new PrivmsgResponseFactory(
                     new NumericErrorResponseFactory(
                         new NumericResponseFactory(new ServerName('irc.test')),
                     ),

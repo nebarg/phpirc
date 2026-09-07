@@ -17,7 +17,7 @@ final class ChannelListResponseFactoryTest extends TestCase
     #[Test]
     public function it_creates_an_empty_channel_list(): void
     {
-        $messages = $this->factory()->createResponses('John', []);
+        $messages = $this->factory()->createListResponses('John', []);
 
         $this->assertCount(2, $messages);
         $this->assertSame('irc.test', $messages[0]->source);
@@ -44,7 +44,7 @@ final class ChannelListResponseFactoryTest extends TestCase
         $second = new Channel('#general');
         $second->join(new Client());
 
-        $messages = $this->factory()->createResponses('John', [$first, $second]);
+        $messages = $this->factory()->createListResponses('John', [$first, $second]);
 
         $this->assertSame(
             ['321', '322', '322', '323'],

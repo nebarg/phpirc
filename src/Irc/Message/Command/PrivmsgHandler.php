@@ -14,7 +14,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 {
     public function __construct(
         private MessageDelivery $delivery,
-        private PrivmsgResponseFactory $responses,
+        private PrivmsgResponseFactory $privmsgResponses,
     ) {}
 
     public function command(): string
@@ -26,7 +26,7 @@ final readonly class PrivmsgHandler implements CommandHandler
     {
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->createMissingRecipientResponse($context->responseTarget()),
+                $this->privmsgResponses->createMissingRecipientResponse($context->responseTarget()),
             );
 
             return;
@@ -36,7 +36,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
         if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
-                $this->responses->createMissingTextResponse($context->responseTarget()),
+                $this->privmsgResponses->createMissingTextResponse($context->responseTarget()),
             );
 
             return;
@@ -51,7 +51,7 @@ final readonly class PrivmsgHandler implements CommandHandler
 
         foreach ($failures as $failure) {
             $context->connection->send(
-                $this->responses->createDeliveryFailureResponse($context->responseTarget(), $failure),
+                $this->privmsgResponses->createDeliveryFailureResponse($context->responseTarget(), $failure),
             );
         }
     }

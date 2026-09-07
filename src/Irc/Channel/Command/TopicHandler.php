@@ -51,9 +51,8 @@ final readonly class TopicHandler implements CommandHandler
         }
 
         if ($message->isParameterMissing(1)) {
-            array_map(
-                $context->connection->send(...),
-                $this->topicResponses->createResponses($context->responseTarget(), $channel),
+            $context->connection->sendMany(
+                $this->topicResponses->createCurrentTopicResponses($context->responseTarget(), $channel),
             );
 
             return;

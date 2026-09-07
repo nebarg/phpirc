@@ -66,6 +66,13 @@ final class ClientConnection implements Connection
         );
     }
 
+    public function sendMany(iterable $messages): void
+    {
+        foreach ($messages as $message) {
+            $this->send($message);
+        }
+    }
+
     public function close(string $reason = 'Connection closed'): void
     {
         if ($this->closed) {

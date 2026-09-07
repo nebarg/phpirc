@@ -15,7 +15,7 @@ final readonly class ChannelTopicResponseFactory
     ) {}
 
     /** @return list<Message> */
-    public function createResponses(string $target, Channel $channel): array
+    public function createCurrentTopicResponses(string $target, Channel $channel): array
     {
         if ($channel->topic === null) {
             return [

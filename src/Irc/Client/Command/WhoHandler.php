@@ -50,7 +50,7 @@ final readonly class WhoHandler implements CommandHandler
                 );
             }
 
-            $this->sendEndResponse($context, $mask);
+            $this->sendEndOfWhoResponse($context, $mask);
 
             return;
         }
@@ -66,13 +66,13 @@ final readonly class WhoHandler implements CommandHandler
             );
         }
 
-        $this->sendEndResponse($context, $mask);
+        $this->sendEndOfWhoResponse($context, $mask);
     }
 
-    private function sendEndResponse(CommandContext $context, string $mask): void
+    private function sendEndOfWhoResponse(CommandContext $context, string $mask): void
     {
         $context->connection->send(
-            $this->whoResponses->createEndResponse(
+            $this->whoResponses->createEndOfWhoResponse(
                 target: $context->responseTarget(),
                 mask: $mask,
             ),

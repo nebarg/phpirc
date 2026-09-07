@@ -14,7 +14,7 @@ final readonly class NamesHandler implements CommandHandler
 {
     public function __construct(
         private ChannelRegistry $channels,
-        private ChannelNamesResponseFactory $responses,
+        private ChannelNamesResponseFactory $namesResponses,
     ) {}
 
     public function command(): string
@@ -28,7 +28,7 @@ final readonly class NamesHandler implements CommandHandler
 
         if ($message->isParameterMissingOrEmpty(0)) {
             $context->connection->send(
-                $this->responses->createEndResponse(
+                $this->namesResponses->createEndOfNamesResponse(
                     target: $target,
                     channelName: '*',
                 ),
@@ -44,7 +44,7 @@ final readonly class NamesHandler implements CommandHandler
 
             if ($channel === null) {
                 $context->connection->send(
-                    $this->responses->createEndResponse(
+                    $this->namesResponses->createEndOfNamesResponse(
                         target: $target,
                         channelName: $channelName === '' ? '*' : $channelName,
                     ),
@@ -53,9 +53,8 @@ final readonly class NamesHandler implements CommandHandler
                 continue;
             }
 
-            array_map(
-                $context->connection->send(...),
-                $this->responses->createResponses($target, $channel),
+            $context->connection->sendMany(
+                $this->namesResponses->createNamesResponses($target, $channel),
             );
         }
     }

@@ -26,7 +26,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         $channel->join($john);
         $channel->join($jane)->grant(MembershipMode::Voice);
 
-        $messages = $this->factory()->createResponses('Jane', $channel);
+        $messages = $this->factory()->createNamesResponses('Jane', $channel);
 
         $this->assertCount(2, $messages);
         $this->assertSame('irc.test', $messages[0]->source);
@@ -46,7 +46,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
     #[Test]
     public function it_creates_an_end_of_names_numeric_for_a_channel_name(): void
     {
-        $message = $this->factory()->createEndResponse('John', '#missing');
+        $message = $this->factory()->createEndOfNamesResponse('John', '#missing');
 
         $this->assertSame('irc.test', $message->source);
         $this->assertSame('366', $message->command);

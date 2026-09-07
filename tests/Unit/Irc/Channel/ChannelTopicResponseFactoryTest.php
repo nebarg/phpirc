@@ -18,7 +18,7 @@ final class ChannelTopicResponseFactoryTest extends TestCase
     {
         $channel = new Channel('#php');
 
-        $messages = $this->factory()->createResponses('John', $channel);
+        $messages = $this->factory()->createCurrentTopicResponses('John', $channel);
 
         $this->assertCount(1, $messages);
         $this->assertSame('irc.test', $messages[0]->source);
@@ -37,7 +37,7 @@ final class ChannelTopicResponseFactoryTest extends TestCase
         $topic = $channel->topic;
         $this->assertNotNull($topic);
 
-        $messages = $this->factory()->createResponses('John', $channel);
+        $messages = $this->factory()->createCurrentTopicResponses('John', $channel);
 
         $this->assertCount(2, $messages);
         $this->assertSame('irc.test', $messages[0]->source);

@@ -114,7 +114,7 @@ final class ListHandlerTest extends TestCase
         return [
             new ListHandler(
                 channels: $channels,
-                responses: new ChannelListResponseFactory(
+                listResponses: new ChannelListResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
                 ),
             ),

@@ -15,17 +15,32 @@ final readonly class CapabilityResponseFactory
         private NumericErrorResponseFactory $errors,
     ) {}
 
-    public function createReply(string $target, string $subcommand, string $capabilities): Message
+    public function createSupportedCapabilitiesResponse(string $target, string $capabilities): Message
+    {
+        return $this->createReply($target, 'LS', $capabilities);
+    }
+
+    public function createEnabledCapabilitiesResponse(string $target, string $capabilities): Message
+    {
+        return $this->createReply($target, 'LIST', $capabilities);
+    }
+
+    public function createRejectedCapabilitiesResponse(string $target, string $capabilities): Message
+    {
+        return $this->createReply($target, 'NAK', $capabilities);
+    }
+
+    public function createInvalidSubcommandResponse(string $target, string $subcommand): Message
+    {
+        return $this->errors->invalidCapabilityCommand($target, $subcommand);
+    }
+
+    private function createReply(string $target, string $subcommand, string $capabilities): Message
     {
         return new Message(
             command: 'CAP',
             parameters: [$target, $subcommand, $capabilities],
             source: $this->serverName->value,
         );
-    }
-
-    public function createInvalidSubcommandResponse(string $target, string $subcommand): Message
-    {
-        return $this->errors->invalidCapabilityCommand($target, $subcommand);
     }
 }

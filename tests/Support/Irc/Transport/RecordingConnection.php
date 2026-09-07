@@ -25,6 +25,13 @@ final class RecordingConnection implements Connection
         $this->messages[] = $message;
     }
 
+    public function sendMany(iterable $messages): void
+    {
+        foreach ($messages as $message) {
+            $this->send($message);
+        }
+    }
+
     public function close(string $reason = 'Connection closed'): void
     {
         $this->closeCalls++;

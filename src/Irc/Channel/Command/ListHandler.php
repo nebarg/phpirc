@@ -15,7 +15,7 @@ final readonly class ListHandler implements CommandHandler
 {
     public function __construct(
         private ChannelRegistry $channels,
-        private ChannelListResponseFactory $responses,
+        private ChannelListResponseFactory $listResponses,
     ) {}
 
     public function command(): string
@@ -29,9 +29,8 @@ final readonly class ListHandler implements CommandHandler
             ? $this->channels->all()
             : $this->findChannels($message->parameter(0));
 
-        array_map(
-            $context->connection->send(...),
-            $this->responses->createResponses($context->responseTarget(), $channels),
+        $context->connection->sendMany(
+            $this->listResponses->createListResponses($context->responseTarget(), $channels),
         );
     }
 

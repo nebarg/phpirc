@@ -147,7 +147,7 @@ final class NamesHandlerTest extends TestCase
         return [
             new NamesHandler(
                 channels: $channels,
-                responses: new ChannelNamesResponseFactory(
+                namesResponses: new ChannelNamesResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
                 ),
             ),

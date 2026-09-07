@@ -22,7 +22,7 @@ final class LusersResponseFactoryTest extends TestCase
     {
         [$factory] = $this->factory();
 
-        $responses = $factory->createResponses('John');
+        $responses = $factory->createLusersResponses('John');
 
         $this->assertSame(['251', '255'], array_column($responses, 'command'));
         $this->assertSame(
@@ -46,7 +46,7 @@ final class LusersResponseFactoryTest extends TestCase
         $channels->join('#ONE', $jane);
         $channels->join('#two', $jane);
 
-        $responses = $factory->createResponses('John');
+        $responses = $factory->createLusersResponses('John');
 
         $this->assertSame(['251', '253', '254', '255'], array_column($responses, 'command'));
         $this->assertSame(

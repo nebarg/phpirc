@@ -171,7 +171,7 @@ final class CapHandlerTest extends TestCase
         $caseMapper = new AsciiCaseMapper();
 
         return new CapHandler(
-            responses: new CapabilityResponseFactory($serverName, $errors),
+            capabilityResponses: new CapabilityResponseFactory($serverName, $errors),
             registration: new RegistrationCompleter(
                 new RegistrationWelcome(
                     new ServerConfig(

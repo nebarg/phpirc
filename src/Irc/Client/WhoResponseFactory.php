@@ -62,7 +62,7 @@ final readonly class WhoResponseFactory
         );
     }
 
-    public function createEndResponse(string $target, string $mask): Message
+    public function createEndOfWhoResponse(string $target, string $mask): Message
     {
         return $this->responses->create(
             code: ResponseCode::EndOfWho,

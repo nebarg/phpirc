@@ -12,7 +12,7 @@ use PhpIrc\Irc\Protocol\Message;
 final readonly class LusersHandler implements CommandHandler
 {
     public function __construct(
-        private LusersResponseFactory $responses,
+        private LusersResponseFactory $lusersResponses,
     ) {}
 
     public function command(): string
@@ -22,9 +22,8 @@ final readonly class LusersHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        array_map(
-            $context->connection->send(...),
-            $this->responses->createResponses($context->responseTarget()),
+        $context->connection->sendMany(
+            $this->lusersResponses->createLusersResponses($context->responseTarget()),
         );
     }
 }

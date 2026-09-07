@@ -18,7 +18,7 @@ final readonly class LusersResponseFactory
     ) {}
 
     /** @return list<Message> */
-    public function createResponses(string $target): array
+    public function createLusersResponses(string $target): array
     {
         $registeredClients = $this->clients->registeredCount();
         $responses = [

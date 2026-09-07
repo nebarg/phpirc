@@ -91,6 +91,13 @@ final class ClientDepartureTest extends TestCase
                 throw new RuntimeException('Sending failed.');
             }
 
+            public function sendMany(iterable $messages): void
+            {
+                foreach ($messages as $message) {
+                    $this->send($message);
+                }
+            }
+
             public function close(string $reason = 'Connection closed'): void {}
 
             public function pongReceived(string $token): void {}

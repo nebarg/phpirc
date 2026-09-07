@@ -102,8 +102,7 @@ final readonly class ChannelModeHandler
 
     private function sendCurrentModes(CommandContext $context, Channel $channel): void
     {
-        array_map(
-            $context->connection->send(...),
+        $context->connection->sendMany(
             $this->modeResponses->createCurrentModeResponses($context->responseTarget(), $channel),
         );
     }

@@ -19,6 +19,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\InputTooLongException;
+use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
@@ -257,6 +258,41 @@ final class ClientConnectionTest extends TestCase
             ["PRIVMSG #php :hello there\r\n"],
             $socket->writes,
         );
+    }
+
+    #[Test]
+    public function it_sends_many_messages_in_order(): void
+    {
+        $socket = new FakeClientSocket();
+        $connection = $this->connection($socket, new RecordingMessageHandler());
+
+        $connection->sendMany([
+            new Message(command: 'PING', parameters: ['one']),
+            new Message(command: 'PONG', parameters: ['two']),
+        ]);
+
+        $this->assertSame(
+            ["PING one\r\n", "PONG two\r\n"],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_stops_sending_many_when_a_message_cannot_be_encoded(): void
+    {
+        $socket = new FakeClientSocket();
+        $connection = $this->connection($socket, new RecordingMessageHandler());
+
+        try {
+            $connection->sendMany([
+                new Message(command: 'PING', parameters: ['one']),
+                new Message(command: 'INVALID-COMMAND'),
+                new Message(command: 'PONG', parameters: ['two']),
+            ]);
+            $this->fail('Expected an invalid message exception.');
+        } catch (InvalidMessageException) {
+            $this->assertSame(["PING one\r\n"], $socket->writes);
+        }
     }
 
     #[Test]

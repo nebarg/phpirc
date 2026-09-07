@@ -80,9 +80,8 @@ final readonly class RegistrationWelcome
             ),
         );
 
-        array_map(
-            $connection->send(...),
-            $this->lusersResponses->createResponses($nickname),
+        $connection->sendMany(
+            $this->lusersResponses->createLusersResponses($nickname),
         );
 
         $connection->send(

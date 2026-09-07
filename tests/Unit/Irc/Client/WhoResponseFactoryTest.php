@@ -75,7 +75,7 @@ final class WhoResponseFactoryTest extends TestCase
     #[Test]
     public function it_creates_the_end_of_who_numeric(): void
     {
-        $message = $this->factory()->createEndResponse('Jane', '#php');
+        $message = $this->factory()->createEndOfWhoResponse('Jane', '#php');
 
         $this->assertSame('irc.test', $message->source);
         $this->assertSame('315', $message->command);
