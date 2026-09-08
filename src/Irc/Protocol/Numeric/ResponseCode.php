@@ -16,7 +16,11 @@ enum ResponseCode: string
     case LuserUnknown = '253';
     case LuserChannels = '254';
     case LuserMe = '255';
+    case WhoisUser = '311';
+    case WhoisServer = '312';
     case EndOfWho = '315';
+    case EndOfWhois = '318';
+    case WhoisChannels = '319';
     case ListStart = '321';
     case ListEntry = '322';
     case ListEnd = '323';
@@ -61,6 +65,8 @@ enum ResponseCode: string
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime, self::WhoReply => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::WhoisUser, self::WhoisServer, self::WhoisChannels => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::UserModeIs, self::ChannelModeIs, self::ChannelCreationTime => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::LuserClient, self::LuserMe => null,
@@ -68,6 +74,7 @@ enum ResponseCode: string
             self::LuserUnknown => 'unknown connection(s)',
             self::LuserChannels => 'channels formed',
             self::EndOfWho => 'End of WHO list',
+            self::EndOfWhois => 'End of /WHOIS list',
             self::ListStart => 'Users  Name',
             self::ListEnd => 'End of /LIST',
             self::NoTopic => 'No topic is set',

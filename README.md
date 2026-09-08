@@ -20,6 +20,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
 - [x] Basic `WHO` queries for exact nicknames and channel members
+- [x] User information and channel membership queries with `WHOIS`
 - [x] Current user, connection and channel counts with `LUSERS`
 - [x] User and channel `MODE` queries
 - [x] Channel operator and voice changes with `+o`, `-o`, `+v` and `-v`

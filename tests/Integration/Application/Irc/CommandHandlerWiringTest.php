@@ -21,6 +21,7 @@ use PhpIrc\Irc\Client\Command\PongHandler;
 use PhpIrc\Irc\Client\Command\QuitHandler;
 use PhpIrc\Irc\Client\Command\UserHandler;
 use PhpIrc\Irc\Client\Command\WhoHandler;
+use PhpIrc\Irc\Client\Command\WhoisHandler;
 use PhpIrc\Irc\Client\Motd;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
@@ -68,6 +69,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(LusersHandler::class, $handlers);
         $this->assertContains(MotdHandler::class, $handlers);
         $this->assertContains(WhoHandler::class, $handlers);
+        $this->assertContains(WhoisHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
         $this->assertContains(KickHandler::class, $handlers);
         $this->assertContains(ListHandler::class, $handlers);
@@ -257,6 +259,35 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ...$this->registrationWrites($config),
                 ":{$serverName} 352 John * john 127.0.0.1 {$serverName} John H :0 John Doe\r\n",
                 ":{$serverName} 315 John john :End of WHO list\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_whois_query_for_the_registered_client(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nJOIN #php\r\nWHOIS john\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":John JOIN #php\r\n",
+                ":{$serverName} 353 John = #php @John\r\n",
+                ":{$serverName} 366 John #php :End of /NAMES list\r\n",
+                ":{$serverName} 311 John John john 127.0.0.1 * :John Doe\r\n",
+                ":{$serverName} 312 John John {$serverName} {$config->networkName}\r\n",
+                ":{$serverName} 319 John John @#php\r\n",
+                ":{$serverName} 318 John john :End of /WHOIS list\r\n",
             ],
             $socket->writes,
         );
