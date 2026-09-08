@@ -28,11 +28,11 @@ final class ClientConnection implements Connection
 
     public function run(): void
     {
-        $registered = false;
+        $lifecycleStarted = false;
 
         try {
             $this->lifecycle->connected($this->client, $this);
-            $registered = true;
+            $lifecycleStarted = true;
             $this->keepalive->start($this);
 
             $context = new CommandContext(
@@ -54,7 +54,7 @@ final class ClientConnection implements Connection
             $this->keepalive->stop();
             $this->close();
 
-            if ($registered) {
+            if ($lifecycleStarted) {
                 $this->lifecycle->disconnected($this->client, $this->disconnectReason);
             }
         }

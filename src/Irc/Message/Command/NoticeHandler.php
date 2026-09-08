@@ -22,6 +22,7 @@ final readonly class NoticeHandler implements PreRegistrationCommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
+        // NOTICE must not produce error replies, so silently ignore it until registration completes.
         if (! $context->client->registration->isComplete()) {
             return;
         }

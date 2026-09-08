@@ -85,6 +85,8 @@ final readonly class KickHandler implements CommandHandler
             return;
         }
 
+        $actorNickname = $context->actorNickname();
+
         $this->broadcaster->broadcast(
             $channel,
             $this->messageText->limit(new Message(
@@ -92,9 +94,9 @@ final readonly class KickHandler implements CommandHandler
                 parameters: [
                     $channel->name,
                     $targetNickname,
-                    $message->optionalParameter(2) ?? $context->responseTarget(),
+                    $message->optionalParameter(2) ?? $actorNickname,
                 ],
-                source: $context->client->nickname,
+                source: $actorNickname,
             )),
         );
 

@@ -91,7 +91,7 @@ final readonly class ChannelModeHandler
         $this->broadcaster->broadcast(
             $channel,
             $this->modeResponses->createChangedMessage(
-                $context->responseTarget(),
+                $context->actorNickname(),
                 $channel,
                 $result->appliedChanges,
             ),

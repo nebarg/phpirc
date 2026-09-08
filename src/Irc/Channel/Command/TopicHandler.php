@@ -76,10 +76,12 @@ final readonly class TopicHandler implements CommandHandler
             return;
         }
 
+        $actorNickname = $context->actorNickname();
+
         if ($message->isParameterEmpty(1)) {
             $channel->clearTopic();
         } else {
-            $channel->setTopic($topic, $context->responseTarget());
+            $channel->setTopic($topic, $actorNickname);
         }
 
         $this->broadcaster->broadcast(
@@ -87,7 +89,7 @@ final readonly class TopicHandler implements CommandHandler
             new Message(
                 command: $this->command(),
                 parameters: [$channel->name, $topic],
-                source: $context->responseTarget(),
+                source: $actorNickname,
             ),
         );
     }

@@ -65,7 +65,7 @@ final readonly class PartHandler implements CommandHandler
                 new Message(
                     command: $this->command(),
                     parameters: $params,
-                    source: $context->client->nickname,
+                    source: $context->actorNickname(),
                 ),
             );
 

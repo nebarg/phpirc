@@ -64,7 +64,7 @@ final readonly class JoinHandler implements CommandHandler
                 new Message(
                     command: $this->command(),
                     parameters: [$channel->name],
-                    source: $context->client->nickname,
+                    source: $context->actorNickname(),
                 ),
             );
 
