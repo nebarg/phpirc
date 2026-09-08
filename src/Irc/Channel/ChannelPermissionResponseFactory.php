@@ -43,4 +43,19 @@ final readonly class ChannelPermissionResponseFactory
             ChannelPermission::Allowed => throw new LogicException('An allowed channel permission has no error response.'),
         };
     }
+
+    public function createKickDeniedResponse(
+        ChannelPermission $permission,
+        string $target,
+        Channel $channel,
+    ): Message {
+        return match ($permission) {
+            ChannelPermission::NotMember => $this->errors->notOnChannel($target, $channel->name),
+            ChannelPermission::InsufficientPrivileges => $this->errors->channelOperatorPrivilegesNeeded(
+                $target,
+                $channel->name,
+            ),
+            ChannelPermission::Allowed => throw new LogicException('An allowed channel permission has no error response.'),
+        };
+    }
 }

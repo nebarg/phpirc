@@ -163,6 +163,25 @@ final class ChannelAccessPolicyTest extends TestCase
         );
     }
 
+    #[Test]
+    public function kicks_require_membership_and_operator_privileges(): void
+    {
+        [$channel, $operator, $member] = $this->channelWithOperatorAndMember();
+
+        $this->assertSame(
+            ChannelPermission::NotMember,
+            $this->policy->checkKick($channel, new Client()),
+        );
+        $this->assertSame(
+            ChannelPermission::InsufficientPrivileges,
+            $this->policy->checkKick($channel, $member),
+        );
+        $this->assertSame(
+            ChannelPermission::Allowed,
+            $this->policy->checkKick($channel, $operator),
+        );
+    }
+
     /** @return array{Channel, Client, Client} */
     private function channelWithOperatorAndMember(): array
     {

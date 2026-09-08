@@ -48,6 +48,16 @@ final readonly class ChannelAccessPolicy
 
     public function checkModeChange(Channel $channel, Client $client): ChannelPermission
     {
+        return $this->checkOperatorAction($channel, $client);
+    }
+
+    public function checkKick(Channel $channel, Client $client): ChannelPermission
+    {
+        return $this->checkOperatorAction($channel, $client);
+    }
+
+    private function checkOperatorAction(Channel $channel, Client $client): ChannelPermission
+    {
         $membership = $channel->membershipFor($client);
 
         if ($membership === null) {

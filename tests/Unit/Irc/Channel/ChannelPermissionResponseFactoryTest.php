@@ -59,6 +59,32 @@ final class ChannelPermissionResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function kicks_return_not_on_channel_for_a_non_member(): void
+    {
+        $response = $this->factory()->createKickDeniedResponse(
+            ChannelPermission::NotMember,
+            'John',
+            new Channel('#php'),
+        );
+
+        $this->assertSame('442', $response->command);
+        $this->assertSame(['John', '#php', "You're not on that channel"], $response->parameters);
+    }
+
+    #[Test]
+    public function kicks_return_operator_privileges_needed_for_an_unprivileged_member(): void
+    {
+        $response = $this->factory()->createKickDeniedResponse(
+            ChannelPermission::InsufficientPrivileges,
+            'John',
+            new Channel('#php'),
+        );
+
+        $this->assertSame('482', $response->command);
+        $this->assertSame(['John', '#php', "You're not channel operator"], $response->parameters);
+    }
+
+    #[Test]
     public function topic_responses_reject_an_allowed_permission(): void
     {
         $this->expectException(LogicException::class);
@@ -78,6 +104,19 @@ final class ChannelPermissionResponseFactoryTest extends TestCase
         $this->expectExceptionMessage('An allowed channel permission has no error response.');
 
         $this->factory()->createModeChangeDeniedResponse(
+            ChannelPermission::Allowed,
+            'John',
+            new Channel('#php'),
+        );
+    }
+
+    #[Test]
+    public function kick_responses_reject_an_allowed_permission(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('An allowed channel permission has no error response.');
+
+        $this->factory()->createKickDeniedResponse(
             ChannelPermission::Allowed,
             'John',
             new Channel('#php'),

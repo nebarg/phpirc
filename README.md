@@ -24,6 +24,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] User and channel `MODE` queries
 - [x] Channel operator and voice changes with `+o`, `-o`, `+v` and `-v`
 - [x] Moderated, protected-topic and no-external-message channel modes with `+m`, `+t` and `+n`
+- [x] Channel operator removal with `KICK`
 - [x] Viewing, setting and clearing channel topics with `TOPIC`
 - [x] `PRIVMSG` and `NOTICE` delivery to users and channels, including multiple targets
 - [x] Outbound message-size enforcement for server replies and relayed chat
@@ -89,7 +90,6 @@ composer qa
 - [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
 - [ ] Peak and lifetime connection statistics
 - [ ] User mode changes
-- [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS
 - [ ] Broader IRCv3 capability support
 - [ ] Optional persistence where it provides value

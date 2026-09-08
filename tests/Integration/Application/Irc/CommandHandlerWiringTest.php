@@ -6,6 +6,7 @@ namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
+use PhpIrc\Irc\Channel\Command\KickHandler;
 use PhpIrc\Irc\Channel\Command\ListHandler;
 use PhpIrc\Irc\Channel\Command\NamesHandler;
 use PhpIrc\Irc\Channel\Command\PartHandler;
@@ -68,6 +69,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(MotdHandler::class, $handlers);
         $this->assertContains(WhoHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
+        $this->assertContains(KickHandler::class, $handlers);
         $this->assertContains(ListHandler::class, $handlers);
         $this->assertContains(NamesHandler::class, $handlers);
         $this->assertContains(PartHandler::class, $handlers);
