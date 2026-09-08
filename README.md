@@ -12,6 +12,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
 - [x] Nickname validation, collision detection and nickname changes
 - [x] Registration welcome messages and `005` feature advertisement
+- [x] Configurable message of the day during registration and with `MOTD`
 - [x] Client and server `PING`/`PONG`, including stale-connection timeouts
 - [x] Per-client command-rate limits and excess-flood disconnections
 - [x] Per-client bounded outbound queues and slow-client disconnections
@@ -67,6 +68,7 @@ The defaults can be overridden in `.env`:
 IRC_SERVER_NAME=irc.local
 IRC_NETWORK_NAME=PHPIRC
 IRC_SERVER_VERSION=phpirc-0.1.0
+IRC_MOTD_FILE=motd
 IRC_PING_INTERVAL=120
 IRC_PONG_TIMEOUT=30
 IRC_FLOOD_BURST_MESSAGES=20
@@ -84,10 +86,8 @@ composer qa
 
 ## Roadmap
 
-- [ ] Configurable post-registration channel auto-join
 - [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
 - [ ] Peak and lifetime connection statistics
-- [ ] Configurable message of the day
 - [ ] User mode changes
 - [ ] Channel operator commands such as `KICK`
 - [ ] Multiple listeners and TLS

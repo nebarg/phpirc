@@ -36,6 +36,9 @@ final class ResponseCodeTest extends TestCase
         yield 'WHO reply' => [ResponseCode::WhoReply, null];
         yield 'names reply' => [ResponseCode::NamesReply, null];
         yield 'end of names' => [ResponseCode::EndOfNames, 'End of /NAMES list'];
+        yield 'MOTD line' => [ResponseCode::MotdLine, null];
+        yield 'MOTD start' => [ResponseCode::MotdStart, null];
+        yield 'end of MOTD' => [ResponseCode::EndOfMotd, 'End of /MOTD command.'];
         yield 'no such nick' => [ResponseCode::NoSuchNick, 'No such nick/channel'];
         yield 'no such channel' => [ResponseCode::NoSuchChannel, 'No such channel'];
         yield 'cannot send to channel' => [ResponseCode::CannotSendToChannel, 'Cannot send to channel'];

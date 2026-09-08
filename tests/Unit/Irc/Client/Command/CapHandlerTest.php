@@ -10,6 +10,8 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Motd;
+use PhpIrc\Irc\Client\MotdResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
@@ -170,16 +172,17 @@ final class CapHandlerTest extends TestCase
         $responses = new NumericResponseFactory($serverName);
         $errors = new NumericErrorResponseFactory($responses, new ByteStringTruncator());
         $caseMapper = new AsciiCaseMapper();
+        $config = new ServerConfig(
+            serverName: $serverName,
+            networkName: 'TestNet',
+            listeners: [],
+        );
 
         return new CapHandler(
             capabilityResponses: new CapabilityResponseFactory($serverName, $errors),
             registration: new RegistrationCompleter(
                 new RegistrationWelcome(
-                    new ServerConfig(
-                        serverName: $serverName,
-                        networkName: 'TestNet',
-                        listeners: [],
-                    ),
+                    $config,
                     $responses,
                     $caseMapper,
                     new ChannelTypes(),
@@ -188,6 +191,7 @@ final class CapHandlerTest extends TestCase
                         new ChannelRegistry($caseMapper),
                         $responses,
                     ),
+                    new MotdResponseFactory($serverName, new Motd(), $responses),
                 ),
             ),
         );

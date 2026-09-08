@@ -28,6 +28,9 @@ enum ResponseCode: string
     case WhoReply = '352';
     case NamesReply = '353';
     case EndOfNames = '366';
+    case MotdLine = '372';
+    case MotdStart = '375';
+    case EndOfMotd = '376';
     case NoSuchNick = '401';
     case NoSuchChannel = '403';
     case CannotSendToChannel = '404';
@@ -54,7 +57,7 @@ enum ResponseCode: string
     {
         // @mago-format-ignore-next
         return match ($this) {
-            self::Welcome, self::YourHost, self::Created, self::MyInfo => null,
+            self::Welcome, self::YourHost, self::Created, self::MyInfo, self::MotdLine, self::MotdStart => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::NamesReply, self::ListEntry, self::Topic, self::TopicWhoTime, self::WhoReply => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
@@ -69,6 +72,7 @@ enum ResponseCode: string
             self::ListEnd => 'End of /LIST',
             self::NoTopic => 'No topic is set',
             self::EndOfNames => 'End of /NAMES list',
+            self::EndOfMotd => 'End of /MOTD command.',
             self::NoSuchNick => 'No such nick/channel',
             self::NoSuchChannel => 'No such channel',
             self::CannotSendToChannel => 'Cannot send to channel',

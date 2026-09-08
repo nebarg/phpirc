@@ -21,6 +21,7 @@ final readonly class ServerConfig
         public KeepaliveConfig $keepalive = new KeepaliveConfig(),
         public FloodProtectionConfig $floodProtection = new FloodProtectionConfig(),
         public OutboundQueueConfig $outboundQueue = new OutboundQueueConfig(),
+        public ?string $motdFile = null,
         ?DateTimeImmutable $startedAt = null,
     ) {
         $this->startedAt = $startedAt ?? new DateTimeImmutable();

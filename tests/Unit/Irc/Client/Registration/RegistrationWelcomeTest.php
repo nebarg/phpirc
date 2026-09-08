@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Motd;
+use PhpIrc\Irc\Client\MotdResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
@@ -69,26 +71,40 @@ final class RegistrationWelcomeTest extends TestCase
         $this->assertContains('CHANTYPES=#&', $connection->messages[4]->parameters);
     }
 
-    private function welcome(?ChannelTypes $channelTypes = null): RegistrationWelcome
+    #[Test]
+    public function it_sends_the_configured_motd_after_the_server_counts(): void
     {
+        $connection = new RecordingConnection();
+
+        $this->welcome(motd: new Motd(['Welcome to TestNet.']))->send($connection, 'John');
+
+        $this->assertSame(['251', '255', '375', '372', '376'], array_column(array_slice($connection->messages, 5), 'command'));
+    }
+
+    private function welcome(
+        ?ChannelTypes $channelTypes = null,
+        ?Motd $motd = null,
+    ): RegistrationWelcome {
         $serverName = new ServerName('irc.test');
         $caseMapper = new AsciiCaseMapper();
         $responses = new NumericResponseFactory($serverName);
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $config = new ServerConfig(
+            serverName: $serverName,
+            networkName: 'TestNet',
+            listeners: [],
+            softwareVersion: 'phpirc-test',
+            startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
+        );
 
         return new RegistrationWelcome(
-            new ServerConfig(
-                serverName: $serverName,
-                networkName: 'TestNet',
-                listeners: [],
-                softwareVersion: 'phpirc-test',
-                startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
-            ),
+            $config,
             $responses,
             $caseMapper,
             $channelTypes ?? new ChannelTypes(),
             new LusersResponseFactory($clients, $channels, $responses),
+            new MotdResponseFactory($serverName, $motd ?? new Motd(), $responses),
         );
     }
 

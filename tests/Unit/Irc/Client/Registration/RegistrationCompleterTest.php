@@ -9,6 +9,8 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Motd;
+use PhpIrc\Irc\Client\MotdResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Command\CommandContext;
@@ -109,16 +111,17 @@ final class RegistrationCompleterTest extends TestCase
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
         $caseMapper = new AsciiCaseMapper();
+        $config = new ServerConfig(
+            serverName: $serverName,
+            networkName: 'TestNet',
+            listeners: [],
+            softwareVersion: 'phpirc-test',
+            startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
+        );
 
         return new RegistrationCompleter(
             new RegistrationWelcome(
-                new ServerConfig(
-                    serverName: $serverName,
-                    networkName: 'TestNet',
-                    listeners: [],
-                    softwareVersion: 'phpirc-test',
-                    startedAt: new DateTimeImmutable('2026-08-29T10:15:30+01:00'),
-                ),
+                $config,
                 $responses,
                 $caseMapper,
                 new ChannelTypes(),
@@ -127,6 +130,7 @@ final class RegistrationCompleterTest extends TestCase
                     new ChannelRegistry($caseMapper),
                     $responses,
                 ),
+                new MotdResponseFactory($serverName, new Motd(), $responses),
             ),
         );
     }

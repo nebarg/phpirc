@@ -10,6 +10,8 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\NickHandler;
 use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Motd;
+use PhpIrc\Irc\Client\MotdResponseFactory;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
@@ -239,6 +241,11 @@ final class NickHandlerTest extends TestCase
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
         $channels ??= new ChannelRegistry(new AsciiCaseMapper());
+        $config = new ServerConfig(
+            serverName: $serverName,
+            networkName: 'TestNet',
+            listeners: [],
+        );
 
         return new NickHandler(
             clients: $clients,
@@ -246,15 +253,12 @@ final class NickHandlerTest extends TestCase
             errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
             registration: new RegistrationCompleter(
                 new RegistrationWelcome(
-                    new ServerConfig(
-                        serverName: $serverName,
-                        networkName: 'TestNet',
-                        listeners: [],
-                    ),
+                    $config,
                     $responses,
                     new AsciiCaseMapper(),
                     new ChannelTypes(),
                     new LusersResponseFactory($clients, $channels, $responses),
+                    new MotdResponseFactory($serverName, new Motd(), $responses),
                 ),
             ),
             broadcaster: new ChannelBroadcaster($clients, $channels),

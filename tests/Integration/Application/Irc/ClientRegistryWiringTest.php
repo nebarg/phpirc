@@ -6,6 +6,7 @@ namespace Tests\Integration\Application\Irc;
 
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Motd;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
@@ -38,15 +39,16 @@ final class ClientRegistryWiringTest extends IntegrationTestCase
             ->completeIfReady(new CommandContext($connection, $client));
 
         $config = $this->container->get(ServerConfig::class);
+        $motd = $this->container->get(Motd::class);
+        $motdCommands = $motd->isEmpty()
+            ? ['422']
+            : ['375', ...array_fill(0, count($motd->lines), '372'), '376'];
 
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(7 + count($motdCommands), $connection->messages);
         $this->assertSame($config->serverName->value, $connection->messages[0]->source);
         $this->assertSame(
-            ['001', '002', '003', '004', '005', '251', '255', '422'],
-            array_map(
-                static fn ($message): string => $message->command,
-                $connection->messages,
-            ),
+            ['001', '002', '003', '004', '005', '251', '255', ...$motdCommands],
+            array_column($connection->messages, 'command'),
         );
         $this->assertStringContainsString(
             $config->networkName,

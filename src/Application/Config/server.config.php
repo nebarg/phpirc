@@ -8,6 +8,10 @@ use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 
 use function Tempest\env;
+use function Tempest\root_path;
+use function Tempest\Support\Path\is_absolute_path;
+
+$motdFile = (string) env('IRC_MOTD_FILE', default: 'motd');
 
 return new ServerConfig(
     serverName: new ServerName((string) env('IRC_SERVER_NAME', default: 'irc.local')),
@@ -30,4 +34,5 @@ return new ServerConfig(
     outboundQueue: new OutboundQueueConfig(
         maximumBytes: (int) env('IRC_OUTBOUND_QUEUE_BYTES', default: 262_144),
     ),
+    motdFile: is_absolute_path($motdFile) ? $motdFile : root_path($motdFile),
 );

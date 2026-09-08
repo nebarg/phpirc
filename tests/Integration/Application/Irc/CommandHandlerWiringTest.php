@@ -13,12 +13,14 @@ use PhpIrc\Irc\Channel\Command\TopicHandler;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\Command\LusersHandler;
+use PhpIrc\Irc\Client\Command\MotdHandler;
 use PhpIrc\Irc\Client\Command\NickHandler;
 use PhpIrc\Irc\Client\Command\PingHandler;
 use PhpIrc\Irc\Client\Command\PongHandler;
 use PhpIrc\Irc\Client\Command\QuitHandler;
 use PhpIrc\Irc\Client\Command\UserHandler;
 use PhpIrc\Irc\Client\Command\WhoHandler;
+use PhpIrc\Irc\Client\Motd;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
@@ -63,6 +65,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertContains(UserHandler::class, $handlers);
         $this->assertContains(CapHandler::class, $handlers);
         $this->assertContains(LusersHandler::class, $handlers);
+        $this->assertContains(MotdHandler::class, $handlers);
         $this->assertContains(WhoHandler::class, $handlers);
         $this->assertContains(JoinHandler::class, $handlers);
         $this->assertContains(ListHandler::class, $handlers);
@@ -280,6 +283,28 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
                 ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
                 ":{$serverName} 254 John 1 :channels formed\r\n",
                 ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_handles_a_raw_motd_query(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nMOTD\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ...$this->motdWrites($config, 'John'),
             ],
             $socket->writes,
         );
@@ -534,7 +559,30 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 005 John CASEMAPPING=ascii CHANMODES=,,,mnt CHANTYPES=# CHANNELLEN=64 HOSTLEN=63 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ TOPICLEN=307 USERLEN=18 :are supported by this server\r\n",
             ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
             ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
-            ":{$serverName} 422 John :MOTD File is missing\r\n",
+            ...$this->motdWrites($config, 'John'),
         ];
+    }
+
+    /** @return list<string> */
+    private function motdWrites(ServerConfig $config, string $target): array
+    {
+        $serverName = $config->serverName->value;
+        $motd = $this->container->get(Motd::class);
+
+        if ($motd->isEmpty()) {
+            return [":{$serverName} 422 {$target} :MOTD File is missing\r\n"];
+        }
+
+        $writes = [
+            ":{$serverName} 375 {$target} :- {$serverName} Message of the day -\r\n",
+        ];
+
+        foreach ($motd->lines as $line) {
+            $writes[] = ":{$serverName} 372 {$target} :- {$line}\r\n";
+        }
+
+        $writes[] = ":{$serverName} 376 {$target} :End of /MOTD command.\r\n";
+
+        return $writes;
     }
 }

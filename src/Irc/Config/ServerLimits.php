@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Config;
 
 use PhpIrc\Irc\Protocol\ByteStringTruncator;
+use PhpIrc\Irc\Protocol\MessageSize;
 
 final readonly class ServerLimits
 {
+    /** Fixed bytes in `:<server> 372 <nickname> :- <line>\r\n`, excluding the variable fields. */
+    private const int MOTD_LINE_SYNTAX_BYTES = 12;
+
     public const int MAX_SERVER_NAME_BYTES = 63;
 
     public const int MAX_NICKNAME_BYTES = 30;
@@ -23,6 +27,12 @@ final readonly class ServerLimits
     public const int MAX_REAL_NAME_BYTES = 128;
 
     public const int MAX_COMMAND_BYTES = 32;
+
+    // @mago-format-ignore-next
+    public const int MAX_MOTD_LINE_BYTES = MessageSize::MAX_BYTES
+        - self::MAX_SERVER_NAME_BYTES
+        - self::MAX_NICKNAME_BYTES
+        - self::MOTD_LINE_SYNTAX_BYTES;
 
     public function __construct(
         private ByteStringTruncator $strings,

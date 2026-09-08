@@ -6,6 +6,7 @@ namespace PhpIrc\Irc\Client\Registration;
 
 use DateTimeInterface;
 use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\MotdResponseFactory;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;
@@ -22,6 +23,7 @@ final readonly class RegistrationWelcome
         private CaseMapper $caseMapper,
         private ChannelTypes $channelTypes,
         private LusersResponseFactory $lusersResponses,
+        private MotdResponseFactory $motdResponses,
     ) {}
 
     public function send(Connection $connection, string $nickname): void
@@ -86,11 +88,8 @@ final readonly class RegistrationWelcome
             $this->lusersResponses->createLusersResponses($nickname),
         );
 
-        $connection->send(
-            $this->responses->create(
-                code: ResponseCode::NoMotd,
-                target: $nickname,
-            ),
+        $connection->sendMany(
+            $this->motdResponses->createMotdResponses($nickname),
         );
     }
 }
