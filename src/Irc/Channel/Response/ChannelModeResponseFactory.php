@@ -8,7 +8,10 @@ use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
+use PhpIrc\Irc\Channel\Mode\ModeChangeFailure;
+use PhpIrc\Irc\Channel\Mode\ModeChangeFailureReason;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
@@ -16,7 +19,36 @@ final readonly class ChannelModeResponseFactory
 {
     public function __construct(
         private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
     ) {}
+
+    public function createUnknownChannelResponse(string $target, string $channelName): Message
+    {
+        return $this->errors->noSuchChannel($target, $channelName);
+    }
+
+    public function createUnknownModeResponse(string $target, string $mode): Message
+    {
+        return $this->errors->unknownMode($target, $mode);
+    }
+
+    public function createChangeFailureResponse(
+        string $target,
+        Channel $channel,
+        ModeChangeFailure $failure,
+    ): Message {
+        return match ($failure->reason) {
+            ModeChangeFailureReason::NoSuchNickname => $this->errors->noSuchNickname(
+                $target,
+                $failure->nickname,
+            ),
+            ModeChangeFailureReason::UserNotInChannel => $this->errors->userNotInChannel(
+                $target,
+                $failure->nickname,
+                $channel->name,
+            ),
+        };
+    }
 
     /** @return array{Message, Message} */
     public function createCurrentModeResponses(string $target, Channel $channel): array

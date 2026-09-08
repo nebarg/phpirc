@@ -7,6 +7,7 @@ namespace Tests\Unit\Irc\Mode;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
+use PhpIrc\Irc\Channel\Mode\ChannelModeChanger;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
@@ -375,11 +376,9 @@ final class ChannelModeHandlerTest extends TestCase
         return [
             new ChannelModeHandler(
                 channels: $channels,
-                clients: $clients,
                 broadcaster: new ChannelBroadcaster($clients, $channels),
-                parser: new ModeChangeParser(),
-                errors: $errors,
-                modeResponses: new ChannelModeResponseFactory($responses),
+                modeChanger: new ChannelModeChanger(new ModeChangeParser(), $clients),
+                modeResponses: new ChannelModeResponseFactory($responses, $errors),
                 channelAccess: new ChannelAccessPolicy(),
                 permissionResponses: new ChannelPermissionResponseFactory($errors),
             ),

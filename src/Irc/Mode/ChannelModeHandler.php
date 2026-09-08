@@ -7,26 +7,19 @@ namespace PhpIrc\Irc\Mode;
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
-use PhpIrc\Irc\Channel\Membership;
-use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
-use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
-use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
+use PhpIrc\Irc\Channel\Mode\ChannelModeChanger;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Channel\Response\ChannelModeResponseFactory;
 use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
-use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class ChannelModeHandler
 {
     public function __construct(
         private ChannelRegistry $channels,
-        private ClientRegistry $clients,
         private ChannelBroadcaster $broadcaster,
-        private ModeChangeParser $parser,
-        private NumericErrorResponseFactory $errors,
+        private ChannelModeChanger $modeChanger,
         private ChannelModeResponseFactory $modeResponses,
         private ChannelAccessPolicy $channelAccess,
         private ChannelPermissionResponseFactory $permissionResponses,
@@ -38,7 +31,10 @@ final readonly class ChannelModeHandler
 
         if ($channel === null) {
             $context->connection->send(
-                $this->errors->noSuchChannel($context->responseTarget(), $message->parameter(0)),
+                $this->modeResponses->createUnknownChannelResponse(
+                    $context->responseTarget(),
+                    $message->parameter(0),
+                ),
             );
 
             return;
@@ -63,30 +59,32 @@ final readonly class ChannelModeHandler
             return;
         }
 
-        $result = $this->parser->parse(
+        $result = $this->modeChanger->apply(
+            channel: $channel,
             modeString: $message->parameter(1),
             arguments: array_slice($message->parameters, 2),
         );
 
         foreach ($result->unknownModes as $unknownMode) {
             $context->connection->send(
-                $this->errors->unknownMode($context->responseTarget(), $unknownMode),
+                $this->modeResponses->createUnknownModeResponse(
+                    $context->responseTarget(),
+                    $unknownMode,
+                ),
             );
         }
 
-        $appliedChanges = [];
-
-        foreach ($result->changes as $change) {
-            $appliedChange = $this->applyChange($context, $channel, $change);
-
-            if ($appliedChange === null) {
-                continue;
-            }
-
-            $appliedChanges[] = $appliedChange;
+        foreach ($result->failures as $failure) {
+            $context->connection->send(
+                $this->modeResponses->createChangeFailureResponse(
+                    $context->responseTarget(),
+                    $channel,
+                    $failure,
+                ),
+            );
         }
 
-        if ($appliedChanges === []) {
+        if ($result->appliedChanges === []) {
             return;
         }
 
@@ -95,7 +93,7 @@ final readonly class ChannelModeHandler
             $this->modeResponses->createChangedMessage(
                 $context->responseTarget(),
                 $channel,
-                $appliedChanges,
+                $result->appliedChanges,
             ),
         );
     }
@@ -105,71 +103,5 @@ final readonly class ChannelModeHandler
         $context->connection->sendMany(
             $this->modeResponses->createCurrentModeResponses($context->responseTarget(), $channel),
         );
-    }
-
-    private function applyChange(
-        CommandContext $context,
-        Channel $channel,
-        ChannelModeChange|MembershipModeChange $change,
-    ): ChannelModeChange|MembershipModeChange|null {
-        if ($change instanceof ChannelModeChange) {
-            $changed = match ($change->action) {
-                ModeAction::Add => $channel->enableMode($change->mode),
-                ModeAction::Remove => $channel->disableMode($change->mode),
-            };
-
-            return $changed ? $change : null;
-        }
-
-        $targetMembership = $this->findTargetMembership($context, $channel, $change->nickname);
-
-        if ($targetMembership === null) {
-            return null;
-        }
-
-        $changed = match ($change->action) {
-            ModeAction::Add => $targetMembership->grant($change->mode),
-            ModeAction::Remove => $targetMembership->revoke($change->mode),
-        };
-
-        if (! $changed) {
-            return null;
-        }
-
-        return new MembershipModeChange(
-            action: $change->action,
-            mode: $change->mode,
-            nickname: $targetMembership->client->nickname ?? $change->nickname,
-        );
-    }
-
-    private function findTargetMembership(
-        CommandContext $context,
-        Channel $channel,
-        string $nickname,
-    ): ?Membership {
-        $client = $this->clients->findByNickname($nickname);
-
-        if ($client === null || ! $client->registration->isComplete()) {
-            $context->connection->send(
-                $this->errors->noSuchNickname($context->responseTarget(), $nickname),
-            );
-
-            return null;
-        }
-
-        $membership = $channel->membershipFor($client);
-
-        if ($membership === null) {
-            $context->connection->send(
-                $this->errors->userNotInChannel(
-                    $context->responseTarget(),
-                    $client->nickname ?? $nickname,
-                    $channel->name,
-                ),
-            );
-        }
-
-        return $membership;
     }
 }
