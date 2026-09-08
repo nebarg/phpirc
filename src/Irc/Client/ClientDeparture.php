@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Protocol\Message;
 
 final readonly class ClientDeparture
@@ -13,14 +13,14 @@ final readonly class ClientDeparture
     public function __construct(
         private ClientRegistry $clients,
         private ChannelRegistry $channels,
-        private ChannelBroadcaster $broadcaster,
+        private SharedChannelPeerBroadcaster $peers,
     ) {}
 
     public function depart(Client $client, string $reason): void
     {
         try {
             if ($client->nickname !== null) {
-                $this->broadcaster->broadcastToSharedChannelPeers(
+                $this->peers->broadcast(
                     $client,
                     new Message(
                         command: 'QUIT',

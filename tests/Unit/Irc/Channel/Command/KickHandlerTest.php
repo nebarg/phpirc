@@ -274,7 +274,7 @@ final class KickHandlerTest extends TestCase
             new KickHandler(
                 channels: $channels,
                 clients: $clients,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 channelAccess: new ChannelAccessPolicy(),
                 permissionResponses: new ChannelPermissionResponseFactory($errors),
                 errors: $errors,

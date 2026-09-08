@@ -12,15 +12,12 @@ final readonly class ChannelBroadcaster
 {
     public function __construct(
         private ClientRegistry $clients,
-        private ChannelRegistry $channels,
     ) {}
 
     public function broadcast(Channel $channel, Message $message): void
     {
         foreach ($channel->members() as $member) {
-            $connection = $this->clients->connectionFor($member->client);
-
-            $connection?->send($message);
+            $this->clients->connectionFor($member->client)?->send($message);
         }
     }
 
@@ -31,33 +28,7 @@ final readonly class ChannelBroadcaster
                 continue;
             }
 
-            $connection = $this->clients->connectionFor($member->client);
-
-            $connection?->send($message);
+            $this->clients->connectionFor($member->client)?->send($message);
         }
-    }
-
-    public function broadcastToSharedChannelPeers(Client $client, Message $message): void
-    {
-        $peers = [];
-
-        foreach ($this->channels->channelsFor($client) as $channel) {
-            foreach ($channel->members() as $membership) {
-                if ($membership->client === $client) {
-                    continue;
-                }
-
-                $peers[$this->clientId($membership->client)] = $membership->client;
-            }
-        }
-
-        foreach ($peers as $peer) {
-            $this->clients->connectionFor($peer)?->send($message);
-        }
-    }
-
-    private function clientId(Client $client): int
-    {
-        return spl_object_id($client);
     }
 }

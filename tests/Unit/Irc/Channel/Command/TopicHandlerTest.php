@@ -278,7 +278,7 @@ final class TopicHandlerTest extends TestCase
         return [
             new TopicHandler(
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 topicResponses: new ChannelTopicResponseFactory($responses),
                 errors: $errors,
                 channelAccess: new ChannelAccessPolicy(),

@@ -271,7 +271,7 @@ final class MessageDeliveryTest extends TestCase
             new MessageDelivery(
                 clients: $clients,
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 targets: new TargetClassifier(new ChannelTypes()),
                 channelAccess: new ChannelAccessPolicy(),
                 messageText: new MessageTextLimiter($this->messageSize(), new ByteStringTruncator()),

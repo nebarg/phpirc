@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport;
 
 use LogicException;
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
@@ -563,7 +563,7 @@ final class ClientConnectionTest extends TestCase
                 departure: new ClientDeparture(
                     clients: $clientRegistry,
                     channels: $channelRegistry,
-                    broadcaster: new ChannelBroadcaster($clientRegistry, $channelRegistry),
+                    peers: new SharedChannelPeerBroadcaster($clientRegistry, $channelRegistry),
                 ),
             ),
             keepalive: $keepalive ?? $this->keepalive(new ManualTimerScheduler()),

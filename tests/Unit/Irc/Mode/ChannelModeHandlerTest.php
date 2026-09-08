@@ -376,7 +376,7 @@ final class ChannelModeHandlerTest extends TestCase
         return [
             new ChannelModeHandler(
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 modeChanger: new ChannelModeChanger(new ModeChangeParser(), $clients),
                 modeResponses: new ChannelModeResponseFactory($responses, $errors),
                 channelAccess: new ChannelAccessPolicy(),

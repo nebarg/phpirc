@@ -257,7 +257,7 @@ final class JoinHandlerTest extends TestCase
             new JoinHandler(
                 channels: $channels,
                 channelNames: new ChannelNameValidator(new ChannelTypes()),
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 namesResponses: new ChannelNamesResponseFactory(
                     $responses,
                     new MessageSize(new MessageEncoder()),

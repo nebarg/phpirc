@@ -141,7 +141,7 @@ final class NoticeHandlerTest extends TestCase
             new NoticeHandler(new MessageDelivery(
                 clients: $clients,
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 targets: new TargetClassifier(new ChannelTypes()),
                 channelAccess: new ChannelAccessPolicy(),
                 messageText: new MessageTextLimiter(

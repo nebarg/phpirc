@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Client\Command;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\NickHandler;
@@ -261,7 +261,7 @@ final class NickHandlerTest extends TestCase
                     new MotdResponseFactory($serverName, new Motd(), $responses),
                 ),
             ),
-            broadcaster: new ChannelBroadcaster($clients, $channels),
+            peers: new SharedChannelPeerBroadcaster($clients, $channels),
         );
     }
 

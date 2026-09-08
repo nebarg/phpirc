@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Config\FloodProtectionConfig;
@@ -154,7 +154,7 @@ final class ClientConnectionFactoryTest extends TestCase
                 departure: new ClientDeparture(
                     clients: $clients,
                     channels: $channels,
-                    broadcaster: new ChannelBroadcaster($clients, $channels),
+                    peers: new SharedChannelPeerBroadcaster($clients, $channels),
                 ),
             ),
             keepalives: new ConnectionKeepaliveFactory(

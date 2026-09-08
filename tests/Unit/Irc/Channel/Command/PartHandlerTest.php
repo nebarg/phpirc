@@ -208,7 +208,7 @@ final class PartHandlerTest extends TestCase
         return [
             new PartHandler(
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                broadcaster: new ChannelBroadcaster($clients),
                 errors: new NumericErrorResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
                     new ByteStringTruncator(),

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\NicknameValidator;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
@@ -20,7 +20,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
         private NicknameValidator $nicknames,
         private NumericErrorResponseFactory $errors,
         private RegistrationCompleter $registration,
-        private ChannelBroadcaster $broadcaster,
+        private SharedChannelPeerBroadcaster $peers,
     ) {}
 
     public function command(): string
@@ -67,7 +67,7 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
             );
 
             $context->connection->send($nicknameChanged);
-            $this->broadcaster->broadcastToSharedChannelPeers(
+            $this->peers->broadcast(
                 $context->client,
                 $nicknameChanged,
             );

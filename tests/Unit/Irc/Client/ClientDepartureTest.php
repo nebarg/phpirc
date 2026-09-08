@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Client;
 
-use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
@@ -128,7 +128,7 @@ final class ClientDepartureTest extends TestCase
             new ClientDeparture(
                 clients: $clients,
                 channels: $channels,
-                broadcaster: new ChannelBroadcaster($clients, $channels),
+                peers: new SharedChannelPeerBroadcaster($clients, $channels),
             ),
             $clients,
             $channels,
