@@ -31,6 +31,12 @@ final class Client
         return $this->registration->complete();
     }
 
+    /**
+     * Updates the client after its nickname has been secured in the registry.
+     *
+     * @internal Nickname changes must go through {@see ClientRegistry::claimNickname()} so the
+     * registry's nickname index and the client cannot diverge.
+     */
     public function setNickname(string $nickname): void
     {
         $this->nickname = $nickname;

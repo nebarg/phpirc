@@ -50,6 +50,12 @@ final class ClientRegistry
         unset($this->clientsById[$clientId]);
     }
 
+    /**
+     * Atomically updates the client's nickname and the case-normalised lookup index.
+     *
+     * This is the sole supported entry point for assigning or changing a connected client's
+     * nickname.
+     */
     public function claimNickname(Client $client, string $nickname): bool
     {
         $nicknameKey = $this->nicknameKey($nickname);
