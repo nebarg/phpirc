@@ -25,13 +25,14 @@ use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTag;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
-use PhpIrc\Irc\Transport\OutboundMessageGuard;
+use PhpIrc\Irc\Transport\OutboundMessagePreparer;
 use PhpIrc\Irc\Transport\OutboundMessageQueue;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
@@ -268,6 +269,22 @@ final class ClientConnectionTest extends TestCase
     }
 
     #[Test]
+    public function it_excludes_tags_from_the_outbound_main_section_limit(): void
+    {
+        $socket = new FakeClientSocket();
+        $connection = $this->connection($socket, new RecordingMessageHandler());
+        $message = new Message(
+            command: 'PING',
+            parameters: ['hello'],
+            tags: [new MessageTag('example', str_repeat('x', MessageSize::MAX_BYTES))],
+        );
+
+        $connection->send($message);
+
+        $this->assertSame([new MessageEncoder()->encode($message)], $socket->writes);
+    }
+
+    #[Test]
     public function it_sends_many_messages_in_order(): void
     {
         $socket = new FakeClientSocket();
@@ -299,8 +316,8 @@ final class ClientConnectionTest extends TestCase
         $connection = $this->connection(
             socket: $socket,
             handler: new RecordingMessageHandler(),
-            outboundMessages: new OutboundMessageGuard(
-                new MessageSize(new MessageEncoder()),
+            outboundMessages: new OutboundMessagePreparer(
+                new MessageEncoder(),
                 $logger,
             ),
         );
@@ -336,8 +353,8 @@ final class ClientConnectionTest extends TestCase
         $connection = $this->connection(
             socket: $socket,
             handler: new RecordingMessageHandler(),
-            outboundMessages: new OutboundMessageGuard(
-                new MessageSize(new MessageEncoder()),
+            outboundMessages: new OutboundMessagePreparer(
+                new MessageEncoder(),
                 $logger,
             ),
         );
@@ -542,7 +559,7 @@ final class ClientConnectionTest extends TestCase
         ?ClientRegistry $clients = null,
         ?ChannelRegistry $channels = null,
         ?ConnectionKeepalive $keepalive = null,
-        ?OutboundMessageGuard $outboundMessages = null,
+        ?OutboundMessagePreparer $outboundMessages = null,
         ?OutboundMessageQueue $outboundQueue = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
@@ -555,7 +572,10 @@ final class ClientConnectionTest extends TestCase
             codec: new MessageCodec(
                 buffer: new LineBuffer(new ClientMessageSizeValidator()),
                 parser: new MessageParser(),
-                encoder: new MessageEncoder(),
+                outboundMessages: $outboundMessages ?? new OutboundMessagePreparer(
+                    new MessageEncoder(),
+                    new NullLogger(),
+                ),
             ),
             handler: $handler,
             lifecycle: new ClientConnectionLifecycle(
@@ -567,10 +587,6 @@ final class ClientConnectionTest extends TestCase
                 ),
             ),
             keepalive: $keepalive ?? $this->keepalive(new ManualTimerScheduler()),
-            outboundMessages: $outboundMessages ?? new OutboundMessageGuard(
-                new MessageSize(new MessageEncoder()),
-                new NullLogger(),
-            ),
             outboundQueue: $outboundQueue ?? new OutboundMessageQueue(
                 socket: $socket,
                 tasks: new ImmediateBackgroundTaskRunner(),

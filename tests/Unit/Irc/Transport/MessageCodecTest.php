@@ -11,7 +11,9 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
+use PhpIrc\Irc\Transport\OutboundMessagePreparer;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\NullLogger;
 use Tests\TestCase;
 
 final class MessageCodecTest extends TestCase
@@ -95,7 +97,10 @@ final class MessageCodecTest extends TestCase
         return new MessageCodec(
             buffer: new LineBuffer(new ClientMessageSizeValidator()),
             parser: new MessageParser(),
-            encoder: new MessageEncoder(),
+            outboundMessages: new OutboundMessagePreparer(
+                new MessageEncoder(),
+                new NullLogger(),
+            ),
         );
     }
 }

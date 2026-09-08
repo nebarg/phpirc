@@ -23,7 +23,6 @@ final class ClientConnection implements Connection
         private readonly MessageHandler $handler,
         private readonly ClientConnectionLifecycle $lifecycle,
         private readonly ConnectionKeepalive $keepalive,
-        private readonly OutboundMessageGuard $outboundMessages,
         private readonly OutboundMessageQueue $outboundQueue,
     ) {}
 
@@ -63,14 +62,18 @@ final class ClientConnection implements Connection
 
     public function send(Message $message): void
     {
-        if ($this->closed || ! $this->outboundMessages->allows($message)) {
+        if ($this->closed) {
+            return;
+        }
+
+        $encoded = $this->codec->encode($message);
+
+        if ($encoded === null) {
             return;
         }
 
         try {
-            $this->outboundQueue->enqueue(
-                $this->codec->encode($message),
-            );
+            $this->outboundQueue->enqueue($encoded);
         } catch (OutboundQueueFullException) {
             // IRC lingo for exceeding the outbound queue limit.
             $this->closeImmediately('SendQ exceeded');

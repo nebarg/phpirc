@@ -11,12 +11,22 @@ final readonly class MessageEncoder
      */
     public function encode(Message $message): string
     {
-        return (
-            $this->encodeTags($message->tags)
-            . $this->encodeSource($message->source)
-            . $this->encodeCommand($message->command)
-            . $this->encodeParameters($message->parameters)
-            . "\r\n"
+        return $this->encodeWithSize($message)->bytes;
+    }
+
+    /**
+     * @throws InvalidMessageException
+     */
+    public function encodeWithSize(Message $message): EncodedMessage
+    {
+        $mainSection = $this->encodeSource($message->source);
+        $mainSection .= $this->encodeCommand($message->command);
+        $mainSection .= $this->encodeParameters($message->parameters);
+        $mainSection .= "\r\n";
+
+        return new EncodedMessage(
+            bytes: $this->encodeTags($message->tags) . $mainSection,
+            mainSectionBytes: strlen($mainSection),
         );
     }
 

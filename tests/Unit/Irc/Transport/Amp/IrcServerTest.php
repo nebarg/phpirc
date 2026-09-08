@@ -17,7 +17,6 @@ use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
-use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Transport\Amp\IrcServer;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
@@ -25,7 +24,7 @@ use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
-use PhpIrc\Irc\Transport\OutboundMessageGuard;
+use PhpIrc\Irc\Transport\OutboundMessagePreparer;
 use PhpIrc\Irc\Transport\OutboundMessageQueueFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
@@ -148,7 +147,10 @@ final class IrcServerTest extends TestCase
             connections: new ClientConnectionFactory(
                 validator: new ClientMessageSizeValidator(),
                 parser: new MessageParser(),
-                encoder: new MessageEncoder(),
+                outboundMessages: new OutboundMessagePreparer(
+                    new MessageEncoder(),
+                    $logger,
+                ),
                 handler: $handler,
                 lifecycle: new ClientConnectionLifecycle(
                     clients: $clients,
@@ -167,10 +169,6 @@ final class IrcServerTest extends TestCase
                     config: $config,
                 ),
                 limits: new ServerLimits(new ByteStringTruncator()),
-                outboundMessages: new OutboundMessageGuard(
-                    new MessageSize(new MessageEncoder()),
-                    $logger,
-                ),
                 outboundQueues: new OutboundMessageQueueFactory(
                     tasks: new ImmediateBackgroundTaskRunner(),
                     config: $config,

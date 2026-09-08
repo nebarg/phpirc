@@ -6,20 +6,21 @@ namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageSize;
 use Psr\Log\LoggerInterface;
 
-final readonly class OutboundMessageGuard
+final readonly class OutboundMessagePreparer
 {
     public function __construct(
-        private MessageSize $messageSize,
+        private MessageEncoder $encoder,
         private LoggerInterface $logger,
     ) {}
 
-    public function allows(Message $message): bool
+    public function prepare(Message $message): ?string
     {
         try {
-            $bytes = $this->messageSize->inBytes($message);
+            $encoded = $this->encoder->encodeWithSize($message);
         } catch (InvalidMessageException $exception) {
             $this->logger->error(
                 'Refused to send an invalid IRC message.',
@@ -29,22 +30,22 @@ final readonly class OutboundMessageGuard
                 ],
             );
 
-            return false;
+            return null;
         }
 
-        if ($bytes <= MessageSize::MAX_BYTES) {
-            return true;
+        if ($encoded->mainSectionBytes <= MessageSize::MAX_BYTES) {
+            return $encoded->bytes;
         }
 
         $this->logger->error(
             'Refused to send an oversized IRC message.',
             [
                 'command' => $message->command,
-                'bytes' => $bytes,
+                'bytes' => $encoded->mainSectionBytes,
                 'limit' => MessageSize::MAX_BYTES,
             ],
         );
 
-        return false;
+        return null;
     }
 }

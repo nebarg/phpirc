@@ -8,7 +8,6 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
-use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
@@ -18,13 +17,12 @@ final readonly class ClientConnectionFactory
     public function __construct(
         private ClientMessageSizeValidator $validator,
         private MessageParser $parser,
-        private MessageEncoder $encoder,
+        private OutboundMessagePreparer $outboundMessages,
         private MessageHandler $handler,
         private ClientConnectionLifecycle $lifecycle,
         private ConnectionKeepaliveFactory $keepalives,
         private FloodProtectionFactory $floodProtection,
         private ServerLimits $limits,
-        private OutboundMessageGuard $outboundMessages,
         private OutboundMessageQueueFactory $outboundQueues,
     ) {}
 
@@ -36,12 +34,11 @@ final readonly class ClientConnectionFactory
             codec: new MessageCodec(
                 buffer: new LineBuffer($this->validator),
                 parser: $this->parser,
-                encoder: $this->encoder,
+                outboundMessages: $this->outboundMessages,
             ),
             handler: $this->floodProtection->protect($this->handler),
             lifecycle: $this->lifecycle,
             keepalive: $this->keepalives->create(),
-            outboundMessages: $this->outboundMessages,
             outboundQueue: $this->outboundQueues->create($socket),
         );
     }

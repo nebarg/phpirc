@@ -17,13 +17,7 @@ final readonly class MessageSize
 
     public function inBytes(Message $message): int
     {
-        $messageWithoutTags = new Message(
-            command: $message->command,
-            parameters: $message->parameters,
-            source: $message->source,
-        );
-
-        return strlen($this->encoder->encode($messageWithoutTags));
+        return $this->encoder->encodeWithSize($message)->mainSectionBytes;
     }
 
     public function fits(Message $message): bool

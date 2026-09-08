@@ -97,6 +97,22 @@ final class MessageEncoderTest extends TestCase
     }
 
     #[Test]
+    public function it_reports_the_main_section_size_separately_from_tags(): void
+    {
+        $encoded = new MessageEncoder()->encodeWithSize(new Message(
+            command: 'PING',
+            parameters: ['hello'],
+            tags: [new MessageTag('example', str_repeat('x', 100))],
+        ));
+
+        $this->assertSame(
+            '@example=' . str_repeat('x', 100) . " PING hello\r\n",
+            $encoded->bytes,
+        );
+        $this->assertSame(12, $encoded->mainSectionBytes);
+    }
+
+    #[Test]
     public function it_normalizes_a_lowercase_command_to_uppercase(): void
     {
         $this->assertSame(

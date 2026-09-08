@@ -6,7 +6,6 @@ namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Protocol\InvalidMessageException;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 
 final class MessageCodec
@@ -14,7 +13,7 @@ final class MessageCodec
     public function __construct(
         private readonly LineBuffer $buffer,
         private readonly MessageParser $parser,
-        private readonly MessageEncoder $encoder,
+        private readonly OutboundMessagePreparer $outboundMessages,
     ) {}
 
     /** @return iterable<Message> */
@@ -29,8 +28,8 @@ final class MessageCodec
         }
     }
 
-    public function encode(Message $message): string
+    public function encode(Message $message): ?string
     {
-        return $this->encoder->encode($message);
+        return $this->outboundMessages->prepare($message);
     }
 }
