@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Channel;
+namespace Tests\Unit\Irc\Channel\Response;
 
 use PhpIrc\Irc\Channel\Channel;
-use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\MessageEncoder;

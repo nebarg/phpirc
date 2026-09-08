@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Channel;
+namespace Tests\Unit\Irc\Channel\Response;
 
 use PhpIrc\Irc\Channel\Channel;
-use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
+use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\MessageEncoder;

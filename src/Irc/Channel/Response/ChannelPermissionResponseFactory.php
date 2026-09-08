@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpIrc\Irc\Channel;
+namespace PhpIrc\Irc\Channel\Response;
 
 use LogicException;
+use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Policy\ChannelPermission;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;

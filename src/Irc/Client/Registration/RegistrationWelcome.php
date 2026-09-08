@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Client\Registration;
 
 use DateTimeInterface;
-use PhpIrc\Irc\Client\LusersResponseFactory;
-use PhpIrc\Irc\Client\MotdResponseFactory;
+use PhpIrc\Irc\Client\Response\LusersResponseFactory;
+use PhpIrc\Irc\Client\Response\MotdResponseFactory;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\CaseMapping\CaseMapper;

@@ -6,14 +6,14 @@ namespace PhpIrc\Irc\Mode;
 
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelModeResponseFactory;
-use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Membership;
 use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Response\ChannelModeResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;

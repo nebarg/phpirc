@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpIrc\Irc\Message;
+namespace PhpIrc\Irc\Message\Response;
 
+use PhpIrc\Irc\Message\MessageDeliveryFailure;
+use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 

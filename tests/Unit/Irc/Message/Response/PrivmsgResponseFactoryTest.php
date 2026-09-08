@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Message;
+namespace Tests\Unit\Irc\Message\Response;
 
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\MessageDeliveryFailure;
 use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
-use PhpIrc\Irc\Message\PrivmsgResponseFactory;
+use PhpIrc\Irc\Message\Response\PrivmsgResponseFactory;
 use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;

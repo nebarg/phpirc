@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Mode\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelModeResponseFactory;
-use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\ModeChangeParser;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Response\ChannelModeResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;

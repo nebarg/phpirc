@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
-use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;

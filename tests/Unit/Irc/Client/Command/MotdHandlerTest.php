@@ -7,7 +7,7 @@ namespace Tests\Unit\Irc\Client\Command;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Command\MotdHandler;
 use PhpIrc\Irc\Client\Motd;
-use PhpIrc\Irc\Client\MotdResponseFactory;
+use PhpIrc\Irc\Client\Response\MotdResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;

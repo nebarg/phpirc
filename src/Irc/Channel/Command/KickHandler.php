@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;

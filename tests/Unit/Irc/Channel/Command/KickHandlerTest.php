@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Command\KickHandler;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
+use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;

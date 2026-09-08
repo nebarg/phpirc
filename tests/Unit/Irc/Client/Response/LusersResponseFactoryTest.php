@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Client;
+namespace Tests\Unit\Irc\Client\Response;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
-use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Response\LusersResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;

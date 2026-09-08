@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
-use PhpIrc\Irc\Channel\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\ChannelNameValidator;
 use PhpIrc\Irc\Channel\ChannelRegistry;
-use PhpIrc\Irc\Channel\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
+use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
+use PhpIrc\Irc\Channel\Response\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Command\CommandContext;

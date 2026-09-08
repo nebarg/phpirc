@@ -7,7 +7,7 @@ namespace PhpIrc\Irc\Message\Command;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
-use PhpIrc\Irc\Message\PrivmsgResponseFactory;
+use PhpIrc\Irc\Message\Response\PrivmsgResponseFactory;
 use PhpIrc\Irc\Protocol\Message;
 
 final readonly class PrivmsgHandler implements CommandHandler

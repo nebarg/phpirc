@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
-use PhpIrc\Irc\Client\CapabilityResponseFactory;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
+use PhpIrc\Irc\Client\Response\CapabilityResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\PreRegistrationCommandHandler;
 use PhpIrc\Irc\Protocol\Message;

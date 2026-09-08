@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Channel;
+namespace Tests\Unit\Irc\Channel\Response;
 
 use DateTimeImmutable;
 use PhpIrc\Irc\Channel\Channel;
-use PhpIrc\Irc\Channel\ChannelModeResponseFactory;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;
+use PhpIrc\Irc\Channel\Response\ChannelModeResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\ModeAction;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel\Command;
 
 use PhpIrc\Irc\Channel\Channel;
-use PhpIrc\Irc\Channel\ChannelListResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Channel\Response\ChannelListResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;

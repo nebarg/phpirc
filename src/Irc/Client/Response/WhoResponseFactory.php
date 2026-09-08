@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpIrc\Irc\Client;
+namespace PhpIrc\Irc\Client\Response;
 
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Membership;
+use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;

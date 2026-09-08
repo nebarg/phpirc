@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Client;
+namespace Tests\Unit\Irc\Client\Response;
 
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
-use PhpIrc\Irc\Client\WhoisResponseFactory;
+use PhpIrc\Irc\Client\Response\WhoisResponseFactory;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;

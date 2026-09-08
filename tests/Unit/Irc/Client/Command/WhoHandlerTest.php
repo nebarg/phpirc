@@ -9,7 +9,7 @@ use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\WhoHandler;
-use PhpIrc\Irc\Client\WhoResponseFactory;
+use PhpIrc\Irc\Client\Response\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\ByteStringTruncator;

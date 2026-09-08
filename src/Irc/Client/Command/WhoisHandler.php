@@ -6,7 +6,7 @@ namespace PhpIrc\Irc\Client\Command;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientRegistry;
-use PhpIrc\Irc\Client\WhoisResponseFactory;
+use PhpIrc\Irc\Client\Response\WhoisResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;

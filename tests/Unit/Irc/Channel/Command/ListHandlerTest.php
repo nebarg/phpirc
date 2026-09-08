@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Channel\Command;
 
-use PhpIrc\Irc\Channel\ChannelListResponseFactory;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Command\ListHandler;
+use PhpIrc\Irc\Channel\Response\ChannelListResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;

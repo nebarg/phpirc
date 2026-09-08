@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PhpIrc\Irc\Channel;
+namespace PhpIrc\Irc\Channel\Response;
 
+use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\ChannelMode;
 use PhpIrc\Irc\Channel\Mode\ChannelModeChange;
 use PhpIrc\Irc\Channel\Mode\MembershipModeChange;

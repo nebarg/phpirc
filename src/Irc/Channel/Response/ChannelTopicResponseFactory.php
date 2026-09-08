@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PhpIrc\Irc\Channel;
+namespace PhpIrc\Irc\Channel\Response;
 
+use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Client;
+namespace Tests\Unit\Irc\Client\Response;
 
 use PhpIrc\Irc\Client\Motd;
-use PhpIrc\Irc\Client\MotdResponseFactory;
+use PhpIrc\Irc\Client\Response\MotdResponseFactory;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\MessageEncoder;

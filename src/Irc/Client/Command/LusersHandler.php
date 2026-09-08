@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
-use PhpIrc\Irc\Client\LusersResponseFactory;
+use PhpIrc\Irc\Client\Response\LusersResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;

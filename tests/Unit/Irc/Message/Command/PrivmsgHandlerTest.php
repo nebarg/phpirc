@@ -13,7 +13,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Message\MessageDelivery;
-use PhpIrc\Irc\Message\PrivmsgResponseFactory;
+use PhpIrc\Irc\Message\Response\PrivmsgResponseFactory;
 use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;

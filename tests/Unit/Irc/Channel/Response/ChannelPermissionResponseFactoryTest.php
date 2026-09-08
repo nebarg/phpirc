@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Irc\Channel;
+namespace Tests\Unit\Irc\Channel\Response;
 
 use LogicException;
 use PhpIrc\Irc\Channel\Channel;
-use PhpIrc\Irc\Channel\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Channel\Policy\ChannelPermission;
+use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
