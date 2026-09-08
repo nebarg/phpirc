@@ -8,7 +8,6 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\ClientSocketException;
 
 final readonly class RateLimitedMessageHandler implements MessageHandler
 {
@@ -26,16 +25,11 @@ final readonly class RateLimitedMessageHandler implements MessageHandler
             return;
         }
 
-        try {
-            $context->connection->send(new Message(
-                command: 'ERROR',
-                parameters: ['Excess flood'],
-                source: $this->serverName->value,
-            ));
-        } catch (ClientSocketException) {
-            // The socket is already unusable, but the connection still needs closing.
-        } finally {
-            $context->connection->close('Excess flood');
-        }
+        $context->connection->send(new Message(
+            command: 'ERROR',
+            parameters: ['Excess flood'],
+            source: $this->serverName->value,
+        ));
+        $context->connection->close('Excess flood');
     }
 }

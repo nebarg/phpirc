@@ -7,7 +7,6 @@ namespace PhpIrc\Irc\Transport\Keepalive;
 use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\ClientSocketException;
 use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Transport\Timer\TimerScheduler;
 
@@ -87,17 +86,11 @@ final class ConnectionKeepalive
             $this->pingTimedOut(...),
         );
 
-        try {
-            $connection->send(new Message(
-                command: 'PING',
-                parameters: [$token],
-                source: $this->serverName->value,
-            ));
-        } catch (ClientSocketException) {
-            $this->cancelTimer();
-            $this->clearPendingToken();
-            $connection->close();
-        }
+        $connection->send(new Message(
+            command: 'PING',
+            parameters: [$token],
+            source: $this->serverName->value,
+        ));
     }
 
     private function pingTimedOut(): void
@@ -111,17 +104,12 @@ final class ConnectionKeepalive
             return;
         }
 
-        try {
-            $connection->send(new Message(
-                command: 'ERROR',
-                parameters: ['Ping timeout'],
-                source: $this->serverName->value,
-            ));
-        } catch (ClientSocketException) {
-            // The socket is already unusable, but the connection still needs closing.
-        } finally {
-            $connection->close('Ping timeout');
-        }
+        $connection->send(new Message(
+            command: 'ERROR',
+            parameters: ['Ping timeout'],
+            source: $this->serverName->value,
+        ));
+        $connection->close('Ping timeout');
     }
 
     private function clearPendingToken(): void

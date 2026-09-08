@@ -9,8 +9,6 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\FloodProtectionConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\ClientSocketException;
-use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Transport\Flood\MessageRateLimiter;
 use PhpIrc\Irc\Transport\Flood\RateLimitedMessageHandler;
 use PHPUnit\Framework\Attributes\Test;
@@ -55,28 +53,6 @@ final class RateLimitedMessageHandlerTest extends TestCase
         $this->assertSame('ERROR', $connection->messages[0]->command);
         $this->assertSame(['Excess flood'], $connection->messages[0]->parameters);
         $this->assertSame(['Excess flood'], $connection->closeReasons);
-    }
-
-    #[Test]
-    public function it_still_closes_when_reporting_excess_flood_fails(): void
-    {
-        $next = new RecordingMessageHandler();
-        $connection = $this->createMock(Connection::class);
-        $connection
-            ->expects($this->once())
-            ->method('send')
-            ->willThrowException(new ClientSocketException('Write failed.'));
-        $connection
-            ->expects($this->once())
-            ->method('close')
-            ->with('Excess flood');
-        $context = new CommandContext($connection, new Client());
-        $handler = $this->handler($next);
-
-        $handler->handle($context, new Message(command: 'PING'));
-        $handler->handle($context, new Message(command: 'PRIVMSG'));
-
-        $this->assertCount(1, $next->messages);
     }
 
     private function handler(RecordingMessageHandler $next): RateLimitedMessageHandler

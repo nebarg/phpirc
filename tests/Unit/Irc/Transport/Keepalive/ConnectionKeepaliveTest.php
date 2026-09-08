@@ -6,9 +6,6 @@ namespace Tests\Unit\Irc\Transport\Keepalive;
 
 use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ServerName;
-use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\ClientSocketException;
-use PhpIrc\Irc\Transport\Connection;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -125,81 +122,6 @@ final class ConnectionKeepaliveTest extends TestCase
 
         $this->assertSame(0, $timers->pendingCount());
         $this->assertCount(1, $timers->cancelledTimers);
-    }
-
-    #[Test]
-    public function it_closes_the_connection_when_sending_the_ping_fails(): void
-    {
-        $timers = new ManualTimerScheduler();
-        $connection = new class implements Connection {
-            public int $closeCalls = 0;
-
-            public function send(Message $message): void
-            {
-                throw new ClientSocketException('Write failed.');
-            }
-
-            public function sendMany(iterable $messages): void
-            {
-                foreach ($messages as $message) {
-                    $this->send($message);
-                }
-            }
-
-            public function close(string $reason = 'Connection closed'): void
-            {
-                $this->closeCalls++;
-            }
-
-            public function pongReceived(string $token): void {}
-        };
-        $keepalive = $this->createKeepalive($timers);
-        $keepalive->start($connection);
-
-        $timers->runNext();
-
-        $this->assertSame(1, $connection->closeCalls);
-        $this->assertSame(0, $timers->pendingCount());
-    }
-
-    #[Test]
-    public function it_still_closes_when_reporting_the_timeout_fails(): void
-    {
-        $timers = new ManualTimerScheduler();
-        $connection = new class implements Connection {
-            public int $sendCalls = 0;
-
-            public int $closeCalls = 0;
-
-            public function send(Message $message): void
-            {
-                if (++$this->sendCalls === 2) {
-                    throw new ClientSocketException('Write failed.');
-                }
-            }
-
-            public function sendMany(iterable $messages): void
-            {
-                foreach ($messages as $message) {
-                    $this->send($message);
-                }
-            }
-
-            public function close(string $reason = 'Connection closed'): void
-            {
-                $this->closeCalls++;
-            }
-
-            public function pongReceived(string $token): void {}
-        };
-        $keepalive = $this->createKeepalive($timers);
-        $keepalive->start($connection);
-        $timers->runNext();
-
-        $timers->runNext();
-
-        $this->assertSame(2, $connection->sendCalls);
-        $this->assertSame(1, $connection->closeCalls);
     }
 
     /** @return array{ConnectionKeepalive, ManualTimerScheduler, RecordingConnection} */
