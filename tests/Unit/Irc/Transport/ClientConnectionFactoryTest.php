@@ -23,10 +23,12 @@ use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PhpIrc\Irc\Transport\OutboundMessageGuard;
+use PhpIrc\Irc\Transport\OutboundMessageQueueFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\NullLogger;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 use Tests\Support\Irc\Transport\Time\ManualMonotonicClock;
 use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
@@ -167,6 +169,11 @@ final class ClientConnectionFactoryTest extends TestCase
             outboundMessages: new OutboundMessageGuard(
                 new MessageSize(new MessageEncoder()),
                 new NullLogger(),
+            ),
+            outboundQueues: new OutboundMessageQueueFactory(
+                tasks: new ImmediateBackgroundTaskRunner(),
+                config: $config,
+                logger: new NullLogger(),
             ),
         );
     }

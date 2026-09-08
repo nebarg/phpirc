@@ -26,6 +26,7 @@ use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PhpIrc\Irc\Transport\OutboundMessageGuard;
+use PhpIrc\Irc\Transport\OutboundMessageQueueFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Revolt\EventLoop;
@@ -33,6 +34,7 @@ use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
+use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 use Tests\Support\Irc\Transport\Time\ManualMonotonicClock;
 use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
@@ -168,6 +170,11 @@ final class IrcServerTest extends TestCase
                 outboundMessages: new OutboundMessageGuard(
                     new MessageSize(new MessageEncoder()),
                     $logger,
+                ),
+                outboundQueues: new OutboundMessageQueueFactory(
+                    tasks: new ImmediateBackgroundTaskRunner(),
+                    config: $config,
+                    logger: $logger,
                 ),
             ),
             logger: $logger,

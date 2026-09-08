@@ -14,6 +14,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Registration welcome messages and `005` feature advertisement
 - [x] Client and server `PING`/`PONG`, including stale-connection timeouts
 - [x] Per-client command-rate limits and excess-flood disconnections
+- [x] Per-client bounded outbound queues and slow-client disconnections
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
@@ -70,6 +71,7 @@ IRC_PING_INTERVAL=120
 IRC_PONG_TIMEOUT=30
 IRC_FLOOD_BURST_MESSAGES=20
 IRC_FLOOD_MESSAGES_PER_SECOND=2
+IRC_OUTBOUND_QUEUE_BYTES=262144
 LISTEN_ADDRESS=127.0.0.1
 LISTEN_PORT=6667
 ```
@@ -82,7 +84,6 @@ composer qa
 
 ## Roadmap
 
-- [ ] Bounded outbound queues and slow-client handling
 - [ ] Configurable post-registration channel auto-join
 - [ ] Extend `WHO` with visibility rules, wildcard masks and IRCv3 WHOX
 - [ ] Peak and lifetime connection statistics

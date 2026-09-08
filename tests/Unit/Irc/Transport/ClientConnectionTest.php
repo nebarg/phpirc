@@ -15,6 +15,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\KeepaliveConfig;
+use PhpIrc\Irc\Config\OutboundQueueConfig;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -31,6 +32,7 @@ use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
 use PhpIrc\Irc\Transport\OutboundMessageGuard;
+use PhpIrc\Irc\Transport\OutboundMessageQueue;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -38,6 +40,7 @@ use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 use Tests\Support\Irc\Transport\Timer\ManualTimerScheduler;
 use Tests\TestCase;
 
@@ -348,6 +351,48 @@ final class ClientConnectionTest extends TestCase
     }
 
     #[Test]
+    public function it_closes_with_a_sendq_reason_when_the_outbound_queue_is_full(): void
+    {
+        $client = new Client();
+        $client->setNickname('John');
+        $jane = new Client();
+        $clients = new ClientRegistry(new AsciiCaseMapper());
+        $channels = new ChannelRegistry(new AsciiCaseMapper());
+        $janeConnection = new RecordingConnection();
+        $clients->register($jane, $janeConnection);
+        $clients->claimNickname($jane, 'Jane');
+        $channels->join('#php', $client);
+        $channels->join('#php', $jane);
+        $socket = new FakeClientSocket(["PING :token\r\n"]);
+        $outboundQueue = new OutboundMessageQueue(
+            socket: $socket,
+            tasks: new ImmediateBackgroundTaskRunner(),
+            config: new OutboundQueueConfig(maximumBytes: 1),
+            logger: new NullLogger(),
+        );
+        $handler = new class implements MessageHandler {
+            public function handle(CommandContext $context, Message $message): void
+            {
+                $context->connection->send(new Message(command: 'PONG', parameters: ['token']));
+            }
+        };
+
+        $this->connection(
+            socket: $socket,
+            handler: $handler,
+            client: $client,
+            clients: $clients,
+            channels: $channels,
+            outboundQueue: $outboundQueue,
+        )->run();
+
+        $this->assertSame(1, $socket->closeCalls);
+        $this->assertCount(1, $janeConnection->messages);
+        $this->assertSame('QUIT', $janeConnection->messages[0]->command);
+        $this->assertSame(['SendQ exceeded'], $janeConnection->messages[0]->parameters);
+    }
+
+    #[Test]
     public function it_closes_the_socket_only_once(): void
     {
         $socket = new FakeClientSocket();
@@ -498,6 +543,7 @@ final class ClientConnectionTest extends TestCase
         ?ChannelRegistry $channels = null,
         ?ConnectionKeepalive $keepalive = null,
         ?OutboundMessageGuard $outboundMessages = null,
+        ?OutboundMessageQueue $outboundQueue = null,
     ): ClientConnection {
         $caseMapper = new AsciiCaseMapper();
         $clientRegistry = $clients ?? new ClientRegistry($caseMapper);
@@ -524,6 +570,12 @@ final class ClientConnectionTest extends TestCase
             outboundMessages: $outboundMessages ?? new OutboundMessageGuard(
                 new MessageSize(new MessageEncoder()),
                 new NullLogger(),
+            ),
+            outboundQueue: $outboundQueue ?? new OutboundMessageQueue(
+                socket: $socket,
+                tasks: new ImmediateBackgroundTaskRunner(),
+                config: new OutboundQueueConfig(),
+                logger: new NullLogger(),
             ),
         );
     }

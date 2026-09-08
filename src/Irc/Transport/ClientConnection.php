@@ -24,6 +24,7 @@ final class ClientConnection implements Connection
         private readonly ClientConnectionLifecycle $lifecycle,
         private readonly ConnectionKeepalive $keepalive,
         private readonly OutboundMessageGuard $outboundMessages,
+        private readonly OutboundMessageQueue $outboundQueue,
     ) {}
 
     public function run(): void
@@ -62,13 +63,18 @@ final class ClientConnection implements Connection
 
     public function send(Message $message): void
     {
-        if (! $this->outboundMessages->allows($message)) {
+        if ($this->closed || ! $this->outboundMessages->allows($message)) {
             return;
         }
 
-        $this->socket->write(
-            $this->codec->encode($message),
-        );
+        try {
+            $this->outboundQueue->enqueue(
+                $this->codec->encode($message),
+            );
+        } catch (OutboundQueueFullException) {
+            // IRC lingo for exceeding the outbound queue limit.
+            $this->closeImmediately('SendQ exceeded');
+        }
     }
 
     public function sendMany(iterable $messages): void
@@ -80,17 +86,36 @@ final class ClientConnection implements Connection
 
     public function close(string $reason = 'Connection closed'): void
     {
-        if ($this->closed) {
+        if (! $this->beginClosing($reason)) {
             return;
         }
 
-        $this->closed = true;
-        $this->disconnectReason = $reason;
-        $this->socket->close();
+        $this->outboundQueue->finishAndClose();
     }
 
     public function pongReceived(string $token): void
     {
         $this->keepalive->pongReceived($token);
+    }
+
+    private function closeImmediately(string $reason): void
+    {
+        if (! $this->beginClosing($reason)) {
+            return;
+        }
+
+        $this->outboundQueue->discardAndClose();
+    }
+
+    private function beginClosing(string $reason): bool
+    {
+        if ($this->closed) {
+            return false;
+        }
+
+        $this->closed = true;
+        $this->disconnectReason = $reason;
+
+        return true;
     }
 }

@@ -20,6 +20,7 @@ final readonly class ServerConfig
         public string $softwareVersion = 'phpirc-0.1.0',
         public KeepaliveConfig $keepalive = new KeepaliveConfig(),
         public FloodProtectionConfig $floodProtection = new FloodProtectionConfig(),
+        public OutboundQueueConfig $outboundQueue = new OutboundQueueConfig(),
         ?DateTimeImmutable $startedAt = null,
     ) {
         $this->startedAt = $startedAt ?? new DateTimeImmutable();

@@ -29,14 +29,26 @@ use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Mode\Command\ModeHandler;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
+use PhpIrc\Irc\Transport\Task\BackgroundTaskRunner;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingCommandHandler;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\RecordingConnection;
+use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 
 final class CommandHandlerWiringTest extends IntegrationTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->container->singleton(
+            BackgroundTaskRunner::class,
+            static fn () => new ImmediateBackgroundTaskRunner(),
+        );
+    }
+
     #[Test]
     public function it_discovers_application_command_handlers(): void
     {

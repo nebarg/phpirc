@@ -6,6 +6,7 @@ namespace Tests\Support\Irc\Transport;
 
 use Closure;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\ClientSocketException;
 
 final class FakeClientSocket implements ClientSocket
 {
@@ -29,6 +30,7 @@ final class FakeClientSocket implements ClientSocket
         array $chunks = [],
         private readonly ?Closure $beforeRead = null,
         private readonly string $remoteAddress = '127.0.0.1',
+        private readonly ?ClientSocketException $writeException = null,
     ) {
         $this->chunks = $chunks;
     }
@@ -51,6 +53,10 @@ final class FakeClientSocket implements ClientSocket
 
     public function write(string $bytes): void
     {
+        if ($this->writeException !== null) {
+            throw $this->writeException;
+        }
+
         $this->writes[] = $bytes;
     }
 

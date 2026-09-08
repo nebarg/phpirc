@@ -3,6 +3,7 @@
 use PhpIrc\Irc\Config\FloodProtectionConfig;
 use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ListenerConfig;
+use PhpIrc\Irc\Config\OutboundQueueConfig;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
 
@@ -25,5 +26,8 @@ return new ServerConfig(
     floodProtection: new FloodProtectionConfig(
         burstMessages: (int) env('IRC_FLOOD_BURST_MESSAGES', default: 20),
         messagesPerSecond: (int) env('IRC_FLOOD_MESSAGES_PER_SECOND', default: 2),
+    ),
+    outboundQueue: new OutboundQueueConfig(
+        maximumBytes: (int) env('IRC_OUTBOUND_QUEUE_BYTES', default: 262_144),
     ),
 );
