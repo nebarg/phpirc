@@ -63,7 +63,7 @@ final readonly class MessageDelivery
             return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::CannotSendToChannel);
         }
 
-        if ($this->channelAccess->checkMessageDelivery($channel, $sender) !== ChannelPermission::Allowed) {
+        if ($this->channelAccess->canSendMessage($channel, $sender) !== ChannelPermission::Allowed) {
             return new MessageDeliveryFailure($channel->name, MessageDeliveryFailureReason::CannotSendToChannel);
         }
 

@@ -49,7 +49,7 @@ final readonly class ChannelModeHandler
             return;
         }
 
-        $permission = $this->channelAccess->checkModeChange($channel, $context->client);
+        $permission = $this->channelAccess->canChangeMode($channel, $context->client);
 
         if ($permission->isDenied()) {
             $context->connection->send(

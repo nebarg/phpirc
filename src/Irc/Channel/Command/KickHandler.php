@@ -53,7 +53,7 @@ final readonly class KickHandler implements CommandHandler
             return;
         }
 
-        $permission = $this->channelAccess->checkKick($channel, $context->client);
+        $permission = $this->channelAccess->canKick($channel, $context->client);
 
         if ($permission->isDenied()) {
             $context->connection->send(

@@ -37,7 +37,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkMessageDelivery($channel, $member),
+            $this->policy->canSendMessage($channel, $member),
         );
     }
 
@@ -48,7 +48,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::NotMember,
-            $this->policy->checkMessageDelivery($channel, new Client()),
+            $this->policy->canSendMessage($channel, new Client()),
         );
     }
 
@@ -60,7 +60,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkMessageDelivery($channel, new Client()),
+            $this->policy->canSendMessage($channel, new Client()),
         );
     }
 
@@ -73,7 +73,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::NotMember,
-            $this->policy->checkMessageDelivery($channel, new Client()),
+            $this->policy->canSendMessage($channel, new Client()),
         );
     }
 
@@ -85,7 +85,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::InsufficientPrivileges,
-            $this->policy->checkMessageDelivery($channel, $member),
+            $this->policy->canSendMessage($channel, $member),
         );
     }
 
@@ -100,11 +100,11 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkMessageDelivery($channel, $operator),
+            $this->policy->canSendMessage($channel, $operator),
         );
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkMessageDelivery($channel, $member),
+            $this->policy->canSendMessage($channel, $member),
         );
     }
 
@@ -113,7 +113,7 @@ final class ChannelAccessPolicyTest extends TestCase
     {
         $this->assertSame(
             ChannelPermission::NotMember,
-            $this->policy->checkTopicChange(new Channel('#php'), new Client()),
+            $this->policy->canChangeTopic(new Channel('#php'), new Client()),
         );
     }
 
@@ -124,11 +124,11 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkTopicChange($channel, $operator),
+            $this->policy->canChangeTopic($channel, $operator),
         );
         $this->assertSame(
             ChannelPermission::InsufficientPrivileges,
-            $this->policy->checkTopicChange($channel, $member),
+            $this->policy->canChangeTopic($channel, $member),
         );
     }
 
@@ -140,7 +140,7 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkTopicChange($channel, $member),
+            $this->policy->canChangeTopic($channel, $member),
         );
     }
 
@@ -151,15 +151,15 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::NotMember,
-            $this->policy->checkModeChange($channel, new Client()),
+            $this->policy->canChangeMode($channel, new Client()),
         );
         $this->assertSame(
             ChannelPermission::InsufficientPrivileges,
-            $this->policy->checkModeChange($channel, $member),
+            $this->policy->canChangeMode($channel, $member),
         );
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkModeChange($channel, $operator),
+            $this->policy->canChangeMode($channel, $operator),
         );
     }
 
@@ -170,15 +170,15 @@ final class ChannelAccessPolicyTest extends TestCase
 
         $this->assertSame(
             ChannelPermission::NotMember,
-            $this->policy->checkKick($channel, new Client()),
+            $this->policy->canKick($channel, new Client()),
         );
         $this->assertSame(
             ChannelPermission::InsufficientPrivileges,
-            $this->policy->checkKick($channel, $member),
+            $this->policy->canKick($channel, $member),
         );
         $this->assertSame(
             ChannelPermission::Allowed,
-            $this->policy->checkKick($channel, $operator),
+            $this->policy->canKick($channel, $operator),
         );
     }
 

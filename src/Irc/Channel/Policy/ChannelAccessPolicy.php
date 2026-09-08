@@ -12,7 +12,7 @@ use PhpIrc\Irc\Client\Client;
 
 final readonly class ChannelAccessPolicy
 {
-    public function checkMessageDelivery(Channel $channel, Client $client): ChannelPermission
+    public function canSendMessage(Channel $channel, Client $client): ChannelPermission
     {
         $membership = $channel->membershipFor($client);
 
@@ -31,7 +31,7 @@ final readonly class ChannelAccessPolicy
             : ChannelPermission::InsufficientPrivileges;
     }
 
-    public function checkTopicChange(Channel $channel, Client $client): ChannelPermission
+    public function canChangeTopic(Channel $channel, Client $client): ChannelPermission
     {
         $membership = $channel->membershipFor($client);
 
@@ -43,20 +43,20 @@ final readonly class ChannelAccessPolicy
             return ChannelPermission::Allowed;
         }
 
-        return $this->checkOperatorPrivileges($membership);
+        return $this->canUseOperatorPrivileges($membership);
     }
 
-    public function checkModeChange(Channel $channel, Client $client): ChannelPermission
+    public function canChangeMode(Channel $channel, Client $client): ChannelPermission
     {
-        return $this->checkOperatorAction($channel, $client);
+        return $this->canPerformOperatorAction($channel, $client);
     }
 
-    public function checkKick(Channel $channel, Client $client): ChannelPermission
+    public function canKick(Channel $channel, Client $client): ChannelPermission
     {
-        return $this->checkOperatorAction($channel, $client);
+        return $this->canPerformOperatorAction($channel, $client);
     }
 
-    private function checkOperatorAction(Channel $channel, Client $client): ChannelPermission
+    private function canPerformOperatorAction(Channel $channel, Client $client): ChannelPermission
     {
         $membership = $channel->membershipFor($client);
 
@@ -64,10 +64,10 @@ final readonly class ChannelAccessPolicy
             return ChannelPermission::NotMember;
         }
 
-        return $this->checkOperatorPrivileges($membership);
+        return $this->canUseOperatorPrivileges($membership);
     }
 
-    private function checkOperatorPrivileges(Membership $membership): ChannelPermission
+    private function canUseOperatorPrivileges(Membership $membership): ChannelPermission
     {
         return $membership->has(MembershipMode::Operator)
             ? ChannelPermission::Allowed

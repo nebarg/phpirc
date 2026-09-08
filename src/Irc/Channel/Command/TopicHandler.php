@@ -62,7 +62,7 @@ final readonly class TopicHandler implements CommandHandler
 
         $topic = $this->limits->truncateTopic($message->parameter(1));
 
-        $permission = $this->channelAccess->checkTopicChange($channel, $context->client);
+        $permission = $this->channelAccess->canChangeTopic($channel, $context->client);
 
         if ($permission->isDenied()) {
             $context->connection->send(
