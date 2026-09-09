@@ -31,50 +31,66 @@ final readonly class NickHandler implements PreRegistrationCommandHandler
     public function handle(CommandContext $context, Message $message): void
     {
         if ($message->isParameterMissingOrEmpty(0)) {
-            $context->connection->send(
-                $this->errors->noNicknameGiven($context->responseTarget()),
-            );
-
+            $this->sendMissingNicknameResponse($context);
             return;
         }
 
         $nickname = $message->parameter(0);
 
         if (! $this->nicknames->isValid($nickname)) {
-            $context->connection->send(
-                $this->errors->erroneousNickname($context->responseTarget(), $nickname),
-            );
-
+            $this->sendInvalidNicknameResponse($context, $nickname);
             return;
         }
 
-        $oldNickname = $context->client->nickname;
+        $previousNickname = $context->client->nickname;
         $wasRegistered = $context->client->registration->isComplete();
 
         if (! $this->clients->claimNickname($context->client, $nickname)) {
-            $context->connection->send(
-                $this->errors->nicknameInUse($context->responseTarget(), $nickname),
-            );
-
+            $this->sendNicknameInUseResponse($context, $nickname);
             return;
         }
 
         if ($wasRegistered) {
-            $nicknameChanged = new Message(
-                command: 'NICK',
-                parameters: [$nickname],
-                source: $oldNickname,
-            );
-
-            $context->connection->send($nicknameChanged);
-            $this->peers->broadcast(
-                $context->client,
-                $nicknameChanged,
-            );
-
+            $this->announceNicknameChange($context, $nickname, $previousNickname);
             return;
         }
 
         $this->registration->completeIfReady($context);
+    }
+
+    private function sendMissingNicknameResponse(CommandContext $context): void
+    {
+        $context->connection->send(
+            $this->errors->noNicknameGiven($context->responseTarget()),
+        );
+    }
+
+    private function sendInvalidNicknameResponse(CommandContext $context, string $nickname): void
+    {
+        $context->connection->send(
+            $this->errors->erroneousNickname($context->responseTarget(), $nickname),
+        );
+    }
+
+    private function sendNicknameInUseResponse(CommandContext $context, string $nickname): void
+    {
+        $context->connection->send(
+            $this->errors->nicknameInUse($context->responseTarget(), $nickname),
+        );
+    }
+
+    private function announceNicknameChange(
+        CommandContext $context,
+        string $nickname,
+        ?string $previousNickname,
+    ): void {
+        $nicknameChanged = new Message(
+            command: $this->command(),
+            parameters: [$nickname],
+            source: $previousNickname,
+        );
+
+        $context->connection->send($nicknameChanged);
+        $this->peers->broadcast($context->client, $nicknameChanged);
     }
 }
