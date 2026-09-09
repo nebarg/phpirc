@@ -6,6 +6,7 @@ namespace PhpIrc\Irc\Client\Command;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Client\Response\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
@@ -17,6 +18,7 @@ final readonly class WhoHandler implements CommandHandler
     public function __construct(
         private ClientRegistry $clients,
         private ChannelRegistry $channels,
+        private ClientVisibilityPolicy $visibility,
         private WhoResponseFactory $whoResponses,
         private NumericErrorResponseFactory $errors,
     ) {}
@@ -41,6 +43,10 @@ final readonly class WhoHandler implements CommandHandler
 
         if ($channel !== null) {
             foreach ($channel->members() as $membership) {
+                if (! $this->visibility->canSee($context->client, $membership->client)) {
+                    continue;
+                }
+
                 $context->connection->send(
                     $this->whoResponses->createChannelMemberReply(
                         target: $context->responseTarget(),
@@ -57,7 +63,7 @@ final readonly class WhoHandler implements CommandHandler
 
         $client = $this->clients->findByNickname($mask);
 
-        if ($client !== null && $client->registration->isComplete()) {
+        if ($client !== null && $client->registration->isComplete() && $this->visibility->canSee($context->client, $client)) {
             $context->connection->send(
                 $this->whoResponses->createClientReply(
                     target: $context->responseTarget(),

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Client\Response;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Mode\UserMode;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
@@ -21,12 +23,17 @@ final readonly class LusersResponseFactory
     /** @return list<Message> */
     public function createLusersResponses(string $target): array
     {
-        $registeredClients = $this->clients->registeredCount();
+        $registeredClients = $this->clients->registeredClients();
+        $invisibleClients = count(array_filter(
+            $registeredClients,
+            static fn (Client $client): bool => $client->hasMode(UserMode::Invisible),
+        ));
+        $visibleClients = count($registeredClients) - $invisibleClients;
         $responses = [
             $this->responses->create(
                 code: ResponseCode::LuserClient,
                 target: $target,
-                text: "There are {$registeredClients} users and 0 invisible on 1 servers",
+                text: "There are {$visibleClients} users and {$invisibleClients} invisible on 1 servers",
             ),
         ];
 
@@ -53,7 +60,7 @@ final readonly class LusersResponseFactory
         $responses[] = $this->responses->create(
             code: ResponseCode::LuserMe,
             target: $target,
-            text: "I have {$registeredClients} clients and 0 servers",
+            text: 'I have ' . count($registeredClients) . ' clients and 0 servers',
         );
 
         return $responses;

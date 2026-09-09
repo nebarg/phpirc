@@ -9,6 +9,8 @@ use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\WhoHandler;
+use PhpIrc\Irc\Client\Mode\UserMode;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Client\Response\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
@@ -186,6 +188,90 @@ final class WhoHandlerTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_hides_an_invisible_client_without_a_shared_channel(): void
+    {
+        [$handler, $clients] = $this->handler();
+        $requester = $this->client('Jane');
+        $invisible = $this->client('John');
+        $invisible->enableMode(UserMode::Invisible);
+        $this->register($clients, $requester);
+        $this->register($clients, $invisible);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $requester),
+            new Message(command: 'WHO', parameters: ['John']),
+        );
+
+        $this->assertCount(1, $connection->messages);
+        $this->assertResponse(
+            connection: $connection,
+            command: '315',
+            parameters: ['Jane', 'John', 'End of WHO list'],
+        );
+    }
+
+    #[Test]
+    public function it_returns_an_invisible_client_with_a_shared_channel(): void
+    {
+        [$handler, $clients, $channels] = $this->handler();
+        $requester = $this->client('Jane');
+        $invisible = $this->client('John');
+        $invisible->enableMode(UserMode::Invisible);
+        $this->register($clients, $requester);
+        $this->register($clients, $invisible);
+        $channels->join('#php', $requester);
+        $channels->join('#php', $invisible);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $requester),
+            new Message(command: 'WHO', parameters: ['John']),
+        );
+
+        $this->assertCount(2, $connection->messages);
+        $this->assertResponse(
+            connection: $connection,
+            command: '352',
+            parameters: ['Jane', '*', 'john', '203.0.113.10', 'irc.test', 'John', 'H', '0 John Doe'],
+        );
+    }
+
+    #[Test]
+    public function a_channel_query_hides_invisible_members_from_outsiders(): void
+    {
+        [$handler, $clients, $channels] = $this->handler();
+        $requester = $this->client('Outside');
+        $visible = $this->client('Jane');
+        $invisible = $this->client('John');
+        $invisible->enableMode(UserMode::Invisible);
+        $this->register($clients, $requester);
+        $this->register($clients, $visible);
+        $this->register($clients, $invisible);
+        $channels->join('#php', $visible);
+        $channels->join('#php', $invisible);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $requester),
+            new Message(command: 'WHO', parameters: ['#php']),
+        );
+
+        $this->assertCount(2, $connection->messages);
+        $this->assertResponse(
+            connection: $connection,
+            command: '352',
+            parameters: ['Outside', '#php', 'jane', '203.0.113.10', 'irc.test', 'Jane', 'H@', '0 Jane Doe'],
+        );
+        $this->assertResponse(
+            connection: $connection,
+            command: '315',
+            parameters: ['Outside', '#php', 'End of WHO list'],
+            index: 1,
+        );
+    }
+
     /** @return array{WhoHandler, ClientRegistry, ChannelRegistry} */
     private function handler(): array
     {
@@ -199,6 +285,7 @@ final class WhoHandlerTest extends TestCase
             new WhoHandler(
                 clients: $clients,
                 channels: $channels,
+                visibility: new ClientVisibilityPolicy($channels),
                 whoResponses: new WhoResponseFactory($serverName, $responses),
                 errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
             ),

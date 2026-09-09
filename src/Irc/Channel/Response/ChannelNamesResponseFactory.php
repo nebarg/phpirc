@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Channel\Response;
 
 use PhpIrc\Irc\Channel\Channel;
+use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -15,15 +17,20 @@ final readonly class ChannelNamesResponseFactory
     public function __construct(
         private NumericResponseFactory $responses,
         private MessageSize $messageSize,
+        private ClientVisibilityPolicy $visibility,
     ) {}
 
     /** @return list<Message> */
-    public function createNamesResponses(string $target, Channel $channel): array
+    public function createNamesResponses(string $target, Client $requester, Channel $channel): array
     {
         $messages = [];
         $names = [];
 
         foreach ($channel->members() as $membership) {
+            if (! $this->visibility->canSeeInChannel($requester, $membership->client, $channel)) {
+                continue;
+            }
+
             $nickname = $membership->client->nickname;
 
             if ($nickname === null) {

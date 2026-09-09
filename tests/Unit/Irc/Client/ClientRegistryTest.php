@@ -190,6 +190,22 @@ final class ClientRegistryTest extends TestCase
         $this->assertSame(1, $registry->unregisteredCount());
     }
 
+    #[Test]
+    public function it_returns_only_clients_that_have_completed_registration(): void
+    {
+        $registry = $this->registry();
+        $registered = new Client();
+        $unregistered = new Client();
+        $this->register($registry, $registered);
+        $this->register($registry, $unregistered);
+        $registry->claimNickname($registered, 'John');
+        $registered->setUsername('john');
+        $registered->setRealName('John Doe');
+        $registered->completeRegistrationIfReady();
+
+        $this->assertSame([$registered], $registry->registeredClients());
+    }
+
     private function registry(): ClientRegistry
     {
         return new ClientRegistry(new AsciiCaseMapper());

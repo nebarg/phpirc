@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Mode;
 
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Mode\UserModeChanger;
+use PhpIrc\Irc\Client\Response\UserModeResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
-use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
 final readonly class UserModeHandler
 {
     public function __construct(
         private ClientRegistry $clients,
-        private NumericResponseFactory $numericResponses,
-        private NumericErrorResponseFactory $errors,
+        private UserModeChanger $modeChanger,
+        private UserModeResponseFactory $modeResponses,
     ) {}
 
     public function handle(CommandContext $context, Message $message): void
@@ -26,7 +25,10 @@ final readonly class UserModeHandler
 
         if ($client === null || ! $client->registration->isComplete()) {
             $context->connection->send(
-                $this->errors->noSuchNickname($context->responseTarget(), $nickname),
+                $this->modeResponses->createUnknownNicknameResponse(
+                    $context->responseTarget(),
+                    $nickname,
+                ),
             );
 
             return;
@@ -34,7 +36,7 @@ final readonly class UserModeHandler
 
         if ($client !== $context->client) {
             $context->connection->send(
-                $this->errors->usersDontMatch($context->responseTarget()),
+                $this->modeResponses->createOtherUserResponse($context->responseTarget()),
             );
 
             return;
@@ -42,20 +44,35 @@ final readonly class UserModeHandler
 
         if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
-                $this->numericResponses->create(
-                    code: ResponseCode::UserModeIs,
-                    target: $context->responseTarget(),
-                    parameters: ['+'],
+                $this->modeResponses->createCurrentModesResponse(
+                    $context->responseTarget(),
+                    $client,
                 ),
             );
 
             return;
         }
 
-        if (trim($message->parameter(1), '+-') !== '') {
+        $result = $this->modeChanger->apply($client, $message->parameter(1));
+
+        if ($result->hasUnknownModes) {
             $context->connection->send(
-                $this->errors->unknownUserModeFlag($context->responseTarget()),
+                $this->modeResponses->createUnknownModeResponse($context->responseTarget()),
             );
         }
+
+        if ($result->appliedChanges === []) {
+            return;
+        }
+
+        $actorNickname = $context->actorNickname();
+
+        $context->connection->send(
+            $this->modeResponses->createChangedMessage(
+                $actorNickname,
+                $actorNickname,
+                $result->appliedChanges,
+            ),
+        );
     }
 }

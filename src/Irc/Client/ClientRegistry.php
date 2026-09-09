@@ -95,10 +95,23 @@ final class ClientRegistry
 
     public function registeredCount(): int
     {
-        return count(array_filter(
-            $this->clientsById,
-            static fn (ConnectedClient $connectedClient): bool => $connectedClient->client->registration->isComplete(),
-        ));
+        return count($this->registeredClients());
+    }
+
+    /** @return list<Client> */
+    public function registeredClients(): array
+    {
+        $clients = [];
+
+        foreach ($this->clientsById as $connectedClient) {
+            if (! $connectedClient->client->registration->isComplete()) {
+                continue;
+            }
+
+            $clients[] = $connectedClient->client;
+        }
+
+        return $clients;
     }
 
     public function unregisteredCount(): int

@@ -7,6 +7,7 @@ namespace Tests\Unit\Irc\Client\Response;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Mode\UserMode;
 use PhpIrc\Irc\Client\Response\LusersResponseFactory;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
@@ -41,6 +42,7 @@ final class LusersResponseFactoryTest extends TestCase
         [$factory, $clients, $channels] = $this->factory();
         $john = $this->register($clients, 'John');
         $jane = $this->register($clients, 'Jane');
+        $jane->enableMode(UserMode::Invisible);
         $this->register($clients, null);
         $channels->join('#one', $john);
         $channels->join('#ONE', $jane);
@@ -50,7 +52,7 @@ final class LusersResponseFactoryTest extends TestCase
 
         $this->assertSame(['251', '253', '254', '255'], array_column($responses, 'command'));
         $this->assertSame(
-            ['John', 'There are 2 users and 0 invisible on 1 servers'],
+            ['John', 'There are 1 users and 1 invisible on 1 servers'],
             $responses[0]->parameters,
         );
         $this->assertSame(['John', '1', 'unknown connection(s)'], $responses[1]->parameters);

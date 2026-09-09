@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client;
 
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Mode\UserMode;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -69,5 +70,20 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($client->completeRegistrationIfReady());
         $this->assertFalse($client->registration->isComplete());
+    }
+
+    #[Test]
+    public function it_manages_user_modes_idempotently(): void
+    {
+        $client = new Client();
+
+        $this->assertTrue($client->enableMode(UserMode::Invisible));
+        $this->assertFalse($client->enableMode(UserMode::Invisible));
+        $this->assertTrue($client->hasMode(UserMode::Invisible));
+        $this->assertSame([UserMode::Invisible], $client->modes());
+        $this->assertTrue($client->disableMode(UserMode::Invisible));
+        $this->assertFalse($client->disableMode(UserMode::Invisible));
+        $this->assertFalse($client->hasMode(UserMode::Invisible));
+        $this->assertSame([], $client->modes());
     }
 }

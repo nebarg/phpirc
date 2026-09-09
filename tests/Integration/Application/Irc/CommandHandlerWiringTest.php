@@ -344,10 +344,10 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     }
 
     #[Test]
-    public function it_handles_a_raw_user_mode_query(): void
+    public function it_handles_raw_user_mode_changes_and_queries(): void
     {
         $socket = new FakeClientSocket([
-            "NICK John\r\nUSER john 0 * :John Doe\r\nMODE john\r\n",
+            "NICK John\r\nUSER john 0 * :John Doe\r\nMODE john +i\r\nMODE john\r\n",
         ]);
         $config = $this->container->get(ServerConfig::class);
         $serverName = $config->serverName->value;
@@ -360,7 +360,8 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->assertSame(
             [
                 ...$this->registrationWrites($config),
-                ":{$serverName} 221 John +\r\n",
+                ":John MODE John +i\r\n",
+                ":{$serverName} 221 John +i\r\n",
             ],
             $socket->writes,
         );
@@ -588,7 +589,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 001 John :Welcome to the {$config->networkName} Network, John\r\n",
             ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
-            ":{$serverName} 004 John {$serverName} {$config->softwareVersion} - mntov\r\n",
+            ":{$serverName} 004 John {$serverName} {$config->softwareVersion} i mntov\r\n",
             ":{$serverName} 005 John CASEMAPPING=ascii CHANMODES=,,,mnt CHANTYPES=# CHANNELLEN=64 HOSTLEN=63 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ TOPICLEN=307 USERLEN=18 :are supported by this server\r\n",
             ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
             ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",

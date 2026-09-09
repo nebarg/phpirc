@@ -54,7 +54,7 @@ final readonly class NamesHandler implements CommandHandler
             }
 
             $context->connection->sendMany(
-                $this->namesResponses->createNamesResponses($target, $channel),
+                $this->namesResponses->createNamesResponses($target, $context->client, $channel),
             );
         }
     }

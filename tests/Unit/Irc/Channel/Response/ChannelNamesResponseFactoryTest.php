@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Channel\Response;
 
 use PhpIrc\Irc\Channel\Channel;
+use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageSize;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
@@ -28,7 +31,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         $channel->join($john);
         $channel->join($jane)->grant(MembershipMode::Voice);
 
-        $messages = $this->factory()->createNamesResponses('Jane', $channel);
+        $messages = $this->factory()->createNamesResponses('Jane', $jane, $channel);
 
         $this->assertCount(2, $messages);
         $this->assertSame('irc.test', $messages[0]->source);
@@ -72,7 +75,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
             $expectedNames[] = $membership->highestPrefix() . $nickname;
         }
 
-        $messages = $this->factory()->createNamesResponses('John', $channel);
+        $messages = $this->factory()->createNamesResponses('John', new Client(), $channel);
         $endOfNames = array_pop($messages);
         $actualNames = [];
         $encoder = new MessageEncoder();
@@ -94,6 +97,7 @@ final class ChannelNamesResponseFactoryTest extends TestCase
         return new ChannelNamesResponseFactory(
             new NumericResponseFactory(new ServerName('irc.test')),
             new MessageSize(new MessageEncoder()),
+            new ClientVisibilityPolicy(new ChannelRegistry(new AsciiCaseMapper())),
         );
     }
 }

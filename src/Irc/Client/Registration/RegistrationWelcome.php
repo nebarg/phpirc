@@ -59,7 +59,7 @@ final readonly class RegistrationWelcome
                 parameters: [
                     $this->config->serverName->value,
                     $this->config->softwareVersion,
-                    '-',
+                    'i',
                     'mntov',
                 ],
             ),

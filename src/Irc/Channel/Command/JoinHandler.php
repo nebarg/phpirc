@@ -71,7 +71,11 @@ final readonly class JoinHandler implements CommandHandler
             $context->connection->sendMany(
                 [
                     ...$this->topicResponses->createExistingTopicResponses($context->responseTarget(), $channel),
-                    ...$this->namesResponses->createNamesResponses($context->responseTarget(), $channel),
+                    ...$this->namesResponses->createNamesResponses(
+                        $context->responseTarget(),
+                        $context->client,
+                        $channel,
+                    ),
                 ],
             );
         }

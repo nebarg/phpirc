@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client;
 
+use PhpIrc\Irc\Client\Mode\UserMode;
 use PhpIrc\Irc\Client\Registration\ClientRegistration;
 
 final class Client
 {
+    /** @var array<string, UserMode> */
+    private array $modes = [];
+
     public private(set) ?string $nickname = null;
 
     public private(set) ?string $username = null;
@@ -50,5 +54,38 @@ final class Client
     public function setRealName(string $realName): void
     {
         $this->realName = $realName;
+    }
+
+    public function enableMode(UserMode $mode): bool
+    {
+        if ($this->hasMode($mode)) {
+            return false;
+        }
+
+        $this->modes[$mode->value] = $mode;
+
+        return true;
+    }
+
+    public function disableMode(UserMode $mode): bool
+    {
+        if (! $this->hasMode($mode)) {
+            return false;
+        }
+
+        unset($this->modes[$mode->value]);
+
+        return true;
+    }
+
+    public function hasMode(UserMode $mode): bool
+    {
+        return isset($this->modes[$mode->value]);
+    }
+
+    /** @return list<UserMode> */
+    public function modes(): array
+    {
+        return array_values($this->modes);
     }
 }

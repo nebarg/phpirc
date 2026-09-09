@@ -13,6 +13,7 @@ use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Channel\Response\ChannelTopicResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\ByteStringTruncator;
@@ -261,6 +262,7 @@ final class JoinHandlerTest extends TestCase
                 namesResponses: new ChannelNamesResponseFactory(
                     $responses,
                     new MessageSize(new MessageEncoder()),
+                    new ClientVisibilityPolicy($channels),
                 ),
                 topicResponses: new ChannelTopicResponseFactory($responses),
                 errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),

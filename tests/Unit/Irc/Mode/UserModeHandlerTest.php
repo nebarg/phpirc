@@ -6,6 +6,9 @@ namespace Tests\Unit\Irc\Mode;
 
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Mode\UserMode;
+use PhpIrc\Irc\Client\Mode\UserModeChanger;
+use PhpIrc\Irc\Client\Response\UserModeResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\UserModeHandler;
@@ -59,6 +62,21 @@ final class UserModeHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_returns_the_requesting_clients_enabled_modes(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $connection] = $this->register($clients, 'John');
+        $john->enableMode(UserMode::Invisible);
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'MODE', parameters: ['John']),
+        );
+
+        $this->assertResponse($connection, '221', ['John', '+i']);
+    }
+
+    #[Test]
     public function it_rejects_an_unknown_nickname(): void
     {
         [$handler, $clients] = $this->handler();
@@ -105,7 +123,7 @@ final class UserModeHandlerTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_unsupported_user_mode_changes(): void
+    public function it_applies_and_reports_an_invisible_mode_change(): void
     {
         [$handler, $clients] = $this->handler();
         [$john, $connection] = $this->register($clients, 'John');
@@ -115,7 +133,81 @@ final class UserModeHandlerTest extends TestCase
             new Message(command: 'MODE', parameters: ['John', '+i']),
         );
 
-        $this->assertResponse($connection, '501', ['John', 'Unknown MODE flag']);
+        $this->assertTrue($john->hasMode(UserMode::Invisible));
+        $this->assertMessage($connection, 'John', 'MODE', ['John', '+i']);
+    }
+
+    #[Test]
+    public function it_removes_and_reports_an_invisible_mode_change(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $connection] = $this->register($clients, 'John');
+        $john->enableMode(UserMode::Invisible);
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'MODE', parameters: ['John', '-i']),
+        );
+
+        $this->assertFalse($john->hasMode(UserMode::Invisible));
+        $this->assertMessage($connection, 'John', 'MODE', ['John', '-i']);
+    }
+
+    #[Test]
+    public function it_uses_the_clients_actual_nickname_in_a_mode_change(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $connection] = $this->register($clients, 'John');
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'MODE', parameters: ['jOhN', '+i']),
+        );
+
+        $this->assertMessage($connection, 'John', 'MODE', ['John', '+i']);
+    }
+
+    #[Test]
+    public function it_reports_unknown_modes_while_still_applying_supported_modes(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $connection] = $this->register($clients, 'John');
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'MODE', parameters: ['John', '+ix']),
+        );
+
+        $this->assertTrue($john->hasMode(UserMode::Invisible));
+        $this->assertCount(2, $connection->messages);
+        $this->assertMessage(
+            $connection,
+            'irc.test',
+            '501',
+            ['John', 'Unknown MODE flag'],
+        );
+        $this->assertMessage(
+            $connection,
+            'John',
+            'MODE',
+            ['John', '+i'],
+            index: 1,
+        );
+    }
+
+    #[Test]
+    public function it_does_not_report_a_mode_that_was_already_enabled(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $connection] = $this->register($clients, 'John');
+        $john->enableMode(UserMode::Invisible);
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'MODE', parameters: ['John', '+i']),
+        );
+
+        $this->assertSame([], $connection->messages);
     }
 
     #[Test]
@@ -141,8 +233,11 @@ final class UserModeHandlerTest extends TestCase
         return [
             new UserModeHandler(
                 clients: $clients,
-                numericResponses: $responses,
-                errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
+                modeChanger: new UserModeChanger(),
+                modeResponses: new UserModeResponseFactory(
+                    $responses,
+                    new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
+                ),
             ),
             $clients,
         ];
@@ -170,8 +265,19 @@ final class UserModeHandlerTest extends TestCase
         array $parameters,
     ): void {
         $this->assertCount(1, $connection->messages);
-        $this->assertSame('irc.test', $connection->messages[0]->source);
-        $this->assertSame($command, $connection->messages[0]->command);
-        $this->assertSame($parameters, $connection->messages[0]->parameters);
+        $this->assertMessage($connection, 'irc.test', $command, $parameters);
+    }
+
+    /** @param list<string> $parameters */
+    private function assertMessage(
+        RecordingConnection $connection,
+        string $source,
+        string $command,
+        array $parameters,
+        int $index = 0,
+    ): void {
+        $this->assertSame($source, $connection->messages[$index]->source);
+        $this->assertSame($command, $connection->messages[$index]->command);
+        $this->assertSame($parameters, $connection->messages[$index]->parameters);
     }
 }

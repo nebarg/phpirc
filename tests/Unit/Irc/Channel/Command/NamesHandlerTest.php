@@ -8,6 +8,8 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Command\NamesHandler;
 use PhpIrc\Irc\Channel\Response\ChannelNamesResponseFactory;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Mode\UserMode;
+use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
@@ -141,6 +143,51 @@ final class NamesHandlerTest extends TestCase
         $this->assertSame('#two', $connection->messages[4]->parameters[1]);
     }
 
+    #[Test]
+    public function it_hides_invisible_members_from_clients_outside_the_channel(): void
+    {
+        [$handler, $channels] = $this->handler();
+        $invisible = $this->client('Jane');
+        $invisible->enableMode(UserMode::Invisible);
+        $channels->join('#php', $invisible);
+        $channels->join('#php', $this->client('John'));
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $this->client('Outside')),
+            new Message(command: 'NAMES', parameters: ['#php']),
+        );
+
+        $this->assertResponse(
+            $connection,
+            '353',
+            ['Outside', '=', '#php', 'John'],
+        );
+    }
+
+    #[Test]
+    public function it_shows_invisible_members_to_other_channel_members(): void
+    {
+        [$handler, $channels] = $this->handler();
+        $invisible = $this->client('Jane');
+        $invisible->enableMode(UserMode::Invisible);
+        $requester = $this->client('John');
+        $channels->join('#php', $invisible);
+        $channels->join('#php', $requester);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $requester),
+            new Message(command: 'NAMES', parameters: ['#php']),
+        );
+
+        $this->assertResponse(
+            $connection,
+            '353',
+            ['John', '=', '#php', '@Jane John'],
+        );
+    }
+
     /** @return array{NamesHandler, ChannelRegistry} */
     private function handler(): array
     {
@@ -152,6 +199,7 @@ final class NamesHandlerTest extends TestCase
                 namesResponses: new ChannelNamesResponseFactory(
                     new NumericResponseFactory(new ServerName('irc.test')),
                     new MessageSize(new MessageEncoder()),
+                    new ClientVisibilityPolicy($channels),
                 ),
             ),
             $channels,

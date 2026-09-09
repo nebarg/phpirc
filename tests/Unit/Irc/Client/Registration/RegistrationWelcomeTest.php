@@ -35,7 +35,7 @@ final class RegistrationWelcomeTest extends TestCase
                 $this->response('001', ['John', 'Welcome to the TestNet Network, John']),
                 $this->response('002', ['John', 'Your host is irc.test, running version phpirc-test']),
                 $this->response('003', ['John', 'This server was created 2026-08-29T10:15:30+01:00']),
-                $this->response('004', ['John', 'irc.test', 'phpirc-test', '-', 'mntov']),
+                $this->response('004', ['John', 'irc.test', 'phpirc-test', 'i', 'mntov']),
                 $this->response(
                     '005',
                     [

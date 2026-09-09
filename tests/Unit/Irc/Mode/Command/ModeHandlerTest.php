@@ -13,6 +13,8 @@ use PhpIrc\Irc\Channel\Response\ChannelModeResponseFactory;
 use PhpIrc\Irc\Channel\Response\ChannelPermissionResponseFactory;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Mode\UserModeChanger;
+use PhpIrc\Irc\Client\Response\UserModeResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Mode\ChannelModeHandler;
@@ -136,7 +138,11 @@ final class ModeHandlerTest extends TestCase
                     channelAccess: new ChannelAccessPolicy(),
                     permissionResponses: new ChannelPermissionResponseFactory($errors),
                 ),
-                userModes: new UserModeHandler($clients, $responses, $errors),
+                userModes: new UserModeHandler(
+                    $clients,
+                    new UserModeChanger(),
+                    new UserModeResponseFactory($responses, $errors),
+                ),
                 errors: $errors,
                 targets: new TargetClassifier($channelTypes ?? new ChannelTypes()),
             ),
