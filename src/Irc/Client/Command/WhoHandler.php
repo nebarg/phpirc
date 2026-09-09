@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client\Command;
 
+use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Policy\ClientVisibilityPolicy;
@@ -11,7 +12,6 @@ use PhpIrc\Irc\Client\Response\WhoResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandHandler;
 use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 
 final readonly class WhoHandler implements CommandHandler
 {
@@ -20,7 +20,6 @@ final readonly class WhoHandler implements CommandHandler
         private ChannelRegistry $channels,
         private ClientVisibilityPolicy $visibility,
         private WhoResponseFactory $whoResponses,
-        private NumericErrorResponseFactory $errors,
     ) {}
 
     public function command(): string
@@ -31,48 +30,71 @@ final readonly class WhoHandler implements CommandHandler
     public function handle(CommandContext $context, Message $message): void
     {
         if ($message->isParameterMissingOrEmpty(0)) {
-            $context->connection->send(
-                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
-            );
-
+            $this->sendMissingMaskResponse($context);
             return;
         }
 
         $mask = $message->parameter(0);
+
+        $this->sendMatches($context, $mask);
+        $this->sendEndOfWhoResponse($context, $mask);
+    }
+
+    private function sendMissingMaskResponse(CommandContext $context): void
+    {
+        $context->connection->send(
+            $this->whoResponses->createMissingMaskResponse($context->responseTarget()),
+        );
+    }
+
+    private function sendMatches(CommandContext $context, string $mask): void
+    {
         $channel = $this->channels->find($mask);
 
         if ($channel !== null) {
-            foreach ($channel->members() as $membership) {
-                if (! $this->visibility->canSee($context->client, $membership->client)) {
-                    continue;
-                }
-
-                $context->connection->send(
-                    $this->whoResponses->createChannelMemberReply(
-                        target: $context->responseTarget(),
-                        channel: $channel,
-                        membership: $membership,
-                    ),
-                );
-            }
-
-            $this->sendEndOfWhoResponse($context, $mask);
-
+            $this->sendChannelMatches($context, $channel);
             return;
         }
 
-        $client = $this->clients->findByNickname($mask);
+        $this->sendNicknameMatch($context, $mask);
+    }
 
-        if ($client !== null && $client->registration->isComplete() && $this->visibility->canSee($context->client, $client)) {
+    private function sendChannelMatches(CommandContext $context, Channel $channel): void
+    {
+        foreach ($channel->members() as $membership) {
+            if (! $this->visibility->canSee($context->client, $membership->client)) {
+                continue;
+            }
+
             $context->connection->send(
-                $this->whoResponses->createClientReply(
+                $this->whoResponses->createChannelMemberReply(
                     target: $context->responseTarget(),
-                    client: $client,
+                    channel: $channel,
+                    membership: $membership,
                 ),
             );
         }
+    }
 
-        $this->sendEndOfWhoResponse($context, $mask);
+    private function sendNicknameMatch(CommandContext $context, string $nickname): void
+    {
+        $client = $this->clients->findByNickname($nickname);
+
+        // @mago-format-ignore-next
+        if (
+            $client === null
+            || ! $client->registration->isComplete()
+            || ! $this->visibility->canSee($context->client, $client)
+        ) {
+            return;
+        }
+
+        $context->connection->send(
+            $this->whoResponses->createClientReply(
+                target: $context->responseTarget(),
+                client: $client,
+            ),
+        );
     }
 
     private function sendEndOfWhoResponse(CommandContext $context, string $mask): void

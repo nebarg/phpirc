@@ -10,8 +10,10 @@ use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Response\WhoResponseFactory;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -76,6 +78,16 @@ final class WhoResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_creates_the_missing_mask_error(): void
+    {
+        $message = $this->factory()->createMissingMaskResponse('Jane');
+
+        $this->assertSame('irc.test', $message->source);
+        $this->assertSame('461', $message->command);
+        $this->assertSame(['Jane', 'WHO', 'Not enough parameters'], $message->parameters);
+    }
+
+    #[Test]
     public function it_creates_the_end_of_who_numeric(): void
     {
         $message = $this->factory()->createEndOfWhoResponse('Jane', '#php');
@@ -109,9 +121,12 @@ final class WhoResponseFactoryTest extends TestCase
     {
         $serverName ??= new ServerName('irc.test');
 
+        $responses = new NumericResponseFactory($serverName);
+
         return new WhoResponseFactory(
             serverName: $serverName,
-            responses: new NumericResponseFactory($serverName),
+            responses: $responses,
+            errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
         );
     }
 

@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\Membership;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\ResponseCode;
 
@@ -17,7 +18,13 @@ final readonly class WhoResponseFactory
     public function __construct(
         private ServerName $serverName,
         private NumericResponseFactory $responses,
+        private NumericErrorResponseFactory $errors,
     ) {}
+
+    public function createMissingMaskResponse(string $target): Message
+    {
+        return $this->errors->needMoreParameters($target, 'WHO');
+    }
 
     public function createClientReply(string $target, Client $client): Message
     {
@@ -42,6 +49,15 @@ final readonly class WhoResponseFactory
         );
     }
 
+    public function createEndOfWhoResponse(string $target, string $mask): Message
+    {
+        return $this->responses->create(
+            code: ResponseCode::EndOfWho,
+            target: $target,
+            parameters: [$mask],
+        );
+    }
+
     private function createReply(
         string $target,
         Client $client,
@@ -60,15 +76,6 @@ final readonly class WhoResponseFactory
                 'H' . $membershipPrefix,
             ],
             text: '0 ' . ($client->realName ?? ''),
-        );
-    }
-
-    public function createEndOfWhoResponse(string $target, string $mask): Message
-    {
-        return $this->responses->create(
-            code: ResponseCode::EndOfWho,
-            target: $target,
-            parameters: [$mask],
         );
     }
 }

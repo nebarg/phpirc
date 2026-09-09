@@ -286,8 +286,11 @@ final class WhoHandlerTest extends TestCase
                 clients: $clients,
                 channels: $channels,
                 visibility: new ClientVisibilityPolicy($channels),
-                whoResponses: new WhoResponseFactory($serverName, $responses),
-                errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
+                whoResponses: new WhoResponseFactory(
+                    $serverName,
+                    $responses,
+                    new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
+                ),
             ),
             $clients,
             $channels,
