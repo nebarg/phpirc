@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Channel\Command;
 
+use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\ChannelBroadcaster;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Command\CommandContext;
@@ -27,49 +28,75 @@ final readonly class PartHandler implements CommandHandler
     public function handle(CommandContext $context, Message $message): void
     {
         if ($message->isParameterMissingOrEmpty(0)) {
-            $context->connection->send(
-                $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
-            );
-
+            $this->sendMissingParametersResponse($context);
             return;
         }
 
-        $channels = $message->parameter(0);
-        $leavingMessage = $message->optionalParameter(1);
+        $reason = $message->optionalParameter(1);
 
-        foreach (explode(',', $channels) as $channelName) {
-            $channel = $this->channels->find($channelName);
-
-            if ($channel === null) {
-                $context->connection->send(
-                    $this->errors->noSuchChannel($context->responseTarget(), $channelName),
-                );
-
-                continue;
-            }
-
-            if (! $channel->hasMember($context->client)) {
-                $context->connection->send(
-                    $this->errors->notOnChannel($context->responseTarget(), $channel->name),
-                );
-
-                continue;
-            }
-
-            $params = $leavingMessage
-                ? [$channel->name, $leavingMessage]
-                : [$channel->name];
-
-            $this->broadcaster->broadcast(
-                $channel,
-                new Message(
-                    command: $this->command(),
-                    parameters: $params,
-                    source: $context->actorNickname(),
-                ),
-            );
-
-            $this->channels->leave($channel, $context->client);
+        foreach (explode(',', $message->parameter(0)) as $channelName) {
+            $this->leaveChannel($context, $channelName, $reason);
         }
+    }
+
+    private function sendMissingParametersResponse(CommandContext $context): void
+    {
+        $context->connection->send(
+            $this->errors->needMoreParameters($context->responseTarget(), $this->command()),
+        );
+    }
+
+    private function leaveChannel(
+        CommandContext $context,
+        string $channelName,
+        ?string $reason,
+    ): void {
+        $channel = $this->channels->find($channelName);
+
+        if ($channel === null) {
+            $this->sendUnknownChannelResponse($context, $channelName);
+            return;
+        }
+
+        if (! $channel->hasMember($context->client)) {
+            $this->sendNotOnChannelResponse($context, $channel);
+            return;
+        }
+
+        $this->broadcastPart($context, $channel, $reason);
+        $this->channels->leave($channel, $context->client);
+    }
+
+    private function sendUnknownChannelResponse(CommandContext $context, string $channelName): void
+    {
+        $context->connection->send(
+            $this->errors->noSuchChannel($context->responseTarget(), $channelName),
+        );
+    }
+
+    private function sendNotOnChannelResponse(CommandContext $context, Channel $channel): void
+    {
+        $context->connection->send(
+            $this->errors->notOnChannel($context->responseTarget(), $channel->name),
+        );
+    }
+
+    private function broadcastPart(
+        CommandContext $context,
+        Channel $channel,
+        ?string $reason,
+    ): void {
+        $parameters = $reason
+            ? [$channel->name, $reason]
+            : [$channel->name];
+
+        $this->broadcaster->broadcast(
+            $channel,
+            new Message(
+                command: $this->command(),
+                parameters: $parameters,
+                source: $context->actorNickname(),
+            ),
+        );
     }
 }
