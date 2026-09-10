@@ -32,8 +32,6 @@ final readonly class PrivmsgHandler implements CommandHandler
             return;
         }
 
-        $targets = $message->parameter(0);
-
         if ($message->isParameterMissingOrEmpty(1)) {
             $context->connection->send(
                 $this->privmsgResponses->createMissingTextResponse($context->responseTarget()),
@@ -45,7 +43,7 @@ final readonly class PrivmsgHandler implements CommandHandler
         $failures = $this->delivery->deliver(
             sender: $context->client,
             command: $this->command(),
-            targets: $targets,
+            targets: $message->parameter(0),
             text: $message->parameter(1),
         );
 
