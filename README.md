@@ -16,6 +16,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Client and server `PING`/`PONG`, including stale-connection timeouts
 - [x] Per-client command-rate limits and excess-flood disconnections
 - [x] Per-client bounded outbound queues and slow-client disconnections
+- [x] Graceful `SIGINT`/`SIGTERM` shutdown with client notification and connection draining
 - [x] Joining and leaving channels with `JOIN` and `PART`
 - [x] Channel member lists with `NAMES`, including operator prefixes
 - [x] Channel discovery with `LIST`
