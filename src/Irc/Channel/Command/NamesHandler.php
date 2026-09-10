@@ -24,38 +24,41 @@ final readonly class NamesHandler implements CommandHandler
 
     public function handle(CommandContext $context, Message $message): void
     {
-        $target = $context->responseTarget();
-
         if ($message->isParameterMissingOrEmpty(0)) {
-            $context->connection->send(
-                $this->namesResponses->createEndOfNamesResponse(
-                    target: $target,
-                    channelName: '*',
-                ),
-            );
-
+            $this->sendEndOfNamesResponse($context, '*');
             return;
         }
 
-        $channels = $message->parameter(0);
-
-        foreach (explode(',', $channels) as $channelName) {
-            $channel = $this->channels->find($channelName);
-
-            if ($channel === null) {
-                $context->connection->send(
-                    $this->namesResponses->createEndOfNamesResponse(
-                        target: $target,
-                        channelName: $channelName === '' ? '*' : $channelName,
-                    ),
-                );
-
-                continue;
-            }
-
-            $context->connection->sendMany(
-                $this->namesResponses->createNamesResponses($target, $context->client, $channel),
-            );
+        foreach (explode(',', $message->parameter(0)) as $channelName) {
+            $this->sendNamesForChannel($context, $channelName);
         }
+    }
+
+    private function sendNamesForChannel(CommandContext $context, string $channelName): void
+    {
+        $channel = $this->channels->find($channelName);
+
+        if ($channel === null) {
+            $this->sendEndOfNamesResponse($context, $channelName === '' ? '*' : $channelName);
+            return;
+        }
+
+        $context->connection->sendMany(
+            $this->namesResponses->createNamesResponses(
+                $context->responseTarget(),
+                $context->client,
+                $channel,
+            ),
+        );
+    }
+
+    private function sendEndOfNamesResponse(CommandContext $context, string $channelName): void
+    {
+        $context->connection->send(
+            $this->namesResponses->createEndOfNamesResponse(
+                target: $context->responseTarget(),
+                channelName: $channelName,
+            ),
+        );
     }
 }
