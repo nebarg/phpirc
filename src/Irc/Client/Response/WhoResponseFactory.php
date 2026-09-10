@@ -73,7 +73,7 @@ final readonly class WhoResponseFactory
                 $client->hostname,
                 $this->serverName->value,
                 $client->nickname ?? '*',
-                'H' . $membershipPrefix,
+                ($client->isAway() ? 'G' : 'H') . $membershipPrefix,
             ],
             text: '0 ' . ($client->realName ?? ''),
         );

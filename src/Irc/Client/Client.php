@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Client;
 
+use InvalidArgumentException;
 use PhpIrc\Irc\Client\Mode\UserMode;
 use PhpIrc\Irc\Client\Registration\ClientRegistration;
 
@@ -17,6 +18,8 @@ final class Client
     public private(set) ?string $username = null;
 
     public private(set) ?string $realName = null;
+
+    public private(set) ?string $awayMessage = null;
 
     public private(set) ClientRegistration $registration;
 
@@ -54,6 +57,25 @@ final class Client
     public function setRealName(string $realName): void
     {
         $this->realName = $realName;
+    }
+
+    public function markAway(string $message): void
+    {
+        if ($message === '') {
+            throw new InvalidArgumentException('Away message cannot be empty.');
+        }
+
+        $this->awayMessage = $message;
+    }
+
+    public function markPresent(): void
+    {
+        $this->awayMessage = null;
+    }
+
+    public function isAway(): bool
+    {
+        return $this->awayMessage !== null;
     }
 
     public function enableMode(UserMode $mode): bool

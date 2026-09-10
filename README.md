@@ -22,6 +22,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Channel discovery with `LIST`
 - [x] Basic `WHO` queries for exact nicknames and channel members
 - [x] User information and channel membership queries with `WHOIS`
+- [x] Away status with `AWAY`, including `WHO`, `WHOIS` and direct-message replies
 - [x] Current user, connection and channel counts with `LUSERS`
 - [x] User and channel `MODE` queries
 - [x] Invisible user mode changes with `+i` and `-i`, including visibility-aware `WHO` and `NAMES`

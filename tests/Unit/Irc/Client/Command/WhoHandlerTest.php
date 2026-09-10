@@ -100,6 +100,27 @@ final class WhoHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_marks_an_away_client_as_gone(): void
+    {
+        [$handler, $clients] = $this->handler();
+        $john = $this->client('John');
+        $john->markAway('Gone for lunch');
+        $this->register($clients, $john);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $john),
+            new Message(command: 'WHO', parameters: ['John']),
+        );
+
+        $this->assertResponse(
+            connection: $connection,
+            command: '352',
+            parameters: ['John', '*', 'john', '203.0.113.10', 'irc.test', 'John', 'G', '0 John Doe'],
+        );
+    }
+
+    #[Test]
     public function it_lists_an_existing_channels_members(): void
     {
         [$handler, $clients, $channels] = $this->handler();

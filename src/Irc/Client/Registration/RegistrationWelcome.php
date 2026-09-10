@@ -70,6 +70,7 @@ final readonly class RegistrationWelcome
                 code: ResponseCode::ISupport,
                 target: $nickname,
                 parameters: [
+                    'AWAYLEN=' . ServerLimits::MAX_AWAY_MESSAGE_BYTES,
                     'CASEMAPPING=' . $this->caseMapper->name(),
                     'CHANMODES=,,,mnt',
                     'CHANTYPES=' . $this->channelTypes->prefixes,

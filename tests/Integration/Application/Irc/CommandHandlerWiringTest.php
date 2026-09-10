@@ -12,6 +12,7 @@ use PhpIrc\Irc\Channel\Command\NamesHandler;
 use PhpIrc\Irc\Channel\Command\PartHandler;
 use PhpIrc\Irc\Channel\Command\TopicHandler;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Command\AwayHandler;
 use PhpIrc\Irc\Client\Command\CapHandler;
 use PhpIrc\Irc\Client\Command\LusersHandler;
 use PhpIrc\Irc\Client\Command\MotdHandler;
@@ -27,6 +28,7 @@ use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\CommandDispatcher;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\NoticeHandler;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
@@ -61,6 +63,7 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ->all();
 
         $this->assertContains(PingHandler::class, $handlers);
+        $this->assertContains(AwayHandler::class, $handlers);
         $this->assertContains(PongHandler::class, $handlers);
         $this->assertContains(QuitHandler::class, $handlers);
         $this->assertContains(NickHandler::class, $handlers);
@@ -209,6 +212,30 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     }
 
     #[Test]
+    public function it_handles_raw_away_status_changes_after_registration(): void
+    {
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\nAWAY :Gone for lunch\r\nAWAY\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ...$this->registrationWrites($config),
+                ":{$serverName} 306 John :You have been marked as being away\r\n",
+                ":{$serverName} 305 John :You are no longer marked as being away\r\n",
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
     public function it_handles_a_raw_quit_and_stops_dispatching_messages(): void
     {
         $socket = new FakeClientSocket([
@@ -235,13 +262,14 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     private function registrationWrites(ServerConfig $config): array
     {
         $serverName = $config->serverName->value;
+        $awayLength = ServerLimits::MAX_AWAY_MESSAGE_BYTES;
 
         return [
             ":{$serverName} 001 John :Welcome to the {$config->networkName} Network, John\r\n",
             ":{$serverName} 002 John :Your host is {$serverName}, running version {$config->softwareVersion}\r\n",
             ":{$serverName} 003 John :This server was created {$config->startedAt->format(\DateTimeInterface::ATOM)}\r\n",
             ":{$serverName} 004 John {$serverName} {$config->softwareVersion} i mntov\r\n",
-            ":{$serverName} 005 John CASEMAPPING=ascii CHANMODES=,,,mnt CHANTYPES=# CHANNELLEN=64 HOSTLEN=63 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ TOPICLEN=307 USERLEN=18 :are supported by this server\r\n",
+            ":{$serverName} 005 John AWAYLEN={$awayLength} CASEMAPPING=ascii CHANMODES=,,,mnt CHANTYPES=# CHANNELLEN=64 HOSTLEN=63 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ TOPICLEN=307 USERLEN=18 :are supported by this server\r\n",
             ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
             ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
             ...$this->motdWrites($config, 'John'),

@@ -34,20 +34,66 @@ final class MessageDeliveryTest extends TestCase
         [$john] = $this->connectedClient('John', $clients);
         [, $janeConnection] = $this->connectedClient('Jane', $clients);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'NOTICE',
             targets: 'jAnE',
             text: 'Hello Jane',
         );
 
-        $this->assertSame([], $failures);
+        $this->assertSame([], $report->failures);
+        $this->assertSame([], $report->awayRecipients);
         $this->assertDeliveredMessage(
             $janeConnection,
             command: 'NOTICE',
             target: 'Jane',
             text: 'Hello Jane',
         );
+    }
+
+    #[Test]
+    public function it_reports_an_away_recipient_after_delivering_a_direct_message(): void
+    {
+        [$delivery, $clients] = $this->delivery();
+        [$john] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $jane->markAway('Gone for lunch');
+
+        $report = $delivery->deliver(
+            sender: $john,
+            command: 'PRIVMSG',
+            targets: 'Jane',
+            text: 'Hello Jane',
+        );
+
+        $this->assertSame([], $report->failures);
+        $this->assertSame([$jane], $report->awayRecipients);
+        $this->assertDeliveredMessage(
+            $janeConnection,
+            command: 'PRIVMSG',
+            target: 'Jane',
+            text: 'Hello Jane',
+        );
+    }
+
+    #[Test]
+    public function it_does_not_report_away_channel_members(): void
+    {
+        [$delivery, $clients, $channels] = $this->delivery();
+        [$john] = $this->connectedClient('John', $clients);
+        [$jane] = $this->connectedClient('Jane', $clients);
+        $jane->markAway('Gone for lunch');
+        $channels->join('#php', $john);
+        $channels->join('#php', $jane);
+
+        $report = $delivery->deliver(
+            sender: $john,
+            command: 'PRIVMSG',
+            targets: '#php',
+            text: 'Hello channel',
+        );
+
+        $this->assertSame([], $report->awayRecipients);
     }
 
     #[Test]
@@ -59,14 +105,15 @@ final class MessageDeliveryTest extends TestCase
         $channels->join('#PHP', $john);
         $channels->join('#php', $jane);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#php',
             text: 'Hello channel',
         );
 
-        $this->assertSame([], $failures);
+        $this->assertSame([], $report->failures);
+        $this->assertSame([], $report->awayRecipients);
         $this->assertSame([], $johnConnection->messages);
         $this->assertDeliveredMessage(
             $janeConnection,
@@ -83,18 +130,18 @@ final class MessageDeliveryTest extends TestCase
         [$john] = $this->connectedClient('John', $clients);
         [, $janeConnection] = $this->connectedClient('Jane', $clients);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: 'Missing,Jane,',
             text: 'Hello targets',
         );
 
-        $this->assertCount(2, $failures);
-        $this->assertSame('Missing', $failures[0]->target);
-        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $failures[0]->reason);
-        $this->assertSame('', $failures[1]->target);
-        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $failures[1]->reason);
+        $this->assertCount(2, $report->failures);
+        $this->assertSame('Missing', $report->failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $report->failures[0]->reason);
+        $this->assertSame('', $report->failures[1]->target);
+        $this->assertSame(MessageDeliveryFailureReason::NoSuchNickname, $report->failures[1]->reason);
         $this->assertDeliveredMessage(
             $janeConnection,
             command: 'PRIVMSG',
@@ -110,16 +157,16 @@ final class MessageDeliveryTest extends TestCase
         [$john] = $this->connectedClient('John', $clients);
         [, $invalidNicknameConnection] = $this->connectedClient('#missing', $clients);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#missing',
             text: 'Hello target',
         );
 
-        $this->assertCount(1, $failures);
-        $this->assertSame('#missing', $failures[0]->target);
-        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
+        $this->assertCount(1, $report->failures);
+        $this->assertSame('#missing', $report->failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $report->failures[0]->reason);
         $this->assertSame([], $invalidNicknameConnection->messages);
     }
 
@@ -131,16 +178,16 @@ final class MessageDeliveryTest extends TestCase
         [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
         $channels->join('#PHP', $jane);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#php',
             text: 'Hello channel',
         );
 
-        $this->assertCount(1, $failures);
-        $this->assertSame('#PHP', $failures[0]->target);
-        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
+        $this->assertCount(1, $report->failures);
+        $this->assertSame('#PHP', $report->failures[0]->target);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $report->failures[0]->reason);
         $this->assertSame([], $janeConnection->messages);
     }
 
@@ -153,14 +200,14 @@ final class MessageDeliveryTest extends TestCase
         $channel = $channels->join('#php', $jane);
         $channel->disableMode(ChannelMode::NoExternalMessages);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $john,
             command: 'PRIVMSG',
             targets: '#PHP',
             text: 'Hello channel',
         );
 
-        $this->assertSame([], $failures);
+        $this->assertSame([], $report->failures);
         $this->assertDeliveredMessage($janeConnection, 'PRIVMSG', '#php', 'Hello channel');
     }
 
@@ -180,12 +227,12 @@ final class MessageDeliveryTest extends TestCase
         $voicedMembership->grant(MembershipMode::Voice);
         $channel->enableMode(ChannelMode::Moderated);
 
-        $failures = $delivery->deliver($member, 'PRIVMSG', '#php', 'Blocked');
-        $successful = $delivery->deliver($voiced, 'PRIVMSG', '#php', 'Allowed');
+        $failedReport = $delivery->deliver($member, 'PRIVMSG', '#php', 'Blocked');
+        $successfulReport = $delivery->deliver($voiced, 'PRIVMSG', '#php', 'Allowed');
 
-        $this->assertCount(1, $failures);
-        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failures[0]->reason);
-        $this->assertSame([], $successful);
+        $this->assertCount(1, $failedReport->failures);
+        $this->assertSame(MessageDeliveryFailureReason::CannotSendToChannel, $failedReport->failures[0]->reason);
+        $this->assertSame([], $successfulReport->failures);
         $this->assertDeliveredMessage($recipientConnection, 'PRIVMSG', '#php', 'Allowed', source: 'Fred');
     }
 
@@ -223,14 +270,14 @@ final class MessageDeliveryTest extends TestCase
         );
         $text = str_repeat('Long notice message ', 30);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $sender,
             command: 'NOTICE',
             targets: str_repeat('r', ServerLimits::MAX_NICKNAME_BYTES),
             text: $text,
         );
 
-        $this->assertSame([], $failures);
+        $this->assertSame([], $report->failures);
         $this->assertCount(1, $recipientConnection->messages);
         $this->assertSame(MessageSize::MAX_BYTES, $this->messageSize()->inBytes($recipientConnection->messages[0]));
         $this->assertLessThan(strlen($text), strlen($recipientConnection->messages[0]->parameter(1)));
@@ -247,14 +294,14 @@ final class MessageDeliveryTest extends TestCase
         $channels->join($channelName, $recipient);
         $text = str_repeat('Long channel message ', 30);
 
-        $failures = $delivery->deliver(
+        $report = $delivery->deliver(
             sender: $sender,
             command: 'PRIVMSG',
             targets: $channelName,
             text: $text,
         );
 
-        $this->assertSame([], $failures);
+        $this->assertSame([], $report->failures);
         $this->assertCount(1, $recipientConnection->messages);
         $this->assertSame(MessageSize::MAX_BYTES, $this->messageSize()->inBytes($recipientConnection->messages[0]));
         $this->assertLessThan(strlen($text), strlen($recipientConnection->messages[0]->parameter(1)));

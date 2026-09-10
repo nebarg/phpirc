@@ -26,29 +26,29 @@ final readonly class MessageDelivery
         private MessageTextLimiter $messageText,
     ) {}
 
-    /** @return list<MessageDeliveryFailure> */
     public function deliver(
         Client $sender,
         string $command,
         string $targets,
         string $text,
-    ): array {
+    ): MessageDeliveryReport {
         $failures = [];
+        $awayRecipients = [];
 
         foreach (explode(',', $targets) as $target) {
-            $failure = match ($this->targets->classify($target)) {
+            $report = match ($this->targets->classify($target)) {
                 TargetType::Channel => $this->deliverToChannel($sender, $command, $target, $text),
                 TargetType::Nickname => $this->deliverToClient($sender, $command, $target, $text),
             };
 
-            if ($failure === null) {
-                continue;
-            }
-
-            $failures[] = $failure;
+            array_push($failures, ...$report->failures);
+            array_push($awayRecipients, ...$report->awayRecipients);
         }
 
-        return $failures;
+        return new MessageDeliveryReport(
+            failures: $failures,
+            awayRecipients: $awayRecipients,
+        );
     }
 
     private function deliverToChannel(
@@ -56,15 +56,19 @@ final readonly class MessageDelivery
         string $command,
         string $target,
         string $text,
-    ): ?MessageDeliveryFailure {
+    ): MessageDeliveryReport {
         $channel = $this->channels->find($target);
 
         if ($channel === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::CannotSendToChannel);
+            return new MessageDeliveryReport(failures: [
+                new MessageDeliveryFailure($target, MessageDeliveryFailureReason::CannotSendToChannel),
+            ]);
         }
 
         if ($this->channelAccess->canSendMessage($channel, $sender) !== ChannelPermission::Allowed) {
-            return new MessageDeliveryFailure($channel->name, MessageDeliveryFailureReason::CannotSendToChannel);
+            return new MessageDeliveryReport(failures: [
+                new MessageDeliveryFailure($channel->name, MessageDeliveryFailureReason::CannotSendToChannel),
+            ]);
         }
 
         $this->broadcaster->broadcastExcept(
@@ -73,7 +77,7 @@ final readonly class MessageDelivery
             $sender,
         );
 
-        return null;
+        return new MessageDeliveryReport();
     }
 
     private function deliverToClient(
@@ -81,24 +85,30 @@ final readonly class MessageDelivery
         string $command,
         string $target,
         string $text,
-    ): ?MessageDeliveryFailure {
+    ): MessageDeliveryReport {
         $recipient = $this->clients->findByNickname($target);
 
         if ($recipient === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname);
+            return new MessageDeliveryReport(failures: [
+                new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname),
+            ]);
         }
 
         $connection = $this->clients->connectionFor($recipient);
 
         if ($connection === null) {
-            return new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname);
+            return new MessageDeliveryReport(failures: [
+                new MessageDeliveryFailure($target, MessageDeliveryFailureReason::NoSuchNickname),
+            ]);
         }
 
         $connection->send(
             $this->createMessage($sender, $command, $recipient->nickname ?? $target, $text),
         );
 
-        return null;
+        return new MessageDeliveryReport(
+            awayRecipients: $recipient->isAway() ? [$recipient] : [],
+        );
     }
 
     private function createMessage(Client $sender, string $command, string $target, string $text): Message

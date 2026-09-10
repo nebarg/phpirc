@@ -15,10 +15,15 @@ final class ServerLimitsTest extends TestCase
     public function it_truncates_server_state_to_its_byte_limits(): void
     {
         $limits = $this->limits();
+        $awayMessageBytes = max(0, ServerLimits::MAX_AWAY_MESSAGE_BYTES);
 
         $this->assertSame(
             str_repeat('t', ServerLimits::MAX_TOPIC_BYTES),
             $limits->truncateTopic(str_repeat('t', ServerLimits::MAX_TOPIC_BYTES + 1)),
+        );
+        $this->assertSame(
+            str_repeat('a', $awayMessageBytes),
+            $limits->truncateAwayMessage(str_repeat('a', $awayMessageBytes + 1)),
         );
         $this->assertSame(
             str_repeat('u', ServerLimits::MAX_USERNAME_BYTES),
@@ -51,6 +56,7 @@ final class ServerLimitsTest extends TestCase
         $limits = $this->limits();
 
         $this->assertSame('A topic', $limits->truncateTopic('A topic'));
+        $this->assertSame('Gone for lunch', $limits->truncateAwayMessage('Gone for lunch'));
         $this->assertSame('john', $limits->truncateUsername('john'));
         $this->assertSame('203.0.113.10', $limits->truncateHostname('203.0.113.10'));
         $this->assertSame('John Doe', $limits->truncateRealName('John Doe'));

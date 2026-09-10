@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Message\Response;
 
+use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Response\AwayResponseFactory;
 use PhpIrc\Irc\Message\MessageDeliveryFailure;
 use PhpIrc\Irc\Message\MessageDeliveryFailureReason;
 use PhpIrc\Irc\Protocol\Message;
@@ -13,6 +15,7 @@ final readonly class PrivmsgResponseFactory
 {
     public function __construct(
         private NumericErrorResponseFactory $errors,
+        private AwayResponseFactory $awayResponses,
     ) {}
 
     public function createMissingRecipientResponse(string $target): Message
@@ -34,5 +37,10 @@ final readonly class PrivmsgResponseFactory
                 $failure->target,
             ),
         };
+    }
+
+    public function createRecipientAwayResponse(string $target, Client $recipient): Message
+    {
+        return $this->awayResponses->createClientIsAwayResponse($target, $recipient);
     }
 }

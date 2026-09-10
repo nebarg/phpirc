@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Client;
 
+use InvalidArgumentException;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\Mode\UserMode;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -85,5 +86,35 @@ final class ClientTest extends TestCase
         $this->assertFalse($client->disableMode(UserMode::Invisible));
         $this->assertFalse($client->hasMode(UserMode::Invisible));
         $this->assertSame([], $client->modes());
+    }
+
+    #[Test]
+    public function it_tracks_when_the_client_is_away_and_present(): void
+    {
+        $client = new Client();
+
+        $client->markAway('Gone for lunch');
+
+        $this->assertTrue($client->isAway());
+        $this->assertSame('Gone for lunch', $client->awayMessage);
+
+        $client->markPresent();
+
+        $this->assertFalse($client->isAway());
+        $this->assertNull($this->awayMessage($client));
+    }
+
+    #[Test]
+    public function it_does_not_allow_an_empty_away_message(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Away message cannot be empty.');
+
+        new Client()->markAway('');
+    }
+
+    private function awayMessage(Client $client): ?string
+    {
+        return $client->awayMessage;
     }
 }

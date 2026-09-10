@@ -16,6 +16,9 @@ enum ResponseCode: string
     case LuserUnknown = '253';
     case LuserChannels = '254';
     case LuserMe = '255';
+    case Away = '301';
+    case Unaway = '305';
+    case NowAway = '306';
     case WhoisUser = '311';
     case WhoisServer = '312';
     case EndOfWho = '315';
@@ -70,9 +73,13 @@ enum ResponseCode: string
             self::UserModeIs, self::ChannelModeIs, self::ChannelCreationTime => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::LuserClient, self::LuserMe => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::Away => null,
             self::ISupport => 'are supported by this server',
             self::LuserUnknown => 'unknown connection(s)',
             self::LuserChannels => 'channels formed',
+            self::Unaway => 'You are no longer marked as being away',
+            self::NowAway => 'You have been marked as being away',
             self::EndOfWho => 'End of WHO list',
             self::EndOfWhois => 'End of /WHOIS list',
             self::ListStart => 'Users  Name',

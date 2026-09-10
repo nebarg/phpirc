@@ -24,6 +24,9 @@ final class ResponseCodeTest extends TestCase
         yield 'LUSERS unknown connections' => [ResponseCode::LuserUnknown, 'unknown connection(s)'];
         yield 'LUSERS channels' => [ResponseCode::LuserChannels, 'channels formed'];
         yield 'LUSERS local clients' => [ResponseCode::LuserMe, null];
+        yield 'away client' => [ResponseCode::Away, null];
+        yield 'no longer away' => [ResponseCode::Unaway, 'You are no longer marked as being away'];
+        yield 'now away' => [ResponseCode::NowAway, 'You have been marked as being away'];
         yield 'WHOIS user' => [ResponseCode::WhoisUser, null];
         yield 'WHOIS server' => [ResponseCode::WhoisServer, null];
         yield 'end of WHO' => [ResponseCode::EndOfWho, 'End of WHO list'];

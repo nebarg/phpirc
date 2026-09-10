@@ -8,6 +8,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\WhoisHandler;
+use PhpIrc\Irc\Client\Response\AwayResponseFactory;
 use PhpIrc\Irc\Client\Response\WhoisResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
@@ -17,6 +18,7 @@ use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -173,6 +175,29 @@ final class WhoisHandlerTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_includes_the_clients_away_message(): void
+    {
+        [$handler, $clients] = $this->handler();
+        $john = $this->client('John');
+        $john->markAway('Gone for lunch');
+        $this->register($clients, $john);
+        $connection = new RecordingConnection();
+
+        $handler->handle(
+            new CommandContext($connection, $this->client('Jane')),
+            new Message(command: 'WHOIS', parameters: ['John']),
+        );
+
+        $this->assertCount(4, $connection->messages);
+        $this->assertResponse(
+            $connection,
+            '301',
+            ['Jane', 'John', 'Gone for lunch'],
+            2,
+        );
+    }
+
     /** @return array{WhoisHandler, ClientRegistry, ChannelRegistry} */
     private function handler(): array
     {
@@ -195,6 +220,13 @@ final class WhoisHandlerTest extends TestCase
                     config: $config,
                     responses: $responses,
                     messageSize: new MessageSize(new MessageEncoder()),
+                    awayResponses: new AwayResponseFactory(
+                        responses: $responses,
+                        messageText: new MessageTextLimiter(
+                            new MessageSize(new MessageEncoder()),
+                            new ByteStringTruncator(),
+                        ),
+                    ),
                 ),
                 errors: new NumericErrorResponseFactory($responses, new ByteStringTruncator()),
             ),

@@ -9,6 +9,9 @@ use PhpIrc\Irc\Protocol\MessageSize;
 
 final readonly class ServerLimits
 {
+    /** Fixed bytes in `:<server> 301 <target> <nickname> :<message>\r\n`, excluding variable fields. */
+    private const int AWAY_REPLY_SYNTAX_BYTES = 11;
+
     /** Fixed bytes in `:<server> 372 <nickname> :- <line>\r\n`, excluding the variable fields. */
     private const int MOTD_LINE_SYNTAX_BYTES = 12;
 
@@ -29,6 +32,12 @@ final readonly class ServerLimits
     public const int MAX_COMMAND_BYTES = 32;
 
     // @mago-format-ignore-next
+    public const int MAX_AWAY_MESSAGE_BYTES = MessageSize::MAX_BYTES
+        - self::MAX_SERVER_NAME_BYTES
+        - (self::MAX_NICKNAME_BYTES * 2)
+        - self::AWAY_REPLY_SYNTAX_BYTES;
+
+    // @mago-format-ignore-next
     public const int MAX_MOTD_LINE_BYTES = MessageSize::MAX_BYTES
         - self::MAX_SERVER_NAME_BYTES
         - self::MAX_NICKNAME_BYTES
@@ -41,6 +50,11 @@ final readonly class ServerLimits
     public function truncateTopic(string $topic): string
     {
         return $this->strings->truncate($topic, self::MAX_TOPIC_BYTES);
+    }
+
+    public function truncateAwayMessage(string $message): string
+    {
+        return $this->strings->truncate($message, self::MAX_AWAY_MESSAGE_BYTES);
     }
 
     public function truncateUsername(string $username): string

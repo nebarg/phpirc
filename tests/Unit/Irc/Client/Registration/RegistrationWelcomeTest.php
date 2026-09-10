@@ -12,6 +12,7 @@ use PhpIrc\Irc\Client\Registration\RegistrationWelcome;
 use PhpIrc\Irc\Client\Response\LusersResponseFactory;
 use PhpIrc\Irc\Client\Response\MotdResponseFactory;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
@@ -40,6 +41,7 @@ final class RegistrationWelcomeTest extends TestCase
                     '005',
                     [
                         'John',
+                        'AWAYLEN=' . ServerLimits::MAX_AWAY_MESSAGE_BYTES,
                         'CASEMAPPING=ascii',
                         'CHANMODES=,,,mnt',
                         'CHANTYPES=#',

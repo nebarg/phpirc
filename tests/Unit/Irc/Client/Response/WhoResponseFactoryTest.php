@@ -78,6 +78,20 @@ final class WhoResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_marks_an_away_client_as_gone(): void
+    {
+        $client = $this->client('John');
+        $client->markAway('Gone for lunch');
+
+        $message = $this->factory()->createClientReply(
+            target: 'Jane',
+            client: $client,
+        );
+
+        $this->assertSame('G', $message->parameter(6));
+    }
+
+    #[Test]
     public function it_creates_the_missing_mask_error(): void
     {
         $message = $this->factory()->createMissingMaskResponse('Jane');

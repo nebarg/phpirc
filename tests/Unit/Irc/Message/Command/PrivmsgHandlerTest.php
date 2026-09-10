@@ -9,6 +9,7 @@ use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\Policy\ChannelAccessPolicy;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\Response\AwayResponseFactory;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
@@ -154,6 +155,31 @@ final class PrivmsgHandlerTest extends TestCase
     }
 
     #[Test]
+    public function it_reports_an_away_recipient_after_delivering_the_message(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $jane->markAway('Gone for lunch');
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'PRIVMSG', parameters: ['Jane', 'Hello Jane']),
+        );
+
+        $this->assertMessage(
+            $janeConnection,
+            source: 'John',
+            parameters: ['Jane', 'Hello Jane'],
+        );
+        $this->assertResponse(
+            $johnConnection,
+            '301',
+            ['John', 'Jane', 'Gone for lunch'],
+        );
+    }
+
+    #[Test]
     public function it_delivers_a_message_to_the_sending_client_when_they_target_themselves(): void
     {
         [$handler, $clients] = $this->handler();
@@ -263,6 +289,10 @@ final class PrivmsgHandlerTest extends TestCase
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $serverName = new ServerName('irc.test');
+        $strings = new ByteStringTruncator();
+        $messageSize = new MessageSize(new MessageEncoder());
+        $responses = new NumericResponseFactory($serverName);
 
         return [
             new PrivmsgHandler(
@@ -273,14 +303,21 @@ final class PrivmsgHandlerTest extends TestCase
                     targets: new TargetClassifier(new ChannelTypes()),
                     channelAccess: new ChannelAccessPolicy(),
                     messageText: new MessageTextLimiter(
-                        new MessageSize(new MessageEncoder()),
-                        new ByteStringTruncator(),
+                        $messageSize,
+                        $strings,
                     ),
                 ),
                 privmsgResponses: new PrivmsgResponseFactory(
                     new NumericErrorResponseFactory(
-                        new NumericResponseFactory(new ServerName('irc.test')),
-                        new ByteStringTruncator(),
+                        $responses,
+                        $strings,
+                    ),
+                    new AwayResponseFactory(
+                        responses: $responses,
+                        messageText: new MessageTextLimiter(
+                            $messageSize,
+                            $strings,
+                        ),
                     ),
                 ),
             ),

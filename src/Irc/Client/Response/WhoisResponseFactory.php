@@ -18,6 +18,7 @@ final readonly class WhoisResponseFactory
         private ServerConfig $config,
         private NumericResponseFactory $responses,
         private MessageSize $messageSize,
+        private AwayResponseFactory $awayResponses,
     ) {}
 
     /**
@@ -35,6 +36,7 @@ final readonly class WhoisResponseFactory
         return [
             $this->createUserResponse($target, $nickname, $client),
             $this->createServerResponse($target, $nickname),
+            ...$this->createAwayResponses($target, $client),
             ...$this->createChannelResponses($target, $nickname, $client, $channels),
             $this->createEndOfWhoisResponse($target, $requestedNickname),
         ];
@@ -72,6 +74,16 @@ final readonly class WhoisResponseFactory
             parameters: [$nickname, $this->config->serverName->value],
             text: $this->config->networkName,
         );
+    }
+
+    /** @return list<Message> */
+    private function createAwayResponses(string $target, Client $client): array
+    {
+        if (! $client->isAway()) {
+            return [];
+        }
+
+        return [$this->awayResponses->createClientIsAwayResponse($target, $client)];
     }
 
     /**

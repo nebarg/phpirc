@@ -130,6 +130,23 @@ final class NoticeHandlerTest extends TestCase
         $this->assertNotice($janeConnection, 'Jane', index: 1);
     }
 
+    #[Test]
+    public function it_does_not_reply_when_the_recipient_is_away(): void
+    {
+        [$handler, $clients] = $this->handler();
+        [$john, $johnConnection] = $this->connectedClient('John', $clients);
+        [$jane, $janeConnection] = $this->connectedClient('Jane', $clients);
+        $jane->markAway('Gone for lunch');
+
+        $handler->handle(
+            new CommandContext($johnConnection, $john),
+            new Message(command: 'NOTICE', parameters: ['Jane', 'Hello Jane']),
+        );
+
+        $this->assertSame([], $johnConnection->messages);
+        $this->assertCount(1, $janeConnection->messages);
+    }
+
     /** @return array{NoticeHandler, ClientRegistry, ChannelRegistry} */
     private function handler(): array
     {

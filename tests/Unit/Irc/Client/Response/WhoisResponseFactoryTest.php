@@ -7,12 +7,15 @@ namespace Tests\Unit\Irc\Client\Response;
 use PhpIrc\Irc\Channel\Channel;
 use PhpIrc\Irc\Channel\Mode\MembershipMode;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\Response\AwayResponseFactory;
 use PhpIrc\Irc\Client\Response\WhoisResponseFactory;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Protocol\ByteStringTruncator;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageSize;
+use PhpIrc\Irc\Protocol\MessageTextLimiter;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -72,6 +75,23 @@ final class WhoisResponseFactoryTest extends TestCase
             ['Jane', 'John', '@#php +#general'],
             $responses[2]->parameters,
         );
+    }
+
+    #[Test]
+    public function it_includes_the_clients_away_message(): void
+    {
+        $client = $this->client('John');
+        $client->markAway('Gone for lunch');
+
+        $responses = $this->factory()->createWhoisResponses(
+            target: 'Jane',
+            requestedNickname: 'John',
+            client: $client,
+            channels: [],
+        );
+
+        $this->assertSame(['311', '312', '301', '318'], array_column($responses, 'command'));
+        $this->assertSame(['Jane', 'John', 'Gone for lunch'], $responses[2]->parameters);
     }
 
     #[Test]
@@ -158,6 +178,13 @@ final class WhoisResponseFactoryTest extends TestCase
             ),
             responses: new NumericResponseFactory($serverName),
             messageSize: $messageSize,
+            awayResponses: new AwayResponseFactory(
+                responses: new NumericResponseFactory($serverName),
+                messageText: new MessageTextLimiter(
+                    $messageSize,
+                    new ByteStringTruncator(),
+                ),
+            ),
         );
     }
 
