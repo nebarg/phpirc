@@ -11,7 +11,7 @@ final readonly class ServerConfig
     public DateTimeImmutable $startedAt;
 
     /**
-     * @param array<ListenerConfig> $listeners
+     * @param list<ListenerConfig> $listeners
      */
     public function __construct(
         public ServerName $serverName,

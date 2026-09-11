@@ -29,6 +29,27 @@ final class AmpClientListenerTest extends TestCase
     }
 
     #[Test]
+    public function it_passes_tls_handshake_configuration_to_the_accepted_socket(): void
+    {
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('setupTls');
+        $socket
+            ->expects($this->once())
+            ->method('read')
+            ->willReturn('incoming bytes');
+        $server = $this->createStub(AmpServerSocket::class);
+        $server
+            ->method('accept')
+            ->willReturn($socket);
+
+        $accepted = new AmpClientListener($server, tlsHandshakeTimeoutSeconds: 5)->accept();
+
+        $this->assertSame('incoming bytes', $accepted?->read());
+    }
+
+    #[Test]
     public function it_returns_null_when_the_amp_listener_closes(): void
     {
         $server = $this->createMock(AmpServerSocket::class);

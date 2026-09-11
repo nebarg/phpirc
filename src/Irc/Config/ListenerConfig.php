@@ -11,6 +11,7 @@ final readonly class ListenerConfig
     public function __construct(
         private string $address,
         private int $port,
+        public ?ListenerTlsConfig $tls = null,
     ) {
         if ($address === '') {
             throw new InvalidArgumentException(

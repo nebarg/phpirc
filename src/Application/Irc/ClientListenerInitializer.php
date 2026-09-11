@@ -6,27 +6,41 @@ namespace PhpIrc\Application\Irc;
 
 use LogicException;
 use PhpIrc\Irc\Config\ServerConfig;
-use PhpIrc\Irc\Transport\Amp\AmpClientListener;
-use PhpIrc\Irc\Transport\ClientListener;
+use PhpIrc\Irc\Transport\Amp\AmpClientListenerFactory;
+use PhpIrc\Irc\Transport\ClientListenerCollection;
 use Tempest\Container\Container;
 use Tempest\Container\Initializer;
 use Tempest\Container\Singleton;
 
-use function Amp\Socket\listen;
-
 final readonly class ClientListenerInitializer implements Initializer
 {
+    public function __construct(
+        private AmpClientListenerFactory $listeners = new AmpClientListenerFactory(),
+    ) {}
+
     #[Singleton]
-    public function initialize(Container $container): ClientListener
+    public function initialize(Container $container): ClientListenerCollection
     {
         $config = $container->get(ServerConfig::class);
 
-        if (count($config->listeners) !== 1) {
-            throw new LogicException('Exactly one listener is currently supported.');
+        if ($config->listeners === []) {
+            throw new LogicException('At least one listener must be configured.');
         }
 
-        return new AmpClientListener(
-            listen($config->listeners[0]->address()),
-        );
+        $listeners = [];
+
+        try {
+            foreach ($config->listeners as $listener) {
+                $listeners[] = $this->listeners->create($listener);
+            }
+        } catch (\Throwable $exception) {
+            foreach ($listeners as $listener) {
+                $listener->close();
+            }
+
+            throw $exception;
+        }
+
+        return new ClientListenerCollection($listeners);
     }
 }

@@ -21,6 +21,7 @@ use PhpIrc\Irc\Transport\Amp\IrcServer;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientListener;
+use PhpIrc\Irc\Transport\ClientListenerCollection;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
@@ -31,6 +32,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
+use Tests\Support\Irc\Transport\BlockingClientSocket;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\Signal\ManualShutdownSignalListener;
@@ -60,6 +62,41 @@ final class IrcServerTest extends TestCase
         $this->assertSame(1, $shutdownSignals->stopCalls);
         $this->assertSame(1, $firstSocket->closeCalls);
         $this->assertSame(1, $secondSocket->closeCalls);
+        $this->assertSame(
+            ['PING', 'PONG'],
+            array_map(
+                static fn (Message $message): string => $message->command,
+                $handler->messages,
+            ),
+        );
+    }
+
+    #[Test]
+    public function it_accepts_clients_from_multiple_listeners(): void
+    {
+        $firstSocket = new FakeClientSocket(["PING :one\r\n"]);
+        $secondSocket = new FakeClientSocket(["PONG :two\r\n"]);
+        $firstListener = new FakeClientListener([$firstSocket]);
+        $secondListener = new FakeClientListener([$secondSocket]);
+        $handler = new RecordingMessageHandler();
+        $shutdownSignals = new ManualShutdownSignalListener();
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())->method('error');
+
+        $this->serverWithListeners(
+            [$firstListener, $secondListener],
+            $handler,
+            $shutdownSignals,
+            $logger,
+        )->run();
+
+        $this->assertSame(2, $firstListener->acceptCalls);
+        $this->assertSame(2, $secondListener->acceptCalls);
+        $this->assertSame(1, $firstListener->closeCalls);
+        $this->assertSame(1, $secondListener->closeCalls);
+        $this->assertSame(1, $firstSocket->closeCalls);
+        $this->assertSame(1, $secondSocket->closeCalls);
+        $this->assertCount(2, $handler->messages);
         $this->assertSame(
             ['PING', 'PONG'],
             array_map(
@@ -137,7 +174,7 @@ final class IrcServerTest extends TestCase
     public function it_stops_accepting_and_notifies_connected_clients_when_shutdown_is_requested(): void
     {
         $shutdownSignals = new ManualShutdownSignalListener();
-        $socket = new FakeClientSocket();
+        $socket = new BlockingClientSocket();
         $listener = new FakeClientListener(
             sockets: [$socket],
             beforeAccept: static function (int $acceptCall) use ($shutdownSignals): void {
@@ -147,6 +184,7 @@ final class IrcServerTest extends TestCase
                 }
             },
         );
+        $otherListener = new FakeClientListener();
         $handler = new RecordingMessageHandler();
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('error');
@@ -155,10 +193,16 @@ final class IrcServerTest extends TestCase
             ->method('info')
             ->with('IRC server shutdown requested.');
 
-        $this->server($listener, $handler, $shutdownSignals, $logger)->run();
+        $this->serverWithListeners(
+            [$listener, $otherListener],
+            $handler,
+            $shutdownSignals,
+            $logger,
+        )->run();
 
         $this->assertSame(2, $listener->acceptCalls);
         $this->assertSame(1, $listener->closeCalls);
+        $this->assertSame(1, $otherListener->closeCalls);
         $this->assertSame(1, $socket->closeCalls);
         $this->assertSame(
             [":irc.test ERROR :Server shutting down\r\n"],
@@ -168,6 +212,21 @@ final class IrcServerTest extends TestCase
 
     private function server(
         ClientListener $listener,
+        RecordingMessageHandler $handler,
+        ShutdownSignalListener $shutdownSignals,
+        LoggerInterface $logger,
+    ): IrcServer {
+        return $this->serverWithListeners(
+            [$listener],
+            $handler,
+            $shutdownSignals,
+            $logger,
+        );
+    }
+
+    /** @param non-empty-list<ClientListener> $listeners */
+    private function serverWithListeners(
+        array $listeners,
         RecordingMessageHandler $handler,
         ShutdownSignalListener $shutdownSignals,
         LoggerInterface $logger,
@@ -182,7 +241,7 @@ final class IrcServerTest extends TestCase
         );
 
         return new IrcServer(
-            listener: $listener,
+            listeners: new ClientListenerCollection($listeners),
             connections: new ClientConnectionFactory(
                 validator: new ClientMessageSizeValidator(),
                 parser: new MessageParser(),

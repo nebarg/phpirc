@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Transport\Amp;
 
 use Amp\ByteStream\StreamException;
+use Amp\CancelledException;
 use Amp\Socket\InternetAddress;
 use Amp\Socket\Socket as AmpSocket;
+use Amp\Socket\TlsException;
+use Amp\TimeoutCancellation;
 use PhpIrc\Irc\Transport\Amp\AmpClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
 use PHPUnit\Framework\Attributes\Test;
@@ -77,6 +80,76 @@ final class AmpClientSocketTest extends TestCase
             $this->fail('Expected a client socket exception.');
         } catch (ClientSocketException $exception) {
             $this->assertSame('Failed to write to the client socket.', $exception->getMessage());
+            $this->assertSame($cause, $exception->getPrevious());
+        }
+    }
+
+    #[Test]
+    public function it_negotiates_tls_before_the_first_io_operation(): void
+    {
+        $tlsNegotiated = false;
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('setupTls')
+            ->with($this->isInstanceOf(TimeoutCancellation::class))
+            ->willReturnCallback(static function () use (&$tlsNegotiated): void {
+                $tlsNegotiated = true;
+            });
+        $socket
+            ->expects($this->once())
+            ->method('read')
+            ->willReturnCallback(static function () use (&$tlsNegotiated): string {
+                self::assertTrue($tlsNegotiated);
+
+                return 'incoming bytes';
+            });
+        $socket
+            ->expects($this->once())
+            ->method('write')
+            ->with('outgoing bytes');
+        $adapter = new AmpClientSocket($socket, tlsHandshakeTimeoutSeconds: 5);
+
+        $this->assertSame('incoming bytes', $adapter->read());
+        $adapter->write('outgoing bytes');
+    }
+
+    #[Test]
+    public function it_translates_tls_negotiation_failures_to_a_client_socket_exception(): void
+    {
+        $cause = new TlsException('TLS negotiation failed.');
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('setupTls')
+            ->willThrowException($cause);
+        $socket->expects($this->once())->method('close');
+
+        try {
+            new AmpClientSocket($socket, tlsHandshakeTimeoutSeconds: 5)->read();
+            $this->fail('Expected a client socket exception.');
+        } catch (ClientSocketException $exception) {
+            $this->assertSame('Failed to negotiate TLS with the client.', $exception->getMessage());
+            $this->assertSame($cause, $exception->getPrevious());
+        }
+    }
+
+    #[Test]
+    public function it_translates_tls_handshake_timeouts_to_a_client_socket_exception(): void
+    {
+        $cause = new CancelledException();
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('setupTls')
+            ->willThrowException($cause);
+        $socket->expects($this->once())->method('close');
+
+        try {
+            new AmpClientSocket($socket, tlsHandshakeTimeoutSeconds: 5)->read();
+            $this->fail('Expected a client socket exception.');
+        } catch (ClientSocketException $exception) {
+            $this->assertSame('Failed to negotiate TLS with the client.', $exception->getMessage());
             $this->assertSame($cause, $exception->getPrevious());
         }
     }

@@ -8,6 +8,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 
 - [x] IRC message parsing and encoding, including message tags
 - [x] TCP listener, line buffering, inbound message-size validation and connection cleanup
+- [x] Concurrent plaintext and implicit-TLS listeners
 - [x] Automatic command-handler discovery and dispatch
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
 - [x] Nickname validation, collision detection and nickname changes
@@ -81,7 +82,13 @@ IRC_FLOOD_MESSAGES_PER_SECOND=2
 IRC_OUTBOUND_QUEUE_BYTES=262144
 LISTEN_ADDRESS=127.0.0.1
 LISTEN_PORT=6667
+TLS_LISTEN_PORT=0
+TLS_CERTIFICATE_FILE=
+TLS_PRIVATE_KEY_FILE=
+TLS_HANDSHAKE_TIMEOUT=10
 ```
+
+Set `TLS_LISTEN_PORT` to `6697` and provide readable certificate-chain and private-key files to enable implicit TLS. Set `LISTEN_PORT` to `0` if the server should accept only TLS connections. Relative certificate paths are resolved from the project root.
 
 Run all quality checks with:
 
@@ -93,7 +100,6 @@ composer qa
 
 - [ ] Extend `WHO` with wildcard masks and IRCv3 WHOX
 - [ ] Peak and lifetime connection statistics
-- [ ] Multiple listeners and TLS
 - [ ] Broader IRCv3 capability support
 - [ ] Optional persistence where it provides value
 

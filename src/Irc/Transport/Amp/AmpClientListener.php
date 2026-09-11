@@ -12,13 +12,16 @@ final readonly class AmpClientListener implements ClientListener
 {
     public function __construct(
         private AmpServerSocket $server,
+        private ?int $tlsHandshakeTimeoutSeconds = null,
     ) {}
 
     public function accept(): ?ClientSocket
     {
         $socket = $this->server->accept();
 
-        return $socket === null ? null : new AmpClientSocket($socket);
+        return $socket === null
+            ? null
+            : new AmpClientSocket($socket, $this->tlsHandshakeTimeoutSeconds);
     }
 
     public function close(): void

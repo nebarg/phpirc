@@ -10,12 +10,15 @@ use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientListener;
+use PhpIrc\Irc\Transport\ClientListenerCollection;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Signal\ShutdownSignalListener;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 use function Amp\async;
+use function Amp\Future\await;
+use function Amp\Future\awaitAll;
 
 final class IrcServer
 {
@@ -24,10 +27,10 @@ final class IrcServer
 
     private bool $shutdownRequested = false;
 
-    private bool $listenerClosed = false;
+    private bool $listenersClosed = false;
 
     public function __construct(
-        private readonly ClientListener $listener,
+        private readonly ClientListenerCollection $listeners,
         private readonly ClientConnectionFactory $connections,
         private readonly ShutdownSignalListener $shutdownSignals,
         private readonly ServerName $serverName,
@@ -37,14 +40,18 @@ final class IrcServer
     public function run(): void
     {
         $this->shutdownSignals->start($this->requestShutdown(...));
+        $listenerTasks = [];
 
         try {
-            while (($socket = $this->listener->accept()) !== null) {
-                $this->startConnection($socket);
+            foreach ($this->listeners->all() as $listener) {
+                $listenerTasks[] = async($this->acceptConnections(...), $listener);
             }
+
+            await($listenerTasks);
         } finally {
             $this->shutdownSignals->stop();
-            $this->closeListener();
+            $this->closeListeners();
+            awaitAll($listenerTasks);
             $this->stopConnections();
         }
     }
@@ -57,17 +64,27 @@ final class IrcServer
 
         $this->shutdownRequested = true;
         $this->logger->info('IRC server shutdown requested.');
-        $this->closeListener();
+        $this->closeListeners();
     }
 
-    private function closeListener(): void
+    private function closeListeners(): void
     {
-        if ($this->listenerClosed) {
+        if ($this->listenersClosed) {
             return;
         }
 
-        $this->listenerClosed = true;
-        $this->listener->close();
+        $this->listenersClosed = true;
+
+        foreach ($this->listeners->all() as $listener) {
+            $listener->close();
+        }
+    }
+
+    private function acceptConnections(ClientListener $listener): void
+    {
+        while (($socket = $listener->accept()) !== null) {
+            $this->startConnection($socket);
+        }
     }
 
     private function startConnection(ClientSocket $socket): void

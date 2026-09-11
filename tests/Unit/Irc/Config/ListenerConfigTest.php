@@ -6,6 +6,7 @@ namespace Tests\Unit\Irc\Config;
 
 use InvalidArgumentException;
 use PhpIrc\Irc\Config\ListenerConfig;
+use PhpIrc\Irc\Config\ListenerTlsConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -18,6 +19,15 @@ final class ListenerConfigTest extends TestCase
         $listener = new ListenerConfig('127.0.0.1', 6667);
 
         $this->assertSame('127.0.0.1:6667', $listener->address());
+    }
+
+    #[Test]
+    public function it_accepts_optional_tls_configuration(): void
+    {
+        $tls = new ListenerTlsConfig('/certificate.pem', '/private-key.pem');
+        $listener = new ListenerConfig('127.0.0.1', 6697, $tls);
+
+        $this->assertSame($tls, $listener->tls);
     }
 
     /** @return iterable<string, array{int}> */
