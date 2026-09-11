@@ -9,6 +9,7 @@ use Amp\CancelledException;
 use Amp\Socket\InternetAddress;
 use Amp\Socket\Socket as AmpSocket;
 use Amp\Socket\TlsException;
+use Amp\Socket\TlsState;
 use Amp\TimeoutCancellation;
 use PhpIrc\Irc\Transport\Amp\AmpClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
@@ -34,6 +35,13 @@ final class AmpClientSocketTest extends TestCase
             ->method('close');
         $socket
             ->expects($this->once())
+            ->method('getTlsState')
+            ->willReturn(TlsState::Disabled);
+        $socket
+            ->expects($this->never())
+            ->method('shutdownTls');
+        $socket
+            ->expects($this->once())
             ->method('getRemoteAddress')
             ->willReturn(new InternetAddress('203.0.113.10', 6697));
 
@@ -43,6 +51,50 @@ final class AmpClientSocketTest extends TestCase
         $this->assertSame('incoming bytes', $adapter->read());
         $adapter->write('outgoing bytes');
         $adapter->close();
+    }
+
+    #[Test]
+    public function it_shuts_down_tls_before_closing_the_amp_socket(): void
+    {
+        $tlsShutdown = false;
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('getTlsState')
+            ->willReturn(TlsState::Enabled);
+        $socket
+            ->expects($this->once())
+            ->method('shutdownTls')
+            ->willReturnCallback(static function () use (&$tlsShutdown): void {
+                $tlsShutdown = true;
+            });
+        $socket
+            ->expects($this->once())
+            ->method('close')
+            ->willReturnCallback(static function () use (&$tlsShutdown): void {
+                self::assertTrue($tlsShutdown);
+            });
+
+        new AmpClientSocket($socket)->close();
+    }
+
+    #[Test]
+    public function it_closes_the_amp_socket_when_tls_shutdown_fails(): void
+    {
+        $socket = $this->createMock(AmpSocket::class);
+        $socket
+            ->expects($this->once())
+            ->method('getTlsState')
+            ->willReturn(TlsState::Enabled);
+        $socket
+            ->expects($this->once())
+            ->method('shutdownTls')
+            ->willThrowException(new TlsException('TLS shutdown failed.'));
+        $socket
+            ->expects($this->once())
+            ->method('close');
+
+        new AmpClientSocket($socket)->close();
     }
 
     #[Test]

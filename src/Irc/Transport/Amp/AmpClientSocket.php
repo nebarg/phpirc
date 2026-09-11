@@ -9,6 +9,7 @@ use Amp\CancelledException;
 use Amp\Socket\InternetAddress;
 use Amp\Socket\Socket as AmpSocket;
 use Amp\Socket\SocketException;
+use Amp\Socket\TlsState;
 use Amp\TimeoutCancellation;
 use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\ClientSocketException;
@@ -59,7 +60,15 @@ final class AmpClientSocket implements ClientSocket
 
     public function close(): void
     {
-        $this->socket->close();
+        try {
+            if ($this->socket->getTlsState() === TlsState::Enabled) {
+                $this->socket->shutdownTls();
+            }
+        } catch (StreamException) {
+            // The peer may already have disconnected while TLS was shutting down.
+        } finally {
+            $this->socket->close();
+        }
     }
 
     private function negotiateTlsIfRequired(): void
