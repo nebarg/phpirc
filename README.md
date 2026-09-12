@@ -11,6 +11,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Concurrent plaintext and implicit-TLS listeners
 - [x] Automatic command-handler discovery and dispatch
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
+- [x] IRCv3 `server-time` capability negotiation and timestamped server messages
 - [x] Nickname validation, collision detection and nickname changes
 - [x] Registration welcome messages and `005` feature advertisement
 - [x] Configurable message of the day during registration and with `MOTD`
@@ -98,7 +99,6 @@ composer qa
 
 ## Roadmap
 
-- [ ] Extend `WHO` with wildcard masks and IRCv3 WHOX
 - [ ] Broader IRCv3 capability support
 - [ ] Optional persistence where it provides value
 

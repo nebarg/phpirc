@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Application\Irc;
 
+use DateTimeImmutable;
 use PhpIrc\Application\Irc\CommandHandlerRegistry;
 use PhpIrc\Irc\Channel\Command\JoinHandler;
 use PhpIrc\Irc\Channel\Command\KickHandler;
@@ -34,17 +35,21 @@ use PhpIrc\Irc\Message\Command\NoticeHandler;
 use PhpIrc\Irc\Message\Command\PrivmsgHandler;
 use PhpIrc\Irc\Mode\Command\ModeHandler;
 use PhpIrc\Irc\Protocol\Message;
+use PhpIrc\Irc\Time\WallClock;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\Task\BackgroundTaskRunner;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Command\RecordingCommandHandler;
+use Tests\Support\Irc\Time\ManualWallClock;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 
 final class CommandHandlerWiringTest extends IntegrationTestCase
 {
+    private const string SERVER_TIME = '2026-09-12T12:00:00.123Z';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -52,6 +57,10 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $this->container->singleton(
             BackgroundTaskRunner::class,
             static fn () => new ImmediateBackgroundTaskRunner(),
+        );
+        $this->container->singleton(
+            WallClock::class,
+            static fn () => new ManualWallClock(new DateTimeImmutable(self::SERVER_TIME)),
         );
     }
 
@@ -197,8 +206,33 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
 
         $this->assertSame(
             [
-                ":{$config->serverName->value} CAP * LS :\r\n",
+                ":{$config->serverName->value} CAP * LS server-time\r\n",
                 ...$this->registrationWrites($config),
+            ],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_negotiates_server_time_and_timestamps_subsequent_messages(): void
+    {
+        $socket = new FakeClientSocket([
+            "CAP LS 302\r\nNICK John\r\nUSER john 0 * :John Doe\r\nCAP REQ :server-time\r\nCAP END\r\nCAP LIST\r\n",
+        ]);
+        $config = $this->container->get(ServerConfig::class);
+        $serverName = $config->serverName->value;
+
+        $this->container
+            ->get(ClientConnectionFactory::class)
+            ->create($socket)
+            ->run();
+
+        $this->assertSame(
+            [
+                ":{$serverName} CAP * LS server-time\r\n",
+                ":{$serverName} CAP John ACK server-time\r\n",
+                ...$this->withServerTime($this->registrationWrites($config)),
+                '@time=' . self::SERVER_TIME . " :{$serverName} CAP John LIST server-time\r\n",
             ],
             $socket->writes,
         );
@@ -318,5 +352,17 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
         $writes[] = ":{$serverName} 376 {$target} :End of /MOTD command.\r\n";
 
         return $writes;
+    }
+
+    /**
+     * @param list<string> $messages
+     * @return list<string>
+     */
+    private function withServerTime(array $messages): array
+    {
+        return array_map(
+            static fn (string $message): string => '@time=' . self::SERVER_TIME . " {$message}",
+            $messages,
+        );
     }
 }

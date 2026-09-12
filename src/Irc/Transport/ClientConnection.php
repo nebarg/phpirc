@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Transport;
 
+use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Command\MessageHandler;
@@ -24,6 +25,7 @@ final class ClientConnection implements Connection
         private readonly ClientConnectionLifecycle $lifecycle,
         private readonly ConnectionKeepalive $keepalive,
         private readonly OutboundMessageQueue $outboundQueue,
+        private readonly ServerTimeMessageTagger $serverTime,
     ) {}
 
     public function run(): void
@@ -66,7 +68,7 @@ final class ClientConnection implements Connection
             return;
         }
 
-        $encoded = $this->codec->encode($message);
+        $encoded = $this->codec->encode($this->serverTime->tag($message, $this->client));
 
         if ($encoded === null) {
             return;

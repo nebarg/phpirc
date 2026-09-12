@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use DateTimeImmutable;
 use LogicException;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
+use PhpIrc\Irc\Client\Capability\Capability;
+use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
@@ -40,6 +43,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
+use Tests\Support\Irc\Time\ManualWallClock;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
@@ -265,6 +269,26 @@ final class ClientConnectionTest extends TestCase
 
         $this->assertSame(
             ["PRIVMSG #php :hello there\r\n"],
+            $socket->writes,
+        );
+    }
+
+    #[Test]
+    public function it_timestamps_outbound_messages_after_server_time_is_enabled(): void
+    {
+        $socket = new FakeClientSocket();
+        $client = new Client();
+        $client->capabilities->enable(Capability::ServerTime);
+        $connection = $this->connection($socket, new RecordingMessageHandler(), $client);
+
+        $connection->send(new Message(
+            command: 'NOTICE',
+            parameters: ['John', 'Hello'],
+            source: 'irc.test',
+        ));
+
+        $this->assertSame(
+            ["@time=2026-09-12T12:00:00.123Z :irc.test NOTICE John Hello\r\n"],
             $socket->writes,
         );
     }
@@ -594,6 +618,9 @@ final class ClientConnectionTest extends TestCase
                 tasks: new ImmediateBackgroundTaskRunner(),
                 config: new OutboundQueueConfig(),
                 logger: new NullLogger(),
+            ),
+            serverTime: new ServerTimeMessageTagger(
+                new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.123Z')),
             ),
         );
     }

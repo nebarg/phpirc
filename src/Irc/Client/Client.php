@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpIrc\Irc\Client;
 
 use InvalidArgumentException;
+use PhpIrc\Irc\Client\Capability\ClientCapabilities;
 use PhpIrc\Irc\Client\Mode\UserMode;
 use PhpIrc\Irc\Client\Registration\ClientRegistration;
 
@@ -23,10 +24,13 @@ final class Client
 
     public private(set) ClientRegistration $registration;
 
+    public private(set) ClientCapabilities $capabilities;
+
     public function __construct(
         public readonly string $hostname = 'localhost',
     ) {
         $this->registration = new ClientRegistration();
+        $this->capabilities = new ClientCapabilities();
     }
 
     public function completeRegistrationIfReady(): bool

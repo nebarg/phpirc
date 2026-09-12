@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Irc\Client\Command;
 
 use PhpIrc\Irc\Channel\ChannelRegistry;
+use PhpIrc\Irc\Client\Capability\Capability;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Client\Command\CapHandler;
@@ -45,7 +46,7 @@ final class CapHandlerTest extends TestCase
     }
 
     #[Test]
-    public function it_lists_an_empty_supported_capability_set_and_suspends_registration(): void
+    public function it_lists_supported_capabilities_and_suspends_registration(): void
     {
         $connection = new RecordingConnection();
         $client = $this->readyClient();
@@ -56,7 +57,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertFalse($client->completeRegistrationIfReady());
-        $this->assertCapabilityReply($connection, ['John', 'LS', '']);
+        $this->assertCapabilityReply($connection, ['John', 'LS', 'server-time']);
     }
 
     #[Test]
@@ -75,7 +76,56 @@ final class CapHandlerTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_all_requested_capabilities_and_suspends_registration(): void
+    public function it_lists_enabled_capabilities(): void
+    {
+        $connection = new RecordingConnection();
+        $client = new Client();
+        $client->setNickname('John');
+        $client->capabilities->enable(Capability::ServerTime);
+
+        $this->handler()->handle(
+            new CommandContext($connection, $client),
+            $this->message(['LIST']),
+        );
+
+        $this->assertCapabilityReply($connection, ['John', 'LIST', 'server-time']);
+    }
+
+    #[Test]
+    public function it_acknowledges_and_enables_server_time(): void
+    {
+        $connection = new RecordingConnection();
+        $client = $this->readyClient();
+
+        $this->handler()->handle(
+            new CommandContext($connection, $client),
+            $this->message(['REQ', 'server-time']),
+        );
+
+        $this->assertFalse($client->completeRegistrationIfReady());
+        $this->assertTrue($client->capabilities->has(Capability::ServerTime));
+        $this->assertCapabilityReply($connection, ['John', 'ACK', 'server-time']);
+    }
+
+    #[Test]
+    public function it_acknowledges_and_disables_server_time(): void
+    {
+        $connection = new RecordingConnection();
+        $client = new Client();
+        $client->setNickname('John');
+        $client->capabilities->enable(Capability::ServerTime);
+
+        $this->handler()->handle(
+            new CommandContext($connection, $client),
+            $this->message(['REQ', '-server-time']),
+        );
+
+        $this->assertFalse($client->capabilities->has(Capability::ServerTime));
+        $this->assertCapabilityReply($connection, ['John', 'ACK', '-server-time']);
+    }
+
+    #[Test]
+    public function it_rejects_unsupported_capabilities_and_suspends_registration(): void
     {
         $connection = new RecordingConnection();
         $client = $this->readyClient();
@@ -90,6 +140,21 @@ final class CapHandlerTest extends TestCase
             $connection,
             ['John', 'NAK', 'multi-prefix sasl'],
         );
+    }
+
+    #[Test]
+    public function it_rejects_a_request_atomically_when_any_capability_is_unsupported(): void
+    {
+        $connection = new RecordingConnection();
+        $client = $this->readyClient();
+
+        $this->handler()->handle(
+            new CommandContext($connection, $client),
+            $this->message(['REQ', 'server-time unknown']),
+        );
+
+        $this->assertFalse($client->capabilities->has(Capability::ServerTime));
+        $this->assertCapabilityReply($connection, ['John', 'NAK', 'server-time unknown']);
     }
 
     #[Test]
@@ -142,7 +207,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCapabilityReply($connection, ['John', 'LS', '']);
+        $this->assertCapabilityReply($connection, ['John', 'LS', 'server-time']);
     }
 
     /** @param list<string> $parameters */

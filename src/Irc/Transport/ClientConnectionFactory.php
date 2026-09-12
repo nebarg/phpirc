@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Transport;
 
+use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\Client;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerLimits;
@@ -24,6 +25,7 @@ final readonly class ClientConnectionFactory
         private FloodProtectionFactory $floodProtection,
         private ServerLimits $limits,
         private OutboundMessageQueueFactory $outboundQueues,
+        private ServerTimeMessageTagger $serverTime,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
@@ -40,6 +42,7 @@ final readonly class ClientConnectionFactory
             lifecycle: $this->lifecycle,
             keepalive: $this->keepalives->create(),
             outboundQueue: $this->outboundQueues->create($socket),
+            serverTime: $this->serverTime,
         );
     }
 }

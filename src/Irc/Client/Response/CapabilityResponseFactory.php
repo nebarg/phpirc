@@ -30,6 +30,11 @@ final readonly class CapabilityResponseFactory
         return $this->createReply($target, 'NAK', $capabilities);
     }
 
+    public function createAcknowledgedCapabilitiesResponse(string $target, string $capabilities): Message
+    {
+        return $this->createReply($target, 'ACK', $capabilities);
+    }
+
     public function createInvalidSubcommandResponse(string $target, string $subcommand): Message
     {
         return $this->errors->invalidCapabilityCommand($target, $subcommand);

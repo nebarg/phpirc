@@ -45,6 +45,16 @@ final class CapabilityResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function it_creates_the_acknowledged_capabilities_response(): void
+    {
+        $response = $this->factory()->createAcknowledgedCapabilitiesResponse('John', 'server-time');
+
+        $this->assertSame('irc.test', $response->source);
+        $this->assertSame('CAP', $response->command);
+        $this->assertSame(['John', 'ACK', 'server-time'], $response->parameters);
+    }
+
+    #[Test]
     public function it_creates_an_invalid_subcommand_response(): void
     {
         $response = $this->factory()->createInvalidSubcommandResponse('John', 'NOPE');

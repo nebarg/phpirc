@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport\Amp;
 
+use DateTimeImmutable;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
+use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Config\ServerConfig;
@@ -33,6 +35,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
+use Tests\Support\Irc\Time\ManualWallClock;
 use Tests\Support\Irc\Transport\BlockingClientSocket;
 use Tests\Support\Irc\Transport\FakeClientListener;
 use Tests\Support\Irc\Transport\FakeClientSocket;
@@ -273,6 +276,9 @@ final class IrcServerTest extends TestCase
                     tasks: new ImmediateBackgroundTaskRunner(),
                     config: $config,
                     logger: $logger,
+                ),
+                serverTime: new ServerTimeMessageTagger(
+                    new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.000Z')),
                 ),
             ),
             shutdownSignals: $shutdownSignals,

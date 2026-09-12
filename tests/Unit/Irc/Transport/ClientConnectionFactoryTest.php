@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Irc\Transport;
 
+use DateTimeImmutable;
 use PhpIrc\Irc\Channel\ChannelRegistry;
 use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
+use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Config\FloodProtectionConfig;
@@ -27,6 +29,7 @@ use PhpIrc\Irc\Transport\OutboundMessageQueueFactory;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\NullLogger;
 use Tests\Support\Irc\Command\RecordingMessageHandler;
+use Tests\Support\Irc\Time\ManualWallClock;
 use Tests\Support\Irc\Transport\FakeClientSocket;
 use Tests\Support\Irc\Transport\Task\ImmediateBackgroundTaskRunner;
 use Tests\Support\Irc\Transport\Time\ManualMonotonicClock;
@@ -174,6 +177,9 @@ final class ClientConnectionFactoryTest extends TestCase
                 tasks: new ImmediateBackgroundTaskRunner(),
                 config: $config,
                 logger: new NullLogger(),
+            ),
+            serverTime: new ServerTimeMessageTagger(
+                new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.000Z')),
             ),
         );
     }
