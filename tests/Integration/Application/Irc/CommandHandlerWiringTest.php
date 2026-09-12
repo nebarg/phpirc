@@ -165,6 +165,24 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
     }
 
     #[Test]
+    public function it_reports_connection_totals_across_client_sessions(): void
+    {
+        $serverName = $this->container->get(ServerConfig::class)->serverName->value;
+        $connections = $this->container->get(ClientConnectionFactory::class);
+        $connections->create(new FakeClientSocket())->run();
+        $socket = new FakeClientSocket([
+            "NICK John\r\nUSER john 0 * :John Doe\r\n",
+        ]);
+
+        $connections->create($socket)->run();
+
+        $this->assertContains(
+            ":{$serverName} 250 John :Highest connection count: 1 (1 clients) (2 connections received)\r\n",
+            $socket->writes,
+        );
+    }
+
+    #[Test]
     public function it_delays_raw_client_registration_until_cap_end(): void
     {
         $socket = new FakeClientSocket([
@@ -272,6 +290,9 @@ final class CommandHandlerWiringTest extends IntegrationTestCase
             ":{$serverName} 005 John AWAYLEN={$awayLength} CASEMAPPING=ascii CHANMODES=,,,mnt CHANTYPES=# CHANNELLEN=64 HOSTLEN=63 NICKLEN=30 NETWORK={$config->networkName} PREFIX=(ov)@+ TOPICLEN=307 USERLEN=18 :are supported by this server\r\n",
             ":{$serverName} 251 John :There are 1 users and 0 invisible on 1 servers\r\n",
             ":{$serverName} 255 John :I have 1 clients and 0 servers\r\n",
+            ":{$serverName} 265 John 1 1 :Current local users 1, max 1\r\n",
+            ":{$serverName} 266 John 1 1 :Current global users 1, max 1\r\n",
+            ":{$serverName} 250 John :Highest connection count: 1 (1 clients) (1 connections received)\r\n",
             ...$this->motdWrites($config, 'John'),
         ];
     }

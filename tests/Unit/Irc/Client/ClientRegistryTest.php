@@ -186,6 +186,7 @@ final class ClientRegistryTest extends TestCase
         $registered->setRealName('John Doe');
         $registered->completeRegistrationIfReady();
 
+        $this->assertSame(2, $registry->connectedCount());
         $this->assertSame(1, $registry->registeredCount());
         $this->assertSame(1, $registry->unregisteredCount());
     }

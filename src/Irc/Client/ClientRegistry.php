@@ -98,6 +98,11 @@ final class ClientRegistry
         return count($this->registeredClients());
     }
 
+    public function connectedCount(): int
+    {
+        return count($this->clientsById);
+    }
+
     /** @return list<Client> */
     public function registeredClients(): array
     {
@@ -116,7 +121,7 @@ final class ClientRegistry
 
     public function unregisteredCount(): int
     {
-        return count($this->clientsById) - $this->registeredCount();
+        return $this->connectedCount() - $this->registeredCount();
     }
 
     private function releaseNickname(Client $client): void

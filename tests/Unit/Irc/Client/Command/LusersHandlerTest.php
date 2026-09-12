@@ -14,6 +14,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -46,7 +47,10 @@ final class LusersHandlerTest extends TestCase
             new Message(command: 'LUSERS'),
         );
 
-        $this->assertSame(['251', '254', '255'], array_column($connection->messages, 'command'));
+        $this->assertSame(
+            ['251', '254', '255', '265', '266', '250'],
+            array_column($connection->messages, 'command'),
+        );
         $this->assertSame(
             ['John', 'There are 1 users and 0 invisible on 1 servers'],
             $connection->messages[0]->parameters,
@@ -56,6 +60,18 @@ final class LusersHandlerTest extends TestCase
             ['John', 'I have 1 clients and 0 servers'],
             $connection->messages[2]->parameters,
         );
+        $this->assertSame(
+            ['John', '1', '1', 'Current local users 1, max 1'],
+            $connection->messages[3]->parameters,
+        );
+        $this->assertSame(
+            ['John', '1', '1', 'Current global users 1, max 1'],
+            $connection->messages[4]->parameters,
+        );
+        $this->assertSame(
+            ['John', 'Highest connection count: 1 (1 clients) (1 connections received)'],
+            $connection->messages[5]->parameters,
+        );
     }
 
     /** @return array{LusersHandler, ClientRegistry, ChannelRegistry} */
@@ -64,12 +80,14 @@ final class LusersHandlerTest extends TestCase
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $statistics = new ConnectionStatistics($clients);
 
         return [
             new LusersHandler(new LusersResponseFactory(
                 clients: $clients,
                 channels: $channels,
                 responses: new NumericResponseFactory(new ServerName('irc.test')),
+                statistics: $statistics,
             )),
             $clients,
             $channels,

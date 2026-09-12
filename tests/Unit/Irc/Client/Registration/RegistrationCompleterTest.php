@@ -19,6 +19,7 @@ use PhpIrc\Irc\Config\ServerName;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -51,7 +52,7 @@ final class RegistrationCompleterTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(11, $connection->messages);
         $this->assertSame([], $connection->messages[0]->tags);
         $this->assertSame('irc.test', $connection->messages[0]->source);
         $this->assertSame('001', $connection->messages[0]->command);
@@ -72,7 +73,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
         $completer->completeIfReady($context);
 
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(11, $connection->messages);
     }
 
     #[Test]
@@ -93,7 +94,7 @@ final class RegistrationCompleterTest extends TestCase
         $completer->completeIfReady($context);
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(11, $connection->messages);
     }
 
     private function readyClient(): Client
@@ -111,6 +112,8 @@ final class RegistrationCompleterTest extends TestCase
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
         $caseMapper = new AsciiCaseMapper();
+        $clients = new ClientRegistry($caseMapper);
+        $statistics = new ConnectionStatistics($clients);
         $config = new ServerConfig(
             serverName: $serverName,
             networkName: 'TestNet',
@@ -126,12 +129,14 @@ final class RegistrationCompleterTest extends TestCase
                 $caseMapper,
                 new ChannelTypes(),
                 new LusersResponseFactory(
-                    new ClientRegistry($caseMapper),
+                    $clients,
                     new ChannelRegistry($caseMapper),
                     $responses,
+                    $statistics,
                 ),
                 new MotdResponseFactory($serverName, new Motd(), $responses),
             ),
+            $statistics,
         );
     }
 }

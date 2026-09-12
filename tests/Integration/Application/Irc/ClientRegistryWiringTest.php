@@ -10,6 +10,7 @@ use PhpIrc\Irc\Client\Motd;
 use PhpIrc\Irc\Client\Registration\RegistrationCompleter;
 use PhpIrc\Irc\Command\CommandContext;
 use PhpIrc\Irc\Config\ServerConfig;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\IntegrationTestCase;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -21,6 +22,15 @@ final class ClientRegistryWiringTest extends IntegrationTestCase
     {
         $first = $this->container->get(ClientRegistry::class);
         $second = $this->container->get(ClientRegistry::class);
+
+        $this->assertSame($first, $second);
+    }
+
+    #[Test]
+    public function it_registers_connection_statistics_as_a_singleton(): void
+    {
+        $first = $this->container->get(ConnectionStatistics::class);
+        $second = $this->container->get(ConnectionStatistics::class);
 
         $this->assertSame($first, $second);
     }
@@ -44,10 +54,22 @@ final class ClientRegistryWiringTest extends IntegrationTestCase
             ? ['422']
             : ['375', ...array_fill(0, count($motd->lines), '372'), '376'];
 
-        $this->assertCount(7 + count($motdCommands), $connection->messages);
+        $this->assertCount(10 + count($motdCommands), $connection->messages);
         $this->assertSame($config->serverName->value, $connection->messages[0]->source);
         $this->assertSame(
-            ['001', '002', '003', '004', '005', '251', '255', ...$motdCommands],
+            [
+                '001',
+                '002',
+                '003',
+                '004',
+                '005',
+                '251',
+                '255',
+                '265',
+                '266',
+                '250',
+                ...$motdCommands,
+            ],
             array_column($connection->messages, 'command'),
         );
         $this->assertStringContainsString(

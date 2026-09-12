@@ -20,10 +20,13 @@ final class ResponseCodeTest extends TestCase
         yield 'my info' => [ResponseCode::MyInfo, null];
         yield 'ISUPPORT' => [ResponseCode::ISupport, 'are supported by this server'];
         yield 'user mode' => [ResponseCode::UserModeIs, null];
+        yield 'connection statistics' => [ResponseCode::StatsConnections, null];
         yield 'LUSERS client' => [ResponseCode::LuserClient, null];
         yield 'LUSERS unknown connections' => [ResponseCode::LuserUnknown, 'unknown connection(s)'];
         yield 'LUSERS channels' => [ResponseCode::LuserChannels, 'channels formed'];
         yield 'LUSERS local clients' => [ResponseCode::LuserMe, null];
+        yield 'local users' => [ResponseCode::LocalUsers, null];
+        yield 'global users' => [ResponseCode::GlobalUsers, null];
         yield 'away client' => [ResponseCode::Away, null];
         yield 'no longer away' => [ResponseCode::Unaway, 'You are no longer marked as being away'];
         yield 'now away' => [ResponseCode::NowAway, 'You have been marked as being away'];

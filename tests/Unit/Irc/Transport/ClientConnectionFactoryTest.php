@@ -19,6 +19,7 @@ use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PhpIrc\Irc\Transport\OutboundMessagePreparer;
@@ -158,6 +159,7 @@ final class ClientConnectionFactoryTest extends TestCase
                     channels: $channels,
                     peers: new SharedChannelPeerBroadcaster($clients, $channels),
                 ),
+                statistics: new ConnectionStatistics($clients),
             ),
             keepalives: new ConnectionKeepaliveFactory(
                 timers: new ManualTimerScheduler(),

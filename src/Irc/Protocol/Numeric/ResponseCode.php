@@ -12,10 +12,13 @@ enum ResponseCode: string
     case MyInfo = '004';
     case ISupport = '005';
     case UserModeIs = '221';
+    case StatsConnections = '250';
     case LuserClient = '251';
     case LuserUnknown = '253';
     case LuserChannels = '254';
     case LuserMe = '255';
+    case LocalUsers = '265';
+    case GlobalUsers = '266';
     case Away = '301';
     case Unaway = '305';
     case NowAway = '306';
@@ -73,6 +76,8 @@ enum ResponseCode: string
             self::UserModeIs, self::ChannelModeIs, self::ChannelCreationTime => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::LuserClient, self::LuserMe => null,
+            // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
+            self::StatsConnections, self::LocalUsers, self::GlobalUsers => null,
             // @mago-ignore lint:no-duplicate-match-arm -- Kept split so the exhaustive null cases remain readable.
             self::Away => null,
             self::ISupport => 'are supported by this server',

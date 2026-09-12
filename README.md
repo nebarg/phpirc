@@ -24,7 +24,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] Basic `WHO` queries for exact nicknames and channel members
 - [x] User information and channel membership queries with `WHOIS`
 - [x] Away status with `AWAY`, including `WHO`, `WHOIS` and direct-message replies
-- [x] Current user, connection and channel counts with `LUSERS`
+- [x] Current, peak and total connection statistics for the current server run with `LUSERS`
 - [x] User and channel `MODE` queries
 - [x] Invisible user mode changes with `+i` and `-i`, including visibility-aware `WHO` and `NAMES`
 - [x] Channel operator and voice changes with `+o`, `-o`, `+v` and `-v`
@@ -99,7 +99,6 @@ composer qa
 ## Roadmap
 
 - [ ] Extend `WHO` with wildcard masks and IRCv3 WHOX
-- [ ] Peak and lifetime connection statistics
 - [ ] Broader IRCv3 capability support
 - [ ] Optional persistence where it provides value
 

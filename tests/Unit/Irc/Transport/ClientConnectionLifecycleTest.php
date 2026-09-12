@@ -11,6 +11,7 @@ use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
 use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -20,13 +21,15 @@ final class ClientConnectionLifecycleTest extends TestCase
     #[Test]
     public function it_registers_a_connected_client(): void
     {
-        [$lifecycle, $clients] = $this->lifecycle();
+        [$lifecycle, $clients, , $statistics] = $this->lifecycle();
         $client = new Client();
         $connection = new RecordingConnection();
 
         $lifecycle->connected($client, $connection);
 
         $this->assertSame($connection, $clients->connectionFor($client));
+        $this->assertSame(1, $statistics->peakConnections);
+        $this->assertSame(1, $statistics->connectionsReceived);
     }
 
     #[Test]
@@ -69,12 +72,13 @@ final class ClientConnectionLifecycleTest extends TestCase
         $this->assertSame(['Read error'], $janeConnection->messages[0]->parameters);
     }
 
-    /** @return array{ClientConnectionLifecycle, ClientRegistry, ChannelRegistry} */
+    /** @return array{ClientConnectionLifecycle, ClientRegistry, ChannelRegistry, ConnectionStatistics} */
     private function lifecycle(): array
     {
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
         $channels = new ChannelRegistry($caseMapper);
+        $statistics = new ConnectionStatistics($clients);
 
         return [
             new ClientConnectionLifecycle(
@@ -84,9 +88,11 @@ final class ClientConnectionLifecycleTest extends TestCase
                     channels: $channels,
                     peers: new SharedChannelPeerBroadcaster($clients, $channels),
                 ),
+                statistics: $statistics,
             ),
             $clients,
             $channels,
+            $statistics,
         ];
     }
 }

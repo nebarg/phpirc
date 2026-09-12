@@ -23,6 +23,7 @@ use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -104,7 +105,7 @@ final class CapHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(11, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
             ['John', 'Welcome to the TestNet Network, John'],
@@ -172,6 +173,8 @@ final class CapHandlerTest extends TestCase
         $responses = new NumericResponseFactory($serverName);
         $errors = new NumericErrorResponseFactory($responses, new ByteStringTruncator());
         $caseMapper = new AsciiCaseMapper();
+        $clients = new ClientRegistry($caseMapper);
+        $statistics = new ConnectionStatistics($clients);
         $config = new ServerConfig(
             serverName: $serverName,
             networkName: 'TestNet',
@@ -187,12 +190,14 @@ final class CapHandlerTest extends TestCase
                     $caseMapper,
                     new ChannelTypes(),
                     new LusersResponseFactory(
-                        new ClientRegistry($caseMapper),
+                        $clients,
                         new ChannelRegistry($caseMapper),
                         $responses,
+                        $statistics,
                     ),
                     new MotdResponseFactory($serverName, new Motd(), $responses),
                 ),
+                $statistics,
             ),
         );
     }

@@ -29,6 +29,7 @@ use PhpIrc\Irc\Protocol\MessageTag;
 use PhpIrc\Irc\Transport\ClientConnection;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepalive;
 use PhpIrc\Irc\Transport\LineBuffer;
 use PhpIrc\Irc\Transport\MessageCodec;
@@ -585,6 +586,7 @@ final class ClientConnectionTest extends TestCase
                     channels: $channelRegistry,
                     peers: new SharedChannelPeerBroadcaster($clientRegistry, $channelRegistry),
                 ),
+                statistics: new ConnectionStatistics($clientRegistry),
             ),
             keepalive: $keepalive ?? $this->keepalive(new ManualTimerScheduler()),
             outboundQueue: $outboundQueue ?? new OutboundMessageQueue(

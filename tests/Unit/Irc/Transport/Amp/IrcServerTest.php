@@ -23,6 +23,7 @@ use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
 use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientListenerCollection;
 use PhpIrc\Irc\Transport\ClientSocket;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PhpIrc\Irc\Transport\Flood\FloodProtectionFactory;
 use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PhpIrc\Irc\Transport\OutboundMessagePreparer;
@@ -257,6 +258,7 @@ final class IrcServerTest extends TestCase
                         channels: $channels,
                         peers: new SharedChannelPeerBroadcaster($clients, $channels),
                     ),
+                    statistics: new ConnectionStatistics($clients),
                 ),
                 keepalives: new ConnectionKeepaliveFactory(
                     timers: new ManualTimerScheduler(),

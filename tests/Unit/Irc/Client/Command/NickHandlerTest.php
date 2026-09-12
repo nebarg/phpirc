@@ -24,6 +24,7 @@ use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericErrorResponseFactory;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
@@ -147,7 +148,7 @@ final class NickHandlerTest extends TestCase
         );
 
         $this->assertTrue($client->registration->isComplete());
-        $this->assertCount(8, $connection->messages);
+        $this->assertCount(11, $connection->messages);
         $this->assertSame('001', $connection->messages[0]->command);
         $this->assertSame(
             ['John', 'Welcome to the TestNet Network, John'],
@@ -241,6 +242,7 @@ final class NickHandlerTest extends TestCase
         $serverName = new ServerName('irc.test');
         $responses = new NumericResponseFactory($serverName);
         $channels ??= new ChannelRegistry(new AsciiCaseMapper());
+        $statistics = new ConnectionStatistics($clients);
         $config = new ServerConfig(
             serverName: $serverName,
             networkName: 'TestNet',
@@ -257,9 +259,15 @@ final class NickHandlerTest extends TestCase
                     $responses,
                     new AsciiCaseMapper(),
                     new ChannelTypes(),
-                    new LusersResponseFactory($clients, $channels, $responses),
+                    new LusersResponseFactory(
+                        $clients,
+                        $channels,
+                        $responses,
+                        $statistics,
+                    ),
                     new MotdResponseFactory($serverName, new Motd(), $responses),
                 ),
+                $statistics,
             ),
             peers: new SharedChannelPeerBroadcaster($clients, $channels),
         );

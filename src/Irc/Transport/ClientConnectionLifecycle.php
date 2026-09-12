@@ -13,11 +13,13 @@ final readonly class ClientConnectionLifecycle
     public function __construct(
         private ClientRegistry $clients,
         private ClientDeparture $departure,
+        private ConnectionStatistics $statistics,
     ) {}
 
     public function connected(Client $client, Connection $connection): void
     {
         $this->clients->register($client, $connection);
+        $this->statistics->connectionAccepted();
     }
 
     public function disconnected(Client $client, string $reason): void

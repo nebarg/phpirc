@@ -18,6 +18,7 @@ use PhpIrc\Irc\Protocol\CaseMapping\AsciiCaseMapper;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\Numeric\NumericResponseFactory;
 use PhpIrc\Irc\Protocol\Target\ChannelTypes;
+use PhpIrc\Irc\Transport\ConnectionStatistics;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Support\Irc\Transport\RecordingConnection;
 use Tests\TestCase;
@@ -57,6 +58,12 @@ final class RegistrationWelcomeTest extends TestCase
                 ),
                 $this->response('251', ['John', 'There are 0 users and 0 invisible on 1 servers']),
                 $this->response('255', ['John', 'I have 0 clients and 0 servers']),
+                $this->response('265', ['John', '0', '0', 'Current local users 0, max 0']),
+                $this->response('266', ['John', '0', '0', 'Current global users 0, max 0']),
+                $this->response('250', [
+                    'John',
+                    'Highest connection count: 0 (0 clients) (0 connections received)',
+                ]),
                 $this->response('422', ['John', 'MOTD File is missing']),
             ],
             $connection->messages,
@@ -80,7 +87,10 @@ final class RegistrationWelcomeTest extends TestCase
 
         $this->welcome(motd: new Motd(['Welcome to TestNet.']))->send($connection, 'John');
 
-        $this->assertSame(['251', '255', '375', '372', '376'], array_column(array_slice($connection->messages, 5), 'command'));
+        $this->assertSame(
+            ['251', '255', '265', '266', '250', '375', '372', '376'],
+            array_column(array_slice($connection->messages, 5), 'command'),
+        );
     }
 
     private function welcome(
@@ -105,7 +115,12 @@ final class RegistrationWelcomeTest extends TestCase
             $responses,
             $caseMapper,
             $channelTypes ?? new ChannelTypes(),
-            new LusersResponseFactory($clients, $channels, $responses),
+            new LusersResponseFactory(
+                $clients,
+                $channels,
+                $responses,
+                new ConnectionStatistics($clients),
+            ),
             new MotdResponseFactory($serverName, $motd ?? new Motd(), $responses),
         );
     }
