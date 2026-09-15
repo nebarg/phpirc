@@ -4,17 +4,12 @@ declare(strict_types=1);
 
 namespace PhpIrc\Irc\Transport\Amp;
 
-use Amp\Future;
-use PhpIrc\Irc\Config\ServerName;
-use PhpIrc\Irc\Protocol\Message;
-use PhpIrc\Irc\Transport\ClientConnection;
-use PhpIrc\Irc\Transport\ClientConnectionFactory;
+use PhpIrc\Irc\Transport\ClientConnectionSupervisor;
 use PhpIrc\Irc\Transport\ClientListener;
 use PhpIrc\Irc\Transport\ClientListenerCollection;
-use PhpIrc\Irc\Transport\ClientSocket;
 use PhpIrc\Irc\Transport\Signal\ShutdownSignalListener;
+use PhpIrc\Irc\Transport\Websocket\WebsocketServer;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 use function Amp\async;
 use function Amp\Future\await;
@@ -22,18 +17,15 @@ use function Amp\Future\awaitAll;
 
 final class IrcServer
 {
-    /** @var array<int, array{connection: ClientConnection, task: Future<void>}> */
-    private array $runningConnections = [];
-
     private bool $shutdownRequested = false;
 
     private bool $listenersClosed = false;
 
     public function __construct(
         private readonly ClientListenerCollection $listeners,
-        private readonly ClientConnectionFactory $connections,
+        private readonly ClientConnectionSupervisor $connections,
+        private readonly WebsocketServer $websockets,
         private readonly ShutdownSignalListener $shutdownSignals,
-        private readonly ServerName $serverName,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -43,6 +35,8 @@ final class IrcServer
         $listenerTasks = [];
 
         try {
+            $this->websockets->start();
+
             foreach ($this->listeners->all() as $listener) {
                 $listenerTasks[] = async($this->acceptConnections(...), $listener);
             }
@@ -52,7 +46,15 @@ final class IrcServer
             $this->shutdownSignals->stop();
             $this->closeListeners();
             awaitAll($listenerTasks);
-            $this->stopConnections();
+
+            try {
+                $this->connections->stopAll(
+                    reason: $this->shutdownRequested ? 'Server shutting down' : 'Server stopped',
+                    notifyClients: $this->shutdownRequested,
+                );
+            } finally {
+                $this->websockets->stop();
+            }
         }
     }
 
@@ -83,51 +85,7 @@ final class IrcServer
     private function acceptConnections(ClientListener $listener): void
     {
         while (($socket = $listener->accept()) !== null) {
-            $this->startConnection($socket);
-        }
-    }
-
-    private function startConnection(ClientSocket $socket): void
-    {
-        $connection = $this->connections->create($socket);
-        $connectionId = spl_object_id($connection);
-
-        $task = async($connection->run(...))
-            ->catch(function (Throwable $exception): void {
-                $this->logger->error(
-                    'IRC client connection failed.',
-                    ['exception' => $exception],
-                );
-            })
-            ->finally(function () use ($connectionId): void {
-                unset($this->runningConnections[$connectionId]);
-            });
-
-        $this->runningConnections[$connectionId] = [
-            'connection' => $connection,
-            'task' => $task,
-        ];
-    }
-
-    private function stopConnections(): void
-    {
-        $runningConnections = $this->runningConnections;
-        $reason = $this->shutdownRequested ? 'Server shutting down' : 'Server stopped';
-
-        foreach ($runningConnections as $runningConnection) {
-            if ($this->shutdownRequested) {
-                $runningConnection['connection']->send(new Message(
-                    command: 'ERROR',
-                    parameters: [$reason],
-                    source: $this->serverName->value,
-                ));
-            }
-
-            $runningConnection['connection']->close($reason);
-        }
-
-        foreach ($runningConnections as $runningConnection) {
-            $runningConnection['task']->await();
+            async($this->connections->run(...), $socket)->ignore();
         }
     }
 }

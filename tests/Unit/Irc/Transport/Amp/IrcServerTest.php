@@ -19,6 +19,7 @@ use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
 use PhpIrc\Irc\Protocol\Message;
 use PhpIrc\Irc\Protocol\MessageEncoder;
 use PhpIrc\Irc\Protocol\MessageParser;
+use PhpIrc\Irc\Transport\Amp\AmpClientConnectionSupervisor;
 use PhpIrc\Irc\Transport\Amp\IrcServer;
 use PhpIrc\Irc\Transport\ClientConnectionFactory;
 use PhpIrc\Irc\Transport\ClientConnectionLifecycle;
@@ -31,6 +32,8 @@ use PhpIrc\Irc\Transport\Keepalive\ConnectionKeepaliveFactory;
 use PhpIrc\Irc\Transport\OutboundMessagePreparer;
 use PhpIrc\Irc\Transport\OutboundMessageQueueFactory;
 use PhpIrc\Irc\Transport\Signal\ShutdownSignalListener;
+use PhpIrc\Irc\Transport\Websocket\DisabledWebsocketServer;
+use PhpIrc\Irc\Transport\Websocket\WebsocketServer;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -214,17 +217,35 @@ final class IrcServerTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_starts_and_stops_the_websocket_server_with_the_irc_server(): void
+    {
+        $websockets = $this->createMock(WebsocketServer::class);
+        $websockets->expects($this->once())->method('start');
+        $websockets->expects($this->once())->method('stop');
+
+        $this->server(
+            listener: new FakeClientListener(),
+            handler: new RecordingMessageHandler(),
+            shutdownSignals: new ManualShutdownSignalListener(),
+            logger: $this->createStub(LoggerInterface::class),
+            websockets: $websockets,
+        )->run();
+    }
+
     private function server(
         ClientListener $listener,
         RecordingMessageHandler $handler,
         ShutdownSignalListener $shutdownSignals,
         LoggerInterface $logger,
+        ?WebsocketServer $websockets = null,
     ): IrcServer {
         return $this->serverWithListeners(
             [$listener],
             $handler,
             $shutdownSignals,
             $logger,
+            $websockets,
         );
     }
 
@@ -234,6 +255,7 @@ final class IrcServerTest extends TestCase
         RecordingMessageHandler $handler,
         ShutdownSignalListener $shutdownSignals,
         LoggerInterface $logger,
+        ?WebsocketServer $websockets = null,
     ): IrcServer {
         $caseMapper = new AsciiCaseMapper();
         $clients = new ClientRegistry($caseMapper);
@@ -244,45 +266,51 @@ final class IrcServerTest extends TestCase
             listeners: [],
         );
 
+        $connectionFactory = new ClientConnectionFactory(
+            validator: new ClientMessageSizeValidator(),
+            parser: new MessageParser(),
+            outboundMessages: new OutboundMessagePreparer(
+                new MessageEncoder(),
+                $logger,
+            ),
+            handler: $handler,
+            lifecycle: new ClientConnectionLifecycle(
+                clients: $clients,
+                departure: new ClientDeparture(
+                    clients: $clients,
+                    channels: $channels,
+                    peers: new SharedChannelPeerBroadcaster($clients, $channels),
+                ),
+                statistics: new ConnectionStatistics($clients),
+            ),
+            keepalives: new ConnectionKeepaliveFactory(
+                timers: new ManualTimerScheduler(),
+                config: $config,
+            ),
+            floodProtection: new FloodProtectionFactory(
+                clock: new ManualMonotonicClock(),
+                config: $config,
+            ),
+            limits: new ServerLimits(new ByteStringTruncator()),
+            outboundQueues: new OutboundMessageQueueFactory(
+                tasks: new ImmediateBackgroundTaskRunner(),
+                config: $config,
+                logger: $logger,
+            ),
+            serverTime: new ServerTimeMessageTagger(
+                new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.000Z')),
+            ),
+        );
+
         return new IrcServer(
             listeners: new ClientListenerCollection($listeners),
-            connections: new ClientConnectionFactory(
-                validator: new ClientMessageSizeValidator(),
-                parser: new MessageParser(),
-                outboundMessages: new OutboundMessagePreparer(
-                    new MessageEncoder(),
-                    $logger,
-                ),
-                handler: $handler,
-                lifecycle: new ClientConnectionLifecycle(
-                    clients: $clients,
-                    departure: new ClientDeparture(
-                        clients: $clients,
-                        channels: $channels,
-                        peers: new SharedChannelPeerBroadcaster($clients, $channels),
-                    ),
-                    statistics: new ConnectionStatistics($clients),
-                ),
-                keepalives: new ConnectionKeepaliveFactory(
-                    timers: new ManualTimerScheduler(),
-                    config: $config,
-                ),
-                floodProtection: new FloodProtectionFactory(
-                    clock: new ManualMonotonicClock(),
-                    config: $config,
-                ),
-                limits: new ServerLimits(new ByteStringTruncator()),
-                outboundQueues: new OutboundMessageQueueFactory(
-                    tasks: new ImmediateBackgroundTaskRunner(),
-                    config: $config,
-                    logger: $logger,
-                ),
-                serverTime: new ServerTimeMessageTagger(
-                    new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.000Z')),
-                ),
+            connections: new AmpClientConnectionSupervisor(
+                connectionFactory: $connectionFactory,
+                serverName: $config->serverName,
+                logger: $logger,
             ),
+            websockets: $websockets ?? new DisabledWebsocketServer(),
             shutdownSignals: $shutdownSignals,
-            serverName: $config->serverName,
             logger: $logger,
         );
     }

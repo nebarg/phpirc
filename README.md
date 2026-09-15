@@ -9,6 +9,7 @@ The aim is a focused, single-server implementation that works with normal IRC cl
 - [x] IRC message parsing and encoding, including message tags
 - [x] TCP listener, line buffering, inbound message-size validation and connection cleanup
 - [x] Concurrent plaintext and implicit-TLS listeners
+- [x] Native IRCv3 WebSocket transport for browser clients
 - [x] Automatic command-handler discovery and dispatch
 - [x] Client registration with `CAP LS`, `CAP END`, `NICK` and `USER`
 - [x] IRCv3 `server-time` capability negotiation and timestamped server messages
@@ -87,9 +88,49 @@ TLS_LISTEN_PORT=0
 TLS_CERTIFICATE_FILE=
 TLS_PRIVATE_KEY_FILE=
 TLS_HANDSHAKE_TIMEOUT=10
+WEBSOCKET_LISTEN_ADDRESS=127.0.0.1
+WEBSOCKET_LISTEN_PORT=0
+WEBSOCKET_PATH=/irc
+WEBSOCKET_ALLOWED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+WEBSOCKET_TRUSTED_PROXIES=
 ```
 
 Set `TLS_LISTEN_PORT` to `6697` and provide readable certificate-chain and private-key files to enable implicit TLS. Set `LISTEN_PORT` to `0` if the server should accept only TLS connections. Relative certificate paths are resolved from the project root.
+
+### Browser WebSocket clients
+
+Set `WEBSOCKET_LISTEN_PORT` to enable the browser-facing listener. Browser clients must negotiate the IRCv3 `text.ircv3.net` subprotocol and send exactly one IRC line per WebSocket message, without `\r\n`:
+
+```javascript
+const irc = new WebSocket('ws://127.0.0.1:8081/irc', 'text.ircv3.net');
+
+irc.addEventListener('open', () => {
+    irc.send('NICK Jane');
+    irc.send('USER jane 0 * :Jane Doe');
+});
+
+irc.addEventListener('message', ({ data }) => {
+    console.log(data);
+});
+```
+
+`WEBSOCKET_ALLOWED_ORIGINS` is a comma-separated allowlist of exact browser origins. Use the Laravel application's public origin in deployed environments. `*` explicitly permits every origin.
+
+For a public demo, terminate `wss://` at nginx and proxy the upgrade to PHP's local listener:
+
+```nginx
+location /irc {
+    proxy_pass http://127.0.0.1:8081;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 300s;
+}
+```
+
+Keep `WEBSOCKET_LISTEN_ADDRESS=127.0.0.1`, set `WEBSOCKET_TRUSTED_PROXIES=127.0.0.1,::1`, and connect the Vue client with `wss://your-domain.example/irc`. This leaves certificate handling with nginx while PHPIRC sees the original client address from the trusted proxy.
 
 Run all quality checks with:
 

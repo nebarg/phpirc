@@ -7,6 +7,7 @@ use PhpIrc\Irc\Config\ListenerTlsConfig;
 use PhpIrc\Irc\Config\OutboundQueueConfig;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerName;
+use PhpIrc\Irc\Config\WebsocketConfig;
 
 use function Tempest\env;
 use function Tempest\root_path;
@@ -16,7 +17,9 @@ $motdFile = (string) env('IRC_MOTD_FILE', default: 'motd');
 $listenAddress = (string) env('LISTEN_ADDRESS', default: '127.0.0.1');
 $listenPort = (int) env('LISTEN_PORT', default: 6667);
 $tlsListenPort = (int) env('TLS_LISTEN_PORT', default: 0);
+$websocketListenPort = (int) env('WEBSOCKET_LISTEN_PORT', default: 0);
 $listeners = [];
+$websocket = null;
 
 if ($listenPort !== 0) {
     $listeners[] = new ListenerConfig(
@@ -44,6 +47,24 @@ if ($tlsListenPort !== 0) {
     );
 }
 
+if ($websocketListenPort !== 0) {
+    $commaSeparatedValues = static fn (string $value): array => array_values(array_filter(
+        array_map(trim(...), explode(',', $value)),
+        static fn (string $item): bool => $item !== '',
+    ));
+
+    $websocket = new WebsocketConfig(
+        address: (string) env('WEBSOCKET_LISTEN_ADDRESS', default: '127.0.0.1'),
+        port: $websocketListenPort,
+        path: (string) env('WEBSOCKET_PATH', default: '/irc'),
+        allowedOrigins: $commaSeparatedValues((string) env(
+            'WEBSOCKET_ALLOWED_ORIGINS',
+            default: 'http://localhost:8000,http://127.0.0.1:8000',
+        )),
+        trustedProxies: $commaSeparatedValues((string) env('WEBSOCKET_TRUSTED_PROXIES', default: '')),
+    );
+}
+
 return new ServerConfig(
     serverName: new ServerName((string) env('IRC_SERVER_NAME', default: 'irc.local')),
     networkName: (string) env('IRC_NETWORK_NAME', default: 'PHPIRC'),
@@ -61,4 +82,5 @@ return new ServerConfig(
         maximumBytes: (int) env('IRC_OUTBOUND_QUEUE_BYTES', default: 262_144),
     ),
     motdFile: is_absolute_path($motdFile) ? $motdFile : root_path($motdFile),
+    websocket: $websocket,
 );
