@@ -49,17 +49,28 @@ Requirements:
 - PHP 8.5
 - Composer
 
-Install dependencies and start the server:
+Install dependencies:
 
 ```shell
 composer install
+```
+
+Run all quality checks with:
+
+```shell
+composer qa
+```
+
+Start the server:
+
+```shell
 php tempest irc:serve
 ```
 
 By default, it listens on `127.0.0.1:6667`. You can connect with an IRC client or test it with netcat:
 
 ```shell
-nc 127.0.0.1 6667
+nc 127.0.0.1 6667 # use -c on mac
 ```
 
 Then register and send a ping:
@@ -117,14 +128,6 @@ irc.addEventListener('message', ({ data }) => {
 });
 ```
 
-### Cloaking client addresses
-
-`WHOIS` and `WHO` publish the address a client connected from, which on a public server hands every user's IP address to everyone else who asks. Set `IRC_HOST_CLOAKING=true` to replace it in those replies with a stand-in such as `4f3a2b1c9d8e7f60.cloak`. The server keeps the real address for itself.
-
-`IRC_HOST_CLOAK_SECRET` is required when cloaking is enabled, and the server will refuse to start without it. An address is drawn from a space small enough to hash in full, so an unkeyed digest would name the address it came from; the secret is what makes that infeasible. Use a long random value, keep it out of version control, and note that changing it changes every cloak.
-
-`IRC_HOST_CLOAK_SUFFIX` is the label each cloak ends with, `cloak` by default. Each address gets the same cloak every time, so bans and ignores by host keep working and a user stays recognisable across a nickname change.
-
 `WEBSOCKET_ALLOWED_ORIGINS` is a comma-separated allowlist of exact browser origins. Use the Laravel application's public origin in deployed environments. `*` explicitly permits every origin.
 
 For a public demo, terminate `wss://` at nginx and proxy the upgrade to PHP's local listener:
@@ -143,11 +146,13 @@ location /irc {
 
 Keep `WEBSOCKET_LISTEN_ADDRESS=127.0.0.1`, set `WEBSOCKET_TRUSTED_PROXIES=127.0.0.1,::1`, and connect the Vue client with `wss://your-domain.example/irc`. This leaves certificate handling with nginx while PHPIRC sees the original client address from the trusted proxy.
 
-Run all quality checks with:
+### Cloaking client addresses
 
-```shell
-composer qa
-```
+`WHOIS` and `WHO` publish the address a client connected from, which on a public server hands every user's IP address to everyone else who asks. Set `IRC_HOST_CLOAKING=true` to replace it in those replies with a stand-in such as `4f3a2b1c9d8e7f60.cloak`. The server keeps the real address for itself.
+
+`IRC_HOST_CLOAK_SECRET` is required when cloaking is enabled, and the server will refuse to start without it. An address is drawn from a space small enough to hash in full, so an unkeyed digest would name the address it came from; the secret is what makes that infeasible. Use a long random value, keep it out of version control, and note that changing it changes every cloak.
+
+`IRC_HOST_CLOAK_SUFFIX` is the label each cloak ends with, `cloak` by default. Each address gets the same cloak every time, so bans and ignores by host keep working and a user stays recognisable across a nickname change.
 
 ## Roadmap
 
