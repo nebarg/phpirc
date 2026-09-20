@@ -1,6 +1,7 @@
 <?php
 
 use PhpIrc\Irc\Config\FloodProtectionConfig;
+use PhpIrc\Irc\Config\HostCloakConfig;
 use PhpIrc\Irc\Config\KeepaliveConfig;
 use PhpIrc\Irc\Config\ListenerConfig;
 use PhpIrc\Irc\Config\ListenerTlsConfig;
@@ -83,4 +84,9 @@ return new ServerConfig(
     ),
     motdFile: is_absolute_path($motdFile) ? $motdFile : root_path($motdFile),
     websocket: $websocket,
+    hostCloak: new HostCloakConfig(
+        enabled: filter_var(env('IRC_HOST_CLOAKING', default: false), FILTER_VALIDATE_BOOLEAN),
+        secret: (string) env('IRC_HOST_CLOAK_SECRET', default: ''),
+        suffix: (string) env('IRC_HOST_CLOAK_SUFFIX', default: 'cloak'),
+    ),
 );

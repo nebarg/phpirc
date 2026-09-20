@@ -144,6 +144,20 @@ final class WhoResponseFactoryTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_publishes_the_cloak_rather_than_the_address_it_stands_for(): void
+    {
+        $client = new Client(hostname: '203.0.113.10', publicHostname: 'abc123.cloak');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
+
+        $reply = $this->factory()->createClientReply('Jane', $client);
+
+        $this->assertContains('abc123.cloak', $reply->parameters);
+        $this->assertNotContains('203.0.113.10', $reply->parameters);
+    }
+
     private function client(string $nickname): Client
     {
         $client = new Client('203.0.113.10');

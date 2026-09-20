@@ -93,6 +93,9 @@ WEBSOCKET_LISTEN_PORT=0
 WEBSOCKET_PATH=/irc
 WEBSOCKET_ALLOWED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
 WEBSOCKET_TRUSTED_PROXIES=
+IRC_HOST_CLOAKING=false
+IRC_HOST_CLOAK_SECRET=
+IRC_HOST_CLOAK_SUFFIX=cloak
 ```
 
 Set `TLS_LISTEN_PORT` to `6697` and provide readable certificate-chain and private-key files to enable implicit TLS. Set `LISTEN_PORT` to `0` if the server should accept only TLS connections. Relative certificate paths are resolved from the project root.
@@ -113,6 +116,14 @@ irc.addEventListener('message', ({ data }) => {
     console.log(data);
 });
 ```
+
+### Cloaking client addresses
+
+`WHOIS` and `WHO` publish the address a client connected from, which on a public server hands every user's IP address to everyone else who asks. Set `IRC_HOST_CLOAKING=true` to replace it in those replies with a stand-in such as `4f3a2b1c9d8e7f60.cloak`. The server keeps the real address for itself.
+
+`IRC_HOST_CLOAK_SECRET` is required when cloaking is enabled, and the server will refuse to start without it. An address is drawn from a space small enough to hash in full, so an unkeyed digest would name the address it came from; the secret is what makes that infeasible. Use a long random value, keep it out of version control, and note that changing it changes every cloak.
+
+`IRC_HOST_CLOAK_SUFFIX` is the label each cloak ends with, `cloak` by default. Each address gets the same cloak every time, so bans and ignores by host keep working and a user stays recognisable across a nickname change.
 
 `WEBSOCKET_ALLOWED_ORIGINS` is a comma-separated allowlist of exact browser origins. Use the Laravel application's public origin in deployed environments. `*` explicitly permits every origin.
 

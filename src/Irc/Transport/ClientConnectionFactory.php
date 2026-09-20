@@ -6,6 +6,7 @@ namespace PhpIrc\Irc\Transport;
 
 use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\Client;
+use PhpIrc\Irc\Client\HostCloak;
 use PhpIrc\Irc\Command\MessageHandler;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Protocol\ClientMessageSizeValidator;
@@ -26,12 +27,18 @@ final readonly class ClientConnectionFactory
         private ServerLimits $limits,
         private OutboundMessageQueueFactory $outboundQueues,
         private ServerTimeMessageTagger $serverTime,
+        private HostCloak $hostCloak,
     ) {}
 
     public function create(ClientSocket $socket): ClientConnection
     {
+        $hostname = $this->limits->truncateHostname($socket->remoteAddress());
+
         return new ClientConnection(
-            client: new Client($this->limits->truncateHostname($socket->remoteAddress())),
+            client: new Client(
+                hostname: $hostname,
+                publicHostname: $this->hostCloak->mask($hostname),
+            ),
             socket: $socket,
             codec: new MessageCodec(
                 buffer: new LineBuffer($this->validator),

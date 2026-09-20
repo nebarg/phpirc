@@ -10,6 +10,8 @@ use PhpIrc\Irc\Channel\SharedChannelPeerBroadcaster;
 use PhpIrc\Irc\Client\Capability\ServerTimeMessageTagger;
 use PhpIrc\Irc\Client\ClientDeparture;
 use PhpIrc\Irc\Client\ClientRegistry;
+use PhpIrc\Irc\Client\HostCloak;
+use PhpIrc\Irc\Config\HostCloakConfig;
 use PhpIrc\Irc\Config\ServerConfig;
 use PhpIrc\Irc\Config\ServerLimits;
 use PhpIrc\Irc\Config\ServerName;
@@ -300,6 +302,7 @@ final class IrcServerTest extends TestCase
             serverTime: new ServerTimeMessageTagger(
                 new ManualWallClock(new DateTimeImmutable('2026-09-12T12:00:00.000Z')),
             ),
+            hostCloak: new HostCloak(new HostCloakConfig()),
         );
 
         return new IrcServer(

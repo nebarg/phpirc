@@ -26,9 +26,13 @@ final class Client
 
     public private(set) ClientCapabilities $capabilities;
 
+    public readonly string $publicHostname;
+
     public function __construct(
         public readonly string $hostname = 'localhost',
+        ?string $publicHostname = null,
     ) {
+        $this->publicHostname = $publicHostname ?? $hostname;
         $this->registration = new ClientRegistration();
         $this->capabilities = new ClientCapabilities();
     }

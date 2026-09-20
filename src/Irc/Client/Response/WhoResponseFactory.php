@@ -70,7 +70,7 @@ final readonly class WhoResponseFactory
             parameters: [
                 $channelName,
                 $client->username ?? '*',
-                $client->hostname,
+                $client->publicHostname,
                 $this->serverName->value,
                 $client->nickname ?? '*',
                 ($client->isAway() ? 'G' : 'H') . $membershipPrefix,

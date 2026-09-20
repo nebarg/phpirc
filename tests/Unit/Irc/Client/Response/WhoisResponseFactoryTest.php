@@ -188,6 +188,26 @@ final class WhoisResponseFactoryTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_publishes_the_cloak_rather_than_the_address_it_stands_for(): void
+    {
+        $client = new Client(hostname: '203.0.113.10', publicHostname: 'abc123.cloak');
+        $client->setNickname('John');
+        $client->setUsername('john');
+        $client->setRealName('John Doe');
+        $client->completeRegistrationIfReady();
+
+        $responses = $this->factory()->createWhoisResponses(
+            target: 'Jane',
+            requestedNickname: 'John',
+            client: $client,
+            channels: [],
+        );
+
+        $this->assertContains('abc123.cloak', $responses[0]->parameters);
+        $this->assertNotContains('203.0.113.10', $responses[0]->parameters);
+    }
+
     private function client(string $nickname): Client
     {
         $client = new Client('203.0.113.10');

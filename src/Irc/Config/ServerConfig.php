@@ -23,6 +23,7 @@ final readonly class ServerConfig
         public OutboundQueueConfig $outboundQueue = new OutboundQueueConfig(),
         public ?string $motdFile = null,
         public ?WebsocketConfig $websocket = null,
+        public HostCloakConfig $hostCloak = new HostCloakConfig(),
         ?DateTimeImmutable $startedAt = null,
     ) {
         $this->startedAt = $startedAt ?? new DateTimeImmutable();

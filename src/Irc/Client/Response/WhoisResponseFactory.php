@@ -59,7 +59,7 @@ final readonly class WhoisResponseFactory
             parameters: [
                 $nickname,
                 $client->username ?? '*',
-                $client->hostname,
+                $client->publicHostname,
                 '*',
             ],
             text: $client->realName ?? '',
